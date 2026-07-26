@@ -53,6 +53,19 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   mainWindow.setMenu(null);
 
+  // Enable Ctrl+Shift+I / F12 for DevTools & Ctrl+R / F5 for reload
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return;
+    const key = input.key.toLowerCase();
+    if ((input.control && input.shift && key === 'i') || input.key === 'F12') {
+      mainWindow?.webContents.toggleDevTools();
+      event.preventDefault();
+    } else if ((input.control && key === 'r') || input.key === 'F5') {
+      mainWindow?.webContents.reload();
+      event.preventDefault();
+    }
+  });
+
   // Reveal window smoothly when DOM & CSS render completely
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
