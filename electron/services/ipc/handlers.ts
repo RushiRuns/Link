@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
+import { messageService } from '../messaging/message-service.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -31,16 +32,9 @@ export function registerIpcHandlers() {
     return peersStore.getKnownPeers();
   });
 
-  // Stubs for messaging, groups, file-transfer, and calls domains
-  ipcMain.handle('messaging:send', async (_, _peerId: string, content: string) => {
-    return {
-      id: 'msg_' + Date.now(),
-      senderId: getOrGenerateIdentity().deviceId,
-      senderName: getOrGenerateIdentity().displayName,
-      content,
-      timestamp: Date.now(),
-      deliveryStatus: 'sent'
-    };
+  // Messaging Handlers
+  ipcMain.handle('messaging:send', async (_, peerId: string, content: string) => {
+    return messageService.sendMessage(peerId, content);
   });
 
   ipcMain.handle('groups:create', async (_, name: string, _memberPeerIds: string[]) => {

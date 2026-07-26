@@ -1,6 +1,7 @@
 import { GlobalStyles } from './components/design-system/GlobalStyles';
 import { AppShell } from './components/layout/AppShell';
 import { PeerList } from './components/peers/PeerList';
+import { ConversationView } from './components/conversations/ConversationView';
 import { useAppStore } from './stores/app.store';
 import { usePeersStore } from './stores/peers.store';
 import { Shield, Activity, Radio } from 'lucide-react';
@@ -16,26 +17,7 @@ export default function App() {
       <GlobalStyles />
       <AppShell sidebar={<PeerList />}>
         {selectedPeer ? (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 'var(--space-6)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{selectedPeer.displayName}</h2>
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  fontFamily: 'var(--font-mono)',
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'var(--bg-card)',
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-sm)'
-                }}
-              >
-                Fingerprint: {selectedPeer.publicKeyFingerprint}
-              </span>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              Direct conversation view. Phase 3 Peer Discovery Active.
-            </p>
-          </div>
+          <ConversationView peer={selectedPeer} />
         ) : (
           <div
             style={{
@@ -64,7 +46,7 @@ export default function App() {
             </div>
 
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
-              Automatic Peer Discovery Active
+              Link LAN Messenger
             </h2>
             <p
               style={{
@@ -75,7 +57,7 @@ export default function App() {
                 marginBottom: 'var(--space-5)'
               }}
             >
-              Layered mDNS & UDP broadcast discovery is scanning your local network. Select a teammate from the sidebar to view connection details.
+              Select an online teammate from the sidebar to start an end-to-end encrypted 1-to-1 conversation.
             </p>
 
             <div
@@ -91,11 +73,11 @@ export default function App() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Shield size={14} color="var(--status-online)" />
-                <span>TOFU Verification</span>
+                <span>Noise_XX Encrypted</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Activity size={14} color="var(--accent-primary)" />
-                <span>mDNS / UDP Active</span>
+                <span>Sub-Second Delivery</span>
               </div>
             </div>
           </div>

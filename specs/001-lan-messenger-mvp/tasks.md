@@ -95,13 +95,13 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T028 [P] [US2] Create `electron/services/messaging/message-service.ts` — implement `sendMessage(peerId, content)`: generate `TextMessage` envelope, encode with MessagePack, encrypt via NoiseSession, send over TCP; implement `onMessage` handler: decrypt, decode, emit `message:received` IPC event; send `MessageAck` immediately on receipt
-- [ ] T029 [P] [US2] Add `MessageAck` handling in `electron/services/messaging/message-service.ts` — on receiving `message.ack`, update message delivery status from `sent` → `delivered`; emit `message:delivered` IPC event with `messageId`
-- [ ] T030 [P] [US2] Create `src/stores/conversations.store.ts` — Zustand store keyed by `conversationId`; holds `Message[]` per conversation (in-memory, session only); handles `message:received`, `message:delivered` IPC events; manages `unreadCount`
-- [ ] T031 [P] [US2] Create `src/components/conversations/ConversationView.tsx` — renders message list for selected peer; auto-scrolls to latest message; shows empty state when no messages
-- [ ] T032 [P] [US2] Create `src/components/conversations/MessageBubble.tsx` — renders a single message: sender label (for group view), content, timestamp, delivery status icon (clock → single tick → double tick for sending/sent/delivered)
-- [ ] T033 [P] [US2] Create `src/components/conversations/MessageInput.tsx` — text input with Send button; handles Enter-to-send; enforces 10,000 char limit with counter; disables when peer is offline
-- [ ] T034 [US2] Wire conversation view into `AppShell` — clicking a peer in `PeerList` opens `ConversationView` for that peer; update `app.store` selected conversation; show peer offline banner if peer status is offline
+- [x] T028 [P] [US2] Create `electron/services/messaging/message-service.ts` — implement `sendMessage(peerId, content)`: generate `TextMessage` envelope, encode with MessagePack, encrypt via NoiseSession, send over TCP; implement `onMessage` handler: decrypt, decode, emit `message:received` IPC event; send `MessageAck` immediately on receipt
+- [x] T029 [P] [US2] Add `MessageAck` handling in `electron/services/messaging/message-service.ts` — on receiving `message.ack`, update message delivery status from `sent` → `delivered`; emit `message:delivered` IPC event with `messageId`
+- [x] T030 [P] [US2] Create `src/stores/conversations.store.ts` — Zustand store keyed by `conversationId`; holds `Message[]` per conversation (in-memory, session only); handles `message:received`, `message:delivered` IPC events; manages `unreadCount`
+- [x] T031 [P] [US2] Create `src/components/conversations/ConversationView.tsx` — renders message list for selected peer; auto-scrolls to latest message; shows empty state when no messages
+- [x] T032 [P] [US2] Create `src/components/conversations/MessageBubble.tsx` — renders a single message: sender label (for group view), content, timestamp, delivery status icon (clock → single tick → double tick for sending/sent/delivered)
+- [x] T033 [P] [US2] Create `src/components/conversations/MessageInput.tsx` — text input with Send button; handles Enter-to-send; enforces 10,000 char limit with counter; disables when peer is offline
+- [x] T034 [US2] Wire conversation view into `AppShell` — clicking a peer in `PeerList` opens `ConversationView` for that peer; update `app.store` selected conversation; show peer offline banner if peer status is offline
 
 **Checkpoint**: User Story 2 complete — 1-to-1 messaging works; delivery status visible; UI stays responsive; wire capture shows only encrypted traffic.
 
