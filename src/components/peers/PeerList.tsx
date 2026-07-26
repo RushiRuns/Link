@@ -4,18 +4,28 @@ import { useGroupsStore } from '../../stores/groups.store';
 import { useAppStore } from '../../stores/app.store';
 import { PeerItem } from './PeerItem';
 import { GroupCreate } from '../groups/GroupCreate';
-import { Users, AlertTriangle, Plus, MessageSquare } from 'lucide-react';
+import { LinkIdentity } from '../../types/ipc';
+import { Users, AlertTriangle, Plus, MessageSquare, Settings, User } from 'lucide-react';
 
-export function PeerList() {
+interface PeerListProps {
+  onOpenSettings?: () => void;
+}
+
+export function PeerList({ onOpenSettings }: PeerListProps) {
   const { peers, loadKnownPeers, initListeners } = usePeersStore();
   const { groups } = useGroupsStore();
   const { selectedPeerId, selectedGroupId, selectPeer, selectGroup } = useAppStore();
   const [noPeersFound, setNoPeersFound] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
 
   useEffect(() => {
     loadKnownPeers();
     const cleanupListeners = initListeners();
+
+    if (window.link?.identity) {
+      window.link.identity.getIdentity().then(setLocalIdentity).catch(console.error);
+    }
 
     let cleanNoPeers: (() => void) | undefined;
     if (window.link?.peers?.onNoPeersFound) {
@@ -40,13 +50,15 @@ export function PeerList() {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 'var(--space-3)' }}>
         {/* Header with New Group button */}
         <div
+          data-nodrag
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             paddingBottom: 'var(--space-3)',
             borderBottom: '1px solid var(--border-color)',
-            marginBottom: 'var(--space-3)'
+            marginBottom: 'var(--space-3)',
+            paddingTop: 'var(--space-2)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
@@ -78,6 +90,7 @@ export function PeerList() {
 
         {noPeersFound && onlinePeers.length === 0 && (
           <div
+            data-nodrag
             style={{
               padding: 'var(--space-3)',
               backgroundColor: 'rgba(255, 159, 10, 0.12)',
@@ -96,7 +109,7 @@ export function PeerList() {
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div data-nodrag style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {/* Groups Section */}
           {groupList.length > 0 && (
             <div style={{ marginBottom: 'var(--space-3)' }}>
@@ -222,6 +235,94 @@ export function PeerList() {
               Searching LAN for teammates...
             </div>
           )}
+        </div>
+
+        {/* User Identity Footer Bar with Settings Button */}
+        <div
+          data-nodrag
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingTop: 'var(--space-3)',
+            borderTop: '1px solid var(--border-color)',
+            marginTop: 'var(--space-2)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minWidth: 0 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                flexShrink: 0
+              }}
+            >
+              <User size={14} strokeWidth={1.5} color="var(--text-secondary)" />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--status-online)',
+                  border: '1px solid var(--bg-sidebar)'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <span
+                style={{
+                  fontWeight: 500,
+                  fontSize: 'var(--font-size-body)',
+                  color: 'var(--text-primary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {localIdentity?.displayName || 'My Device'}
+              </span>
+              <span style={{ fontSize: '10px', color: 'var(--status-online)' }}>Online</span>
+            </div>
+          </div>
+
+          <button
+            onClick={onOpenSettings}
+            title="Settings & Preferences"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 30,
+              height: 30,
+              borderRadius: 'var(--radius-sm)',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'background-color var(--transition-fast), color var(--transition-fast)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
+          >
+            <Settings size={16} strokeWidth={1.5} />
+          </button>
         </div>
       </div>
 

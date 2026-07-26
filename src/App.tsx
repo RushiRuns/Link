@@ -40,10 +40,7 @@ export default function App() {
   return (
     <>
       <GlobalStyles />
-      <AppShell
-        sidebar={<PeerList />}
-        onOpenSettings={() => setShowSettings(true)}
-      >
+      <AppShell sidebar={<PeerList onOpenSettings={() => setShowSettings(true)} />}>
         {selectedPeer ? (
           <ConversationView peer={selectedPeer} />
         ) : selectedGroup ? (
