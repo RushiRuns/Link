@@ -1,8 +1,10 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { db } from './services/storage/db.js';
+import { configStore } from './services/storage/config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +26,7 @@ function createWindow() {
     minHeight: 550,
     frame: false,
     titleBarStyle: 'hidden',
-    backgroundColor: '#0b0f19',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#14161b' : '#f6f8fa',
     show: false,
     webPreferences: {
       preload: preloadPath,
@@ -34,7 +36,7 @@ function createWindow() {
     }
   });
 
-  // Reveal window smoothly when DOM & CSS render completely to prevent white flash
+  // Reveal window smoothly when DOM & CSS render completely
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
@@ -59,7 +61,15 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    // Initialize SQLite / file storage
+    db.init();
+
     createWindow();
+
+    // Listen for OS theme changes
+    nativeTheme.on('updated', () => {
+      mainWindow?.webContents.send('theme:changed', nativeTheme.shouldUseDarkColors);
+    });
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -120,4 +130,38 @@ ipcMain.on('window-control', (_, action: 'minimize' | 'maximize' | 'close' | 'is
       mainWindow.close();
       break;
   }
+});
+
+// Stubs for Phase 1 IPC Handlers
+ipcMain.handle('identity:get', async () => {
+  let name = configStore.get('displayName') || os.userInfo().username || 'User';
+  let devId = configStore.get('deviceId');
+  if (!devId) {
+    devId = 'dev-' + Math.random().toString(36).substring(2, 9);
+    configStore.set('deviceId', devId);
+    configStore.set('displayName', name);
+  }
+  return {
+    deviceId: devId,
+    displayName: name,
+    publicKey: configStore.get('publicKey') || '',
+    publicKeyFingerprint: '',
+    appVersion: '1.0.0'
+  };
+});
+
+ipcMain.handle('identity:set-name', async (_, name: string) => {
+  configStore.set('displayName', name);
+  const current = configStore.get('deviceId') || 'dev-id';
+  return {
+    deviceId: current,
+    displayName: name,
+    publicKey: configStore.get('publicKey') || '',
+    publicKeyFingerprint: '',
+    appVersion: '1.0.0'
+  };
+});
+
+ipcMain.handle('peers:get-known', async () => {
+  return db.getAllPeers();
 });

@@ -33,15 +33,15 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 **Purpose**: Project scaffolding, design system foundation, and IPC bridge skeleton — required before any feature work.
 
-- [ ] T001 Extend `electron/preload.ts` to expose typed IPC bridge stubs for all service domains (discovery, messaging, groups, file-transfer, calls, storage) via `contextBridge`
-- [ ] T002 [P] Create `src/types/ipc.ts` with TypeScript interfaces for all IPC channel payloads (LinkPeer, LinkMessage, LinkGroup, LinkFileTransfer, LinkCall, LinkIdentity)
-- [ ] T003 [P] Create `src/types/electron.d.ts` extensions — add `window.link` typed API surface mirroring IPC bridge stubs
-- [ ] T004 [P] Create design system foundation in `src/components/design-system/tokens.css` — define CSS custom properties for color palette (matte dark-grey dark mode, light mode), spacing scale, border-radius, and typography (system font stack)
-- [ ] T005 [P] Create `src/components/design-system/GlobalStyles.tsx` — apply CSS reset, body background, font, and OS-level `prefers-color-scheme` binding via `nativeTheme` IPC event
-- [ ] T006 [P] Scaffold app shell layout in `src/components/layout/AppShell.tsx` — sidebar (peer list) + main pane (conversation/call view) split layout, responsive to window resize
-- [ ] T007 [P] Install and configure `electron-store` in `electron/main.ts` — configure with `safeStorage` encryption for credential fields; define schema for `displayName`, `deviceId`, `encryptedPrivateKey`, `publicKey`
-- [ ] T008 [P] Install and configure `better-sqlite3` (with SQLCipher) in `electron/services/storage/db.ts` — open encrypted DB in `app.getPath('userData')`, enable WAL mode, define initial schema migrations for `peers` table
-- [ ] T009 [P] Install wire-protocol dependencies: `msgpackr` for MessagePack encoding, `uuid` for ID generation — add encode/decode helpers in `electron/services/network/wire.ts`
+- [x] T001 Extend `electron/preload.ts` to expose typed IPC bridge stubs for all service domains (discovery, messaging, groups, file-transfer, calls, storage) via `contextBridge`
+- [x] T002 [P] Create `src/types/ipc.ts` with TypeScript interfaces for all IPC channel payloads (LinkPeer, LinkMessage, LinkGroup, LinkFileTransfer, LinkCall, LinkIdentity)
+- [x] T003 [P] Create `src/types/electron.d.ts` extensions — add `window.link` typed API surface mirroring IPC bridge stubs
+- [x] T004 [P] Create design system foundation in `src/components/design-system/tokens.css` — define CSS custom properties for color palette (matte dark-grey dark mode, light mode), spacing scale, border-radius, and typography (system font stack)
+- [x] T005 [P] Create `src/components/design-system/GlobalStyles.tsx` — apply CSS reset, body background, font, and OS-level `prefers-color-scheme` binding via `nativeTheme` IPC event
+- [x] T006 [P] Scaffold app shell layout in `src/components/layout/AppShell.tsx` — sidebar (peer list) + main pane (conversation/call view) split layout, responsive to window resize
+- [x] T007 [P] Install and configure `electron-store` in `electron/main.ts` — configure with `safeStorage` encryption for credential fields; define schema for `displayName`, `deviceId`, `encryptedPrivateKey`, `publicKey`
+- [x] T008 [P] Install and configure `better-sqlite3` (with SQLCipher) in `electron/services/storage/db.ts` — open encrypted DB in `app.getPath('userData')`, enable WAL mode, define initial schema migrations for `peers` table
+- [x] T009 [P] Install wire-protocol dependencies: `msgpackr` for MessagePack encoding, `uuid` for ID generation — add encode/decode helpers in `electron/services/network/wire.ts`
 
 ---
 

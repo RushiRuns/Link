@@ -11,9 +11,15 @@
     "package": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@stablelib/chacha20poly1305": "^2.0.1",
+    "@stablelib/x25519": "^2.0.1",
+    "@types/uuid": "^10.0.0",
+    "electron-store": "^11.0.2",
     "lucide-react": "^0.400.0",
+    "msgpackr": "^2.0.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
