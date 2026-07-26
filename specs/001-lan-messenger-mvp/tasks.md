@@ -169,15 +169,15 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 **Purpose**: Hardening, settings, cross-platform verification, and constitution compliance final pass.
 
-- [ ] T054 [P] Create `src/components/settings/SettingsPanel.tsx` — display name editing (persists via `window.link.identity.setDisplayName()`); key fingerprint display (FR-015); app version display; light/dark mode override toggle (optional, OS default by default)
-- [ ] T055 [P] Create `src/components/peers/PeerProfile.tsx` — shown on peer name click: display name, public key fingerprint for out-of-band verification (FR-015), connection status, last seen
-- [ ] T056 [P] Implement graceful disconnect handling in `electron/services/network/connection-manager.ts` — on unexpected TCP close during file transfer: send `file.complete` with `success: false, reason: 'connection_lost'`; on call drop: send `call.end` with `reason: 'connection_lost'`; renderer shows user-readable error (FR-014)
-- [ ] T057 [P] Implement `nativeTheme` OS appearance binding in `electron/main.ts` — listen for `nativeTheme.on('updated')`, send IPC event `theme:changed` with `shouldUseDarkColors`; renderer `useTheme` hook applies `data-theme` attribute to `<html>` element toggling CSS token sets (FR-010)
-- [ ] T058 [P] Implement platform-specific window chrome in `electron/main.ts` — `titleBarStyle: 'hiddenInset'` on macOS (traffic-light controls); default title bar on Windows; `frame: false` with custom drag region if needed for Windows (FR-011)
-- [ ] T059 [P] Add "No peers found" UI in `src/components/peers/PeerList.tsx` — empty state with network warning icon and message: "No peers found — your network may block peer discovery" triggered by `discovery:no-peers-found` IPC event (Edge Case)
-- [ ] T060 [P] Add version mismatch UI state in `src/components/peers/StatusBadge.tsx` and `PeerItem.tsx` — show warning badge; tooltip "Link version mismatch — please ensure all teammates are on the same version" (FR-019)
-- [ ] T061 Run quickstart.md Scenario 10 (cross-platform parity) — verify all scenarios pass on both macOS and Windows; fix any platform-specific regressions before marking MVP complete (FR-011, SC-008)
-- [ ] T062 Final constitution compliance review — verify all 5 gates in plan.md Constitution Check; confirm no renderer-side blocking I/O; confirm no plaintext on wire; confirm both themes render correctly; confirm cross-platform parity
+- [x] T054 [P] Create `src/components/settings/SettingsPanel.tsx` — display name editing (persists via `window.link.identity.setDisplayName()`); key fingerprint display (FR-015); app version display; light/dark mode override toggle (optional, OS default by default)
+- [x] T055 [P] Create `src/components/peers/PeerProfile.tsx` — shown on peer name click: display name, public key fingerprint for out-of-band verification (FR-015), connection status, last seen
+- [x] T056 [P] Implement graceful disconnect handling in `electron/services/network/connection-manager.ts` — on unexpected TCP close during file transfer: send `file.complete` with `success: false, reason: 'connection_lost'`; on call drop: send `call.end` with `reason: 'connection_lost'`; renderer shows user-readable error (FR-014)
+- [x] T057 [P] Implement `nativeTheme` OS appearance binding in `electron/main.ts` — listen for `nativeTheme.on('updated')`, send IPC event `theme:changed` with `shouldUseDarkColors`; renderer `useTheme` hook applies `data-theme` attribute to `<html>` element toggling CSS token sets (FR-010)
+- [x] T058 [P] Implement platform-specific window chrome in `electron/main.ts` — `titleBarStyle: 'hiddenInset'` on macOS (traffic-light controls); default title bar on Windows; `frame: false` with custom drag region if needed for Windows (FR-011)
+- [x] T059 [P] Add "No peers found" UI in `src/components/peers/PeerList.tsx` — empty state with network warning icon and message: "No peers found — your network may block peer discovery" triggered by `discovery:no-peers-found` IPC event (Edge Case)
+- [x] T060 [P] Add version mismatch UI state in `src/components/peers/StatusBadge.tsx` and `PeerItem.tsx` — show warning badge; tooltip "Link version mismatch — please ensure all teammates are on the same version" (FR-019)
+- [x] T061 Run quickstart.md Scenario 10 (cross-platform parity) — verify all scenarios pass on both macOS and Windows; fix any platform-specific regressions before marking MVP complete (FR-011, SC-008)
+- [x] T062 Final constitution compliance review — verify all 5 gates in plan.md Constitution Check; confirm no renderer-side blocking I/O; confirm no plaintext on wire; confirm both themes render correctly; confirm cross-platform parity
 
 ---
 

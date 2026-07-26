@@ -27,13 +27,15 @@ function createWindow() {
     ? path.join(__dirname, 'preload.mjs')
     : path.join(__dirname, 'preload.js');
 
+  const isMac = process.platform === 'darwin';
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 720,
     minWidth: 800,
     minHeight: 550,
-    frame: false,
-    titleBarStyle: 'hidden',
+    frame: !isMac,
+    titleBarStyle: isMac ? 'hiddenInset' : 'default',
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#14161b' : '#f6f8fa',
     show: false,
     webPreferences: {
@@ -47,6 +49,13 @@ function createWindow() {
   // Reveal window smoothly when DOM & CSS render completely
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+  });
+
+  // T057: Listen for OS theme changes and notify renderer
+  nativeTheme.on('updated', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('theme:changed', nativeTheme.shouldUseDarkColors);
+    }
   });
 
   messageService.init(mainWindow);

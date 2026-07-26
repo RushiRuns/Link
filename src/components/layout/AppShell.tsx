@@ -1,12 +1,14 @@
 import { ReactNode } from 'react';
+import { Settings } from 'lucide-react';
 import './AppShell.css';
 
 interface AppShellProps {
   sidebar: ReactNode;
   children: ReactNode;
+  onOpenSettings?: () => void;
 }
 
-export function AppShell({ sidebar, children }: AppShellProps) {
+export function AppShell({ sidebar, children, onOpenSettings }: AppShellProps) {
   const handleWindowControl = (action: 'minimize' | 'maximize' | 'close') => {
     if (window.electron) {
       window.electron.windowControl(action);
@@ -22,6 +24,16 @@ export function AppShell({ sidebar, children }: AppShellProps) {
           <span className="link-badge">LAN P2P</span>
         </div>
         <div className="link-titlebar-controls">
+          {onOpenSettings && (
+            <button
+              className="link-control-btn"
+              onClick={onOpenSettings}
+              title="Settings & Preferences"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Settings size={14} />
+            </button>
+          )}
           <button
             className="link-control-btn"
             onClick={() => handleWindowControl('minimize')}

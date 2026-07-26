@@ -34,6 +34,15 @@ class CallSignalingService {
           break;
       }
     });
+
+    connectionManager.on('peer:disconnected', (peerId: string) => {
+      for (const [callId, state] of this.activeCalls.entries()) {
+        if (state.peerId === peerId) {
+          this.activeCalls.delete(callId);
+          this.windowRef?.webContents?.send('calls:ended', callId);
+        }
+      }
+    });
   }
 
   public setWindow(mainWindow: any) {

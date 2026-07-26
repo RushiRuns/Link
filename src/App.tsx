@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GlobalStyles } from './components/design-system/GlobalStyles';
 import { AppShell } from './components/layout/AppShell';
 import { PeerList } from './components/peers/PeerList';
@@ -7,11 +7,14 @@ import { GroupView } from './components/groups/GroupView';
 import { FileTransferOffer } from './components/file-transfer/FileTransferOffer';
 import { IncomingCallModal } from './components/calls/IncomingCallModal';
 import { CallScreen } from './components/calls/CallScreen';
+import { SettingsPanel } from './components/settings/SettingsPanel';
+import { PeerProfile } from './components/peers/PeerProfile';
 import { useAppStore } from './stores/app.store';
 import { usePeersStore } from './stores/peers.store';
 import { useGroupsStore } from './stores/groups.store';
 import { useFileTransferStore } from './stores/file-transfer.store';
 import { useCallsStore } from './stores/calls.store';
+import { LinkPeer } from './types/ipc';
 import { Shield, Activity, Radio } from 'lucide-react';
 
 export default function App() {
@@ -20,6 +23,9 @@ export default function App() {
   const { groups } = useGroupsStore();
   const { incomingOffer } = useFileTransferStore();
   const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [profilePeer, setProfilePeer] = useState<LinkPeer | null>(null);
 
   useEffect(() => {
     const cleanCalls = initCallListeners();
@@ -34,7 +40,10 @@ export default function App() {
   return (
     <>
       <GlobalStyles />
-      <AppShell sidebar={<PeerList />}>
+      <AppShell
+        sidebar={<PeerList />}
+        onOpenSettings={() => setShowSettings(true)}
+      >
         {selectedPeer ? (
           <ConversationView peer={selectedPeer} />
         ) : selectedGroup ? (
@@ -108,6 +117,8 @@ export default function App() {
       {incomingOffer && <FileTransferOffer offer={incomingOffer} />}
       {incomingCall && <IncomingCallModal />}
       {activeCall && <CallScreen />}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {profilePeer && <PeerProfile peer={profilePeer} onClose={() => setProfilePeer(null)} />}
     </>
   );
 }

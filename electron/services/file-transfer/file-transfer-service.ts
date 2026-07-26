@@ -43,6 +43,18 @@ class FileTransferService {
           break;
       }
     });
+
+    connectionManager.on('peer:disconnected', (peerId: string) => {
+      for (const [id, state] of this.transfers.entries()) {
+        if (state.peerId === peerId && (state.status === 'transferring' || state.status === 'pending_accept')) {
+          state.status = 'failed';
+          if (state.writeStream) {
+            try { state.writeStream.destroy(); } catch {}
+          }
+          this.windowRef?.webContents?.send('file-transfer:failed', id);
+        }
+      }
+    });
   }
 
   public setWindow(mainWindow: any) {
