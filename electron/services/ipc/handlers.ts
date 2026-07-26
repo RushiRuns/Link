@@ -3,6 +3,7 @@ import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
 import { messageService } from '../messaging/message-service.js';
 import { groupService } from '../groups/group-service.js';
+import { fileTransferService } from '../file-transfer/file-transfer-service.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -47,21 +48,16 @@ export function registerIpcHandlers() {
     return groupService.sendGroupMessage(groupId, content);
   });
 
+  // File Transfer Handlers
   ipcMain.handle('file-transfer:offer', async (_, peerId: string, filePath: string) => {
-    return {
-      id: 'ft_' + Date.now(),
-      direction: 'outgoing',
-      peerId,
-      fileName: filePath.split(/[/\\]/).pop() || 'file',
-      fileSizeBytes: 0,
-      mimeType: 'application/octet-stream',
-      status: 'pending_accept',
-      bytesTransferred: 0
-    };
+    if (!filePath) {
+      return fileTransferService.selectAndOfferFile(peerId);
+    }
+    return fileTransferService.offerFile(peerId, filePath);
   });
 
-  ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean) => {
-    console.log(`[IPC] File transfer ${transferId} respond: ${accepted}`);
+  ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean, savePath?: string) => {
+    return fileTransferService.respondToOffer(transferId, accepted, savePath);
   });
 
   ipcMain.handle('calls:offer', async (_, peerId: string, mediaType: 'voice' | 'video') => {

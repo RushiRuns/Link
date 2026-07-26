@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { LinkPeer, LinkIdentity } from '../../types/ipc';
 import { useConversationsStore } from '../../stores/conversations.store';
+import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
+import { TransferProgress } from '../file-transfer/TransferProgress';
 import { Shield, AlertCircle } from 'lucide-react';
 
 interface ConversationViewProps {
@@ -11,6 +13,7 @@ interface ConversationViewProps {
 
 export function ConversationView({ peer }: ConversationViewProps) {
   const { messages, sendMessage, markConversationRead, initListeners } = useConversationsStore();
+  const { transfers, offerFile, initListeners: initFtListeners } = useFileTransferStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -26,21 +29,30 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   useEffect(() => {
     markConversationRead(conversationId);
-    const cleanup = initListeners();
-    return cleanup;
-  }, [conversationId, markConversationRead, initListeners]);
+    const cleanupConv = initListeners();
+    const cleanupFt = initFtListeners();
+    return () => {
+      cleanupConv();
+      cleanupFt();
+    };
+  }, [conversationId, markConversationRead, initListeners, initFtListeners]);
 
   const conversationMessages = messages.get(conversationId) || [];
+  const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [conversationMessages.length]);
+  }, [conversationMessages.length, peerTransfers.length]);
 
   const handleSend = (text: string) => {
     sendMessage(peer.id, text);
+  };
+
+  const handleAttachFile = () => {
+    offerFile(peer.id);
   };
 
   const isOffline = peer.status === 'offline';
@@ -116,7 +128,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         </div>
       )}
 
-      {/* Message List */}
+      {/* Message & File Transfer List */}
       <div
         ref={scrollRef}
         style={{
@@ -127,7 +139,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
           flexDirection: 'column'
         }}
       >
-        {conversationMessages.length === 0 ? (
+        {conversationMessages.length === 0 && peerTransfers.length === 0 ? (
           <div
             style={{
               flex: 1,
@@ -142,22 +154,32 @@ export function ConversationView({ peer }: ConversationViewProps) {
           >
             <Shield size={32} color="var(--text-muted)" style={{ opacity: 0.5 }} />
             <div>Encrypted 1-to-1 conversation with {peer.displayName}</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message to begin chatting</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message or file to begin chatting</div>
           </div>
         ) : (
-          conversationMessages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isSelf={msg.senderId === localIdentity?.deviceId}
-            />
-          ))
+          <>
+            {conversationMessages.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isSelf={msg.senderId === localIdentity?.deviceId}
+              />
+            ))}
+
+            {peerTransfers.map((transfer) => (
+              <TransferProgress key={transfer.id} transfer={transfer} />
+            ))}
+          </>
         )}
       </div>
 
       {/* Message Input Footer */}
       <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)' }}>
-        <MessageInput onSend={handleSend} disabled={isOffline || isVersionMismatch} />
+        <MessageInput
+          onSend={handleSend}
+          onAttachFile={handleAttachFile}
+          disabled={isOffline || isVersionMismatch}
+        />
       </div>
     </div>
   );

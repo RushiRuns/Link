@@ -1,15 +1,16 @@
 import { useState, KeyboardEvent } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
 
 interface MessageInputProps {
   onSend: (content: string) => void;
+  onAttachFile?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
 const MAX_CHAR_LIMIT = 10000;
 
-export function MessageInput({ onSend, disabled, placeholder }: MessageInputProps) {
+export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: MessageInputProps) {
   const [content, setContent] = useState('');
 
   const handleSend = () => {
@@ -42,6 +43,29 @@ export function MessageInput({ onSend, disabled, placeholder }: MessageInputProp
           border: '1px solid var(--border-color)'
         }}
       >
+        {onAttachFile && (
+          <button
+            onClick={onAttachFile}
+            disabled={disabled}
+            title="Attach File"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              backgroundColor: 'transparent',
+              color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+              border: 'none',
+              cursor: disabled ? 'default' : 'pointer',
+              flexShrink: 0
+            }}
+          >
+            <Paperclip size={18} />
+          </button>
+        )}
+
         <textarea
           rows={1}
           value={content}

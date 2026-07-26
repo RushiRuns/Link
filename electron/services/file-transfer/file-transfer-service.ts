@@ -1,0 +1,295 @@
+import { connectionManager } from '../network/connection-manager.js';
+import { app, dialog } from 'electron';
+import fs from 'fs';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface ActiveFileTransferState {
+  id: string;
+  direction: 'outgoing' | 'incoming';
+  peerId: string;
+  groupId?: string;
+  filePath?: string;
+  fileName: string;
+  fileSizeBytes: number;
+  mimeType: string;
+  bytesTransferred: number;
+  status: 'pending_accept' | 'transferring' | 'completed' | 'declined' | 'failed' | 'cancelled';
+  savePath?: string;
+  tempPath?: string;
+  writeStream?: fs.WriteStream;
+}
+
+class FileTransferService {
+  private windowRef: any = null;
+  private transfers: Map<string, ActiveFileTransferState> = new Map();
+
+  public init(mainWindow: any) {
+    this.windowRef = mainWindow;
+
+    connectionManager.on('message', (senderDeviceId: string, envelope: any) => {
+      switch (envelope.type) {
+        case 'file.offer':
+          this.handleFileOffer(senderDeviceId, envelope);
+          break;
+        case 'file.response':
+          this.handleFileResponse(senderDeviceId, envelope);
+          break;
+        case 'file.chunk':
+          this.handleFileChunk(senderDeviceId, envelope);
+          break;
+        case 'file.complete':
+          this.handleFileComplete(senderDeviceId, envelope);
+          break;
+      }
+    });
+  }
+
+  public setWindow(mainWindow: any) {
+    this.windowRef = mainWindow;
+  }
+
+  public async selectAndOfferFile(peerId: string, groupId?: string) {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      title: 'Select File to Send'
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    const filePath = result.filePaths[0];
+    return this.offerFile(peerId, filePath, groupId);
+  }
+
+  public async offerFile(peerId: string, filePath: string, groupId?: string) {
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+
+    const stat = fs.statSync(filePath);
+    const fileName = path.basename(filePath);
+    const transferId = uuidv4();
+    const chunkSize = 65536; // 64 KB
+    const totalChunks = Math.ceil(stat.size / chunkSize);
+
+    const state: ActiveFileTransferState = {
+      id: transferId,
+      direction: 'outgoing',
+      peerId,
+      groupId,
+      filePath,
+      fileName,
+      fileSizeBytes: stat.size,
+      mimeType: 'application/octet-stream',
+      bytesTransferred: 0,
+      status: 'pending_accept'
+    };
+
+    this.transfers.set(transferId, state);
+
+    connectionManager.send(peerId, {
+      type: 'file.offer',
+      id: transferId,
+      ts: Date.now(),
+      payload: {
+        transferId,
+        groupId,
+        fileName,
+        fileSizeBytes: stat.size,
+        mimeType: state.mimeType,
+        chunkSizeBytes: chunkSize,
+        totalChunks
+      }
+    });
+
+    return {
+      id: transferId,
+      direction: 'outgoing' as const,
+      peerId,
+      groupId,
+      fileName,
+      fileSizeBytes: stat.size,
+      mimeType: state.mimeType,
+      status: 'pending_accept' as const,
+      bytesTransferred: 0
+    };
+  }
+
+  public async respondToOffer(transferId: string, accepted: boolean, customSavePath?: string) {
+    const state = this.transfers.get(transferId);
+    if (!state) return;
+
+    if (!accepted) {
+      state.status = 'declined';
+      connectionManager.send(state.peerId, {
+        type: 'file.response',
+        id: 'resp_' + uuidv4(),
+        ts: Date.now(),
+        payload: { transferId, accepted: false }
+      });
+      return;
+    }
+
+    // Determine save path if not specified
+    let savePath = customSavePath;
+    if (!savePath) {
+      const downloadsDir = app.getPath('downloads');
+      savePath = path.join(downloadsDir, state.fileName);
+    }
+
+    const tempPath = path.join(app.getPath('temp'), `link_ft_${transferId}.tmp`);
+
+    state.status = 'transferring';
+    state.savePath = savePath;
+    state.tempPath = tempPath;
+    state.writeStream = fs.createWriteStream(tempPath);
+
+    connectionManager.send(state.peerId, {
+      type: 'file.response',
+      id: 'resp_' + uuidv4(),
+      ts: Date.now(),
+      payload: { transferId, accepted: true }
+    });
+  }
+
+  private handleFileOffer(senderDeviceId: string, envelope: any) {
+    const p = envelope.payload;
+    if (!p || !p.transferId) return;
+
+    const state: ActiveFileTransferState = {
+      id: p.transferId,
+      direction: 'incoming',
+      peerId: senderDeviceId,
+      groupId: p.groupId,
+      fileName: p.fileName,
+      fileSizeBytes: p.fileSizeBytes,
+      mimeType: p.mimeType || 'application/octet-stream',
+      bytesTransferred: 0,
+      status: 'pending_accept'
+    };
+
+    this.transfers.set(p.transferId, state);
+
+    // Notify renderer of incoming offer
+    this.windowRef?.webContents?.send('file-transfer:offer-received', {
+      id: p.transferId,
+      direction: 'incoming',
+      peerId: senderDeviceId,
+      groupId: p.groupId,
+      fileName: p.fileName,
+      fileSizeBytes: p.fileSizeBytes,
+      mimeType: state.mimeType,
+      status: 'pending_accept',
+      bytesTransferred: 0
+    });
+  }
+
+  private handleFileResponse(_senderDeviceId: string, envelope: any) {
+    const p = envelope.payload;
+    const state = this.transfers.get(p?.transferId);
+    if (!state) return;
+
+    if (!p.accepted) {
+      state.status = 'declined';
+      this.windowRef?.webContents?.send('file-transfer:declined', state.id);
+      return;
+    }
+
+    state.status = 'transferring';
+    this.startSendingChunks(state);
+  }
+
+  private startSendingChunks(state: ActiveFileTransferState) {
+    if (!state.filePath || !fs.existsSync(state.filePath)) {
+      state.status = 'failed';
+      return;
+    }
+
+    const readStream = fs.createReadStream(state.filePath, { highWaterMark: 65536 });
+    let chunkIndex = 0;
+
+    readStream.on('data', (chunkBuffer: Buffer | string) => {
+      const bytes = typeof chunkBuffer === 'string' ? Buffer.from(chunkBuffer) : chunkBuffer;
+      state.bytesTransferred += bytes.length;
+
+      connectionManager.send(state.peerId, {
+        type: 'file.chunk',
+        id: 'chunk_' + uuidv4(),
+        ts: Date.now(),
+        payload: {
+          transferId: state.id,
+          chunkIndex: chunkIndex++,
+          data: bytes.toString('base64'),
+          isLast: state.bytesTransferred >= state.fileSizeBytes
+        }
+      });
+
+      this.windowRef?.webContents?.send('file-transfer:progress', {
+        transferId: state.id,
+        bytesTransferred: state.bytesTransferred
+      });
+    });
+
+    readStream.on('end', () => {
+      state.status = 'completed';
+      connectionManager.send(state.peerId, {
+        type: 'file.complete',
+        id: 'complete_' + uuidv4(),
+        ts: Date.now(),
+        payload: { transferId: state.id, success: true }
+      });
+
+      this.windowRef?.webContents?.send('file-transfer:completed', state.id);
+    });
+
+    readStream.on('error', (err) => {
+      console.error(`[FileTransfer] Stream read error for ${state.id}:`, err);
+      state.status = 'failed';
+      this.windowRef?.webContents?.send('file-transfer:failed', state.id);
+    });
+  }
+
+  private handleFileChunk(_senderDeviceId: string, envelope: any) {
+    const p = envelope.payload;
+    const state = this.transfers.get(p?.transferId);
+    if (!state || !state.writeStream) return;
+
+    try {
+      const buffer = Buffer.from(p.data, 'base64');
+      state.writeStream.write(buffer);
+      state.bytesTransferred += buffer.length;
+
+      this.windowRef?.webContents?.send('file-transfer:progress', {
+        transferId: state.id,
+        bytesTransferred: state.bytesTransferred
+      });
+    } catch (err) {
+      console.error(`[FileTransfer] Error writing chunk for ${state.id}:`, err);
+    }
+  }
+
+  private handleFileComplete(_senderDeviceId: string, envelope: any) {
+    const p = envelope.payload;
+    const state = this.transfers.get(p?.transferId);
+    if (!state) return;
+
+    if (state.writeStream) {
+      state.writeStream.end(() => {
+        if (state.tempPath && state.savePath) {
+          try {
+            fs.copyFileSync(state.tempPath, state.savePath);
+            fs.unlinkSync(state.tempPath);
+          } catch (err) {
+            console.error(`[FileTransfer] Error finalizing saved file for ${state.id}:`, err);
+          }
+        }
+        state.status = 'completed';
+        this.windowRef?.webContents?.send('file-transfer:completed', state.id);
+      });
+    }
+  }
+}
+
+export const fileTransferService = new FileTransferService();
