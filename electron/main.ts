@@ -4,7 +4,10 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { db } from './services/storage/db.js';
-import { configStore } from './services/storage/config.js';
+import { registerIpcHandlers } from './services/ipc/handlers.js';
+import { setupHandshakeHandler } from './services/network/handshake.js';
+import { startKeepaliveMonitor } from './services/network/keepalive.js';
+import { connectionManager } from './services/network/connection-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,9 +63,19 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(() => {
-    // Initialize SQLite / file storage
+  app.whenReady().then(async () => {
+    // Initialize storage & IPC handlers
     db.init();
+    registerIpcHandlers();
+    setupHandshakeHandler();
+    startKeepaliveMonitor();
+
+    // Start TCP listener on dynamic port
+    try {
+      await connectionManager.startServer();
+    } catch (err) {
+      console.warn('[Main] ConnectionManager server failed to start:', err);
+    }
 
     createWindow();
 
@@ -130,38 +143,4 @@ ipcMain.on('window-control', (_, action: 'minimize' | 'maximize' | 'close' | 'is
       mainWindow.close();
       break;
   }
-});
-
-// Stubs for Phase 1 IPC Handlers
-ipcMain.handle('identity:get', async () => {
-  let name = configStore.get('displayName') || os.userInfo().username || 'User';
-  let devId = configStore.get('deviceId');
-  if (!devId) {
-    devId = 'dev-' + Math.random().toString(36).substring(2, 9);
-    configStore.set('deviceId', devId);
-    configStore.set('displayName', name);
-  }
-  return {
-    deviceId: devId,
-    displayName: name,
-    publicKey: configStore.get('publicKey') || '',
-    publicKeyFingerprint: '',
-    appVersion: '1.0.0'
-  };
-});
-
-ipcMain.handle('identity:set-name', async (_, name: string) => {
-  configStore.set('displayName', name);
-  const current = configStore.get('deviceId') || 'dev-id';
-  return {
-    deviceId: current,
-    displayName: name,
-    publicKey: configStore.get('publicKey') || '',
-    publicKeyFingerprint: '',
-    appVersion: '1.0.0'
-  };
-});
-
-ipcMain.handle('peers:get-known', async () => {
-  return db.getAllPeers();
 });

@@ -51,16 +51,16 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T010 Create `electron/services/identity/identity.ts` — implement `LocalIdentity` lifecycle: generate Curve25519 keypair on first launch using `@stablelib/x25519`, encrypt private key via `safeStorage`, persist to `electron-store`, load on subsequent launches; expose `getIdentity()` function
-- [ ] T011 [P] Create `electron/services/identity/fingerprint.ts` — derive human-readable public key fingerprint (truncated hex of SHA-256 of publicKey); expose `getFingerprint(publicKey)` helper
-- [ ] T012 Create `electron/services/network/noise.ts` — implement Noise_XX handshake using `@stablelib/x25519` and `@stablelib/chacha20poly1305`; expose `initiateHandshake(socket, localKeypair, remotePubKey?)` and `acceptHandshake(socket, localKeypair)` returning an established `NoiseSession` with `encrypt(plaintext)` / `decrypt(ciphertext)` methods
-- [ ] T013 Create `electron/services/network/connection-manager.ts` — manage a registry of active `NoiseSession` connections keyed by `deviceId`; implement `connect(peer)`, `disconnect(peerId)`, `send(peerId, envelope)`, `broadcast(peerIds, envelope)`, and `onMessage(handler)` using TCP sockets; emit `peer:connected`, `peer:disconnected` events
-- [ ] T014 Create `electron/services/network/handshake.ts` — implement post-Noise `HandshakeHello` / `HandshakeAck` exchange (version check: major.minor must match); reject and close connection on version mismatch; TOFU: on first connection store peer's public key, on subsequent connections verify it matches stored key
-- [ ] T015 [P] Create `electron/services/network/keepalive.ts` — send `keepalive` message every 15s on idle connections; detect peer offline if no message received for 30s; emit `peer:timeout` event on connection manager
-- [ ] T016 Create `electron/services/storage/peers-store.ts` — CRUD operations on SQLite `peers` table (upsert peer on connect, update lastSeen, query all known peers); run in main process only; expose via IPC
-- [ ] T017 [P] Create `electron/services/ipc/handlers.ts` — register all `ipcMain.handle()` stubs for identity, peers, messaging, groups, file-transfer, and calls domains; wire to service implementations as they are built
-- [ ] T018 Create `src/stores/peers.store.ts` — Zustand store for runtime peer list (online peers, status, display names); subscribe to `peer:connected` / `peer:disconnected` IPC events from main process
-- [ ] T019 Create `src/stores/app.store.ts` — Zustand store for global app state: active view, selected conversation/group, call state, theme
+- [x] T010 Create `electron/services/identity/identity.ts` — implement `LocalIdentity` lifecycle: generate Curve25519 keypair on first launch using `@stablelib/x25519`, encrypt private key via `safeStorage`, persist to `electron-store`, load on subsequent launches; expose `getIdentity()` function
+- [x] T011 [P] Create `electron/services/identity/fingerprint.ts` — derive human-readable public key fingerprint (truncated hex of SHA-256 of publicKey); expose `getFingerprint(publicKey)` helper
+- [x] T012 Create `electron/services/network/noise.ts` — implement Noise_XX handshake using `@stablelib/x25519` and `@stablelib/chacha20poly1305`; expose `initiateHandshake(socket, localKeypair, remotePubKey?)` and `acceptHandshake(socket, localKeypair)` returning an established `NoiseSession` with `encrypt(plaintext)` / `decrypt(ciphertext)` methods
+- [x] T013 Create `electron/services/network/connection-manager.ts` — manage a registry of active `NoiseSession` connections keyed by `deviceId`; implement `connect(peer)`, `disconnect(peerId)`, `send(peerId, envelope)`, `broadcast(peerIds, envelope)`, and `onMessage(handler)` using TCP sockets; emit `peer:connected`, `peer:disconnected` events
+- [x] T014 Create `electron/services/network/handshake.ts` — implement post-Noise `HandshakeHello` / `HandshakeAck` exchange (version check: major.minor must match); reject and close connection on version mismatch; TOFU: on first connection store peer's public key, on subsequent connections verify it matches stored key
+- [x] T015 [P] Create `electron/services/network/keepalive.ts` — send `keepalive` message every 15s on idle connections; detect peer offline if no message received for 30s; emit `peer:timeout` event on connection manager
+- [x] T016 Create `electron/services/storage/peers-store.ts` — CRUD operations on SQLite `peers` table (upsert peer on connect, update lastSeen, query all known peers); run in main process only; expose via IPC
+- [x] T017 [P] Create `electron/services/ipc/handlers.ts` — register all `ipcMain.handle()` stubs for identity, peers, messaging, groups, file-transfer, and calls domains; wire to service implementations as they are built
+- [x] T018 Create `src/stores/peers.store.ts` — Zustand store for runtime peer list (online peers, status, display names); subscribe to `peer:connected` / `peer:disconnected` IPC events from main process
+- [x] T019 Create `src/stores/app.store.ts` — Zustand store for global app state: active view, selected conversation/group, call state, theme
 
 **Checkpoint**: Foundation ready — identity created, Noise_XX encryption working, TCP connections established with version check and TOFU. User story work can begin.
 
