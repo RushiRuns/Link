@@ -170,7 +170,7 @@ export function CallScreen() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 40px rgba(56, 189, 248, 0.25)'
+                boxShadow: '0 0 40px rgba(255, 255, 255, 0.08)'
               }}
             >
               <User size={48} color="var(--accent-primary)" />

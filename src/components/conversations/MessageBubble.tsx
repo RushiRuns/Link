@@ -21,7 +21,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbl
       case 'sent':
         return <span style={{ opacity: 0.8, fontSize: '0.75rem' }} title="Sent">✓</span>;
       case 'delivered':
-        return <span style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold' }} title="Delivered">✓✓</span>;
+        return <span style={{ color: '#9ca3af', fontSize: '0.75rem', fontWeight: 'bold' }} title="Delivered">✓✓</span>;
       case 'failed':
         return <span style={{ color: 'var(--status-error)', fontSize: '0.7rem' }} title="Failed to deliver">⚠️</span>;
       default:

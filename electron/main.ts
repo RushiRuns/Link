@@ -23,7 +23,9 @@ const gotTheLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
-  const preloadPath = fs.existsSync(path.join(__dirname, 'preload.mjs'))
+  const preloadPath = fs.existsSync(path.join(__dirname, 'preload.cjs'))
+    ? path.join(__dirname, 'preload.cjs')
+    : fs.existsSync(path.join(__dirname, 'preload.mjs'))
     ? path.join(__dirname, 'preload.mjs')
     : path.join(__dirname, 'preload.js');
 

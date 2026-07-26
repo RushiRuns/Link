@@ -1,7 +1,7 @@
 /* Link Design System Tokens - macOS Sequoia-Inspired Theme */
 
 :root {
-  /* Default: Dark Theme (Matte dark-grey) */
+  /* Default: Dark Theme (Matte dark-grey accent palette - zero blue) */
   --bg-app: #14161b;
   --bg-sidebar: #1a1c23;
   --bg-card: #22252e;
@@ -16,9 +16,9 @@
   --text-secondary: #9da5b4;
   --text-muted: #6b7280;
 
-  --accent-primary: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-light: rgba(59, 130, 246, 0.15);
+  --accent-primary: #4b5563;
+  --accent-hover: #374151;
+  --accent-light: rgba(255, 255, 255, 0.08);
 
   --status-online: #10b981;
   --status-offline: #6b7280;
@@ -61,9 +61,9 @@
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
 
-  --accent-primary: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-light: rgba(37, 99, 235, 0.1);
+  --accent-primary: #4b5563;
+  --accent-hover: #374151;
+  --accent-light: rgba(0, 0, 0, 0.08);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);

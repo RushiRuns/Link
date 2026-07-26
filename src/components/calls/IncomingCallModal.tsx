@@ -55,7 +55,7 @@ export function IncomingCallModal() {
             width: 60,
             height: 60,
             borderRadius: '50%',
-            backgroundColor: isVideo ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            backgroundColor: isVideo ? 'rgba(255, 255, 255, 0.1)' : 'rgba(16, 185, 129, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
