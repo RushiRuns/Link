@@ -4,6 +4,7 @@ import { peersStore } from '../storage/peers-store.js';
 import { messageService } from '../messaging/message-service.js';
 import { groupService } from '../groups/group-service.js';
 import { fileTransferService } from '../file-transfer/file-transfer-service.js';
+import { callSignalingService } from '../calls/call-signaling.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -60,22 +61,20 @@ export function registerIpcHandlers() {
     return fileTransferService.respondToOffer(transferId, accepted, savePath);
   });
 
-  ipcMain.handle('calls:offer', async (_, peerId: string, mediaType: 'voice' | 'video') => {
-    return {
-      id: 'call_' + Date.now(),
-      initiatorId: getOrGenerateIdentity().deviceId,
-      peerId,
-      mediaType,
-      status: 'ringing',
-      startedAt: Date.now()
-    };
+  // Call Handlers
+  ipcMain.handle('calls:offer', async (_, peerId: string, mediaType: 'voice' | 'video', sdp: string) => {
+    return callSignalingService.sendOffer(peerId, mediaType, sdp);
   });
 
-  ipcMain.handle('calls:answer', async (_, callId: string, accepted: boolean) => {
-    console.log(`[IPC] Call ${callId} answer: ${accepted}`);
+  ipcMain.handle('calls:answer', async (_, callId: string, accepted: boolean, sdp?: string) => {
+    return callSignalingService.sendAnswer(callId, accepted, sdp);
+  });
+
+  ipcMain.handle('calls:ice-candidate', async (_, callId: string, candidate: any) => {
+    return callSignalingService.sendIceCandidate(callId, candidate);
   });
 
   ipcMain.handle('calls:end', async (_, callId: string) => {
-    console.log(`[IPC] Call ${callId} ended`);
+    return callSignalingService.endCall(callId);
   });
 }

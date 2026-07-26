@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { LinkPeer, LinkIdentity } from '../../types/ipc';
 import { useConversationsStore } from '../../stores/conversations.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
+import { useCallsStore } from '../../stores/calls.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, Phone, Video } from 'lucide-react';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -14,6 +15,7 @@ interface ConversationViewProps {
 export function ConversationView({ peer }: ConversationViewProps) {
   const { messages, sendMessage, markConversationRead, initListeners } = useConversationsStore();
   const { transfers, offerFile, initListeners: initFtListeners } = useFileTransferStore();
+  const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +57,17 @@ export function ConversationView({ peer }: ConversationViewProps) {
     offerFile(peer.id);
   };
 
+  const handleStartCall = (mediaType: 'voice' | 'video') => {
+    setActiveCall({
+      callId: 'call_' + Date.now(),
+      peerId: peer.id,
+      peerName: peer.displayName,
+      mediaType,
+      status: 'ringing',
+      isIncoming: false
+    });
+  };
+
   const isOffline = peer.status === 'offline';
   const isVersionMismatch = peer.status === 'version_mismatch';
 
@@ -87,9 +100,54 @@ export function ConversationView({ peer }: ConversationViewProps) {
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--status-online)' }}>
-          <Shield size={14} color="var(--status-online)" />
-          <span>E2E Encrypted</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          {/* Call Initiation Buttons */}
+          {!isOffline && !isVersionMismatch && (
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button
+                onClick={() => handleStartCall('voice')}
+                title="Start Voice Call"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <Phone size={15} />
+              </button>
+
+              <button
+                onClick={() => handleStartCall('video')}
+                title="Start Video Call"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--accent-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                <Video size={15} />
+              </button>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--status-online)' }}>
+            <Shield size={14} color="var(--status-online)" />
+            <span>E2E Encrypted</span>
+          </div>
         </div>
       </div>
 
@@ -105,7 +163,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
             borderBottom: '1px solid var(--border-color)'
           }}
         >
-          {peer.displayName} is offline. Messages cannot be sent right now.
+          {peer.displayName} is offline. Messages and calls cannot be initiated right now.
         </div>
       )}
 
@@ -154,7 +212,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
           >
             <Shield size={32} color="var(--text-muted)" style={{ opacity: 0.5 }} />
             <div>Encrypted 1-to-1 conversation with {peer.displayName}</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message or file to begin chatting</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message or start a call to begin</div>
           </div>
         ) : (
           <>

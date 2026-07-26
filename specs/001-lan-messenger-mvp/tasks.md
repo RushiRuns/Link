@@ -153,13 +153,13 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 ### Implementation for User Story 5
 
-- [ ] T047 [P] [US5] Create `electron/services/calls/call-signaling.ts` — implement WebRTC signaling over existing Noise TCP connections: `sendOffer(peerId, mediaType, sdp)` sends `call.offer`; `sendAnswer(callId, accepted, sdp?)` sends `call.answer`; relay `IceCandidate` messages; relay `call.end`; emit corresponding IPC events to renderer for each received signal message
-- [ ] T048 [P] [US5] Create `src/stores/calls.store.ts` — Zustand store: active call state (callId, peerId, mediaType, status); handles `call:offer-received`, `call:answer-received`, `call:ice-candidate`, `call:ended` IPC events
-- [ ] T049 [P] [US5] Create `src/components/calls/IncomingCallModal.tsx` — overlay shown when `call:offer-received`; displays caller name and media type (voice/video icon); Accept and Decline buttons; auto-dismiss on `call:ended` from caller side
-- [ ] T050 [P] [US5] Create `src/components/calls/CallScreen.tsx` — full-screen (or floating) call UI: local + remote video elements; mute/unmute toggle; camera on/off toggle (video calls); end call button; shows call duration timer; collapses to audio-only view for voice calls
-- [ ] T051 [US5] Create `src/components/calls/CallControls.tsx` — extracted control bar (mute, camera, end) used by `CallScreen`; handles media track toggling via WebRTC `RTCPeerConnection.getSenders()`
-- [ ] T052 [US5] Implement WebRTC peer connection in renderer `src/hooks/useWebRTC.ts` — create `RTCPeerConnection` with no ICE servers (LAN-only, no STUN/TURN); handle `negotiationneeded`, `icecandidate`, `track` events; relay signals via `window.link.calls.*` IPC; attach remote track to `<video>` element in `CallScreen`
-- [ ] T053 [US5] Wire call initiation into `PeerItem` — "Call" button (voice/video toggle) on each online peer; calls `window.link.calls.offer(peerId, mediaType)`; opens `CallScreen` on answer accepted; route incoming `call:offer-received` to `IncomingCallModal`
+- [x] T047 [P] [US5] Create `electron/services/calls/call-signaling.ts` — implement WebRTC signaling over existing Noise TCP connections: `sendOffer(peerId, mediaType, sdp)` sends `call.offer`; `sendAnswer(callId, accepted, sdp?)` sends `call.answer`; relay `IceCandidate` messages; relay `call.end`; emit corresponding IPC events to renderer for each received signal message
+- [x] T048 [P] [US5] Create `src/stores/calls.store.ts` — Zustand store: active call state (callId, peerId, mediaType, status); handles `call:offer-received`, `call:answer-received`, `call:ice-candidate`, `call:ended` IPC events
+- [x] T049 [P] [US5] Create `src/components/calls/IncomingCallModal.tsx` — overlay shown when `call:offer-received`; displays caller name and media type (voice/video icon); Accept and Decline buttons; auto-dismiss on `call:ended` from caller side
+- [x] T050 [P] [US5] Create `src/components/calls/CallScreen.tsx` — full-screen (or floating) call UI: local + remote video elements; mute/unmute toggle; camera on/off toggle (video calls); end call button; shows call duration timer; collapses to audio-only view for voice calls
+- [x] T051 [US5] Create `src/components/calls/CallControls.tsx` — extracted control bar (mute, camera, end) used by `CallScreen`; handles media track toggling via WebRTC `RTCPeerConnection.getSenders()`
+- [x] T052 [US5] Implement WebRTC peer connection in renderer `src/hooks/useWebRTC.ts` — create `RTCPeerConnection` with no ICE servers (LAN-only, no STUN/TURN); handle `negotiationneeded`, `icecandidate`, `track` events; relay signals via `window.link.calls.*` IPC; attach remote track to `<video>` element in `CallScreen`
+- [x] T053 [US5] Wire call initiation into `PeerItem` — "Call" button (voice/video toggle) on each online peer; calls `window.link.calls.offer(peerId, mediaType)`; opens `CallScreen` on answer accepted; route incoming `call:offer-received` to `IncomingCallModal`
 
 **Checkpoint**: User Story 5 complete — voice and video calls connect within 3s; signaling is encrypted; call ends cleanly on either party's action.
 

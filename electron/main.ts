@@ -12,6 +12,7 @@ import { discoveryManager } from './services/discovery/discovery-manager.js';
 import { messageService } from './services/messaging/message-service.js';
 import { groupService } from './services/groups/group-service.js';
 import { fileTransferService } from './services/file-transfer/file-transfer-service.js';
+import { callSignalingService } from './services/calls/call-signaling.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +52,7 @@ function createWindow() {
   messageService.init(mainWindow);
   groupService.init(mainWindow);
   fileTransferService.init(mainWindow);
+  callSignalingService.init(mainWindow);
 
   const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
 

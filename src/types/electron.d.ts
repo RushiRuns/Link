@@ -53,11 +53,14 @@ export interface LinkAPI {
     onCompleted: (callback: (transferId: string) => void) => () => void;
   };
   calls: {
-    offer: (peerId: string, mediaType: CallMediaType) => Promise<LinkCall>;
-    answer: (callId: string, accepted: boolean) => Promise<void>;
-    end: (callId: string) => Promise<void>;
-    onOfferReceived: (callback: (call: LinkCall) => void) => () => void;
-    onEnded: (callback: (callId: string) => void) => () => void;
+    offerCall: (peerId: string, mediaType: 'voice' | 'video', sdp: string) => Promise<LinkCall>;
+    answerCall: (callId: string, accepted: boolean, sdp?: string) => Promise<void>;
+    sendIceCandidate: (callId: string, candidate: any) => Promise<void>;
+    endCall: (callId: string) => Promise<void>;
+    onOfferReceived: (callback: (call: LinkCall & { sdp: string }) => void) => () => void;
+    onAnswerReceived: (callback: (data: { callId: string; accepted: boolean; sdp?: string }) => void) => () => void;
+    onIceCandidateReceived: (callback: (data: { callId: string; candidate: any }) => void) => () => void;
+    onCallEnded: (callback: (callId: string) => void) => () => void;
   };
   theme: {
     onThemeChanged: (callback: (isDark: boolean) => void) => () => void;

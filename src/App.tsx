@@ -1,13 +1,17 @@
+import { useEffect } from 'react';
 import { GlobalStyles } from './components/design-system/GlobalStyles';
 import { AppShell } from './components/layout/AppShell';
 import { PeerList } from './components/peers/PeerList';
 import { ConversationView } from './components/conversations/ConversationView';
 import { GroupView } from './components/groups/GroupView';
 import { FileTransferOffer } from './components/file-transfer/FileTransferOffer';
+import { IncomingCallModal } from './components/calls/IncomingCallModal';
+import { CallScreen } from './components/calls/CallScreen';
 import { useAppStore } from './stores/app.store';
 import { usePeersStore } from './stores/peers.store';
 import { useGroupsStore } from './stores/groups.store';
 import { useFileTransferStore } from './stores/file-transfer.store';
+import { useCallsStore } from './stores/calls.store';
 import { Shield, Activity, Radio } from 'lucide-react';
 
 export default function App() {
@@ -15,6 +19,14 @@ export default function App() {
   const { peers } = usePeersStore();
   const { groups } = useGroupsStore();
   const { incomingOffer } = useFileTransferStore();
+  const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
+
+  useEffect(() => {
+    const cleanCalls = initCallListeners();
+    return () => {
+      cleanCalls();
+    };
+  }, [initCallListeners]);
 
   const selectedPeer = selectedPeerId ? peers.get(selectedPeerId) : null;
   const selectedGroup = selectedGroupId ? groups.get(selectedGroupId) : null;
@@ -66,7 +78,7 @@ export default function App() {
                 marginBottom: 'var(--space-5)'
               }}
             >
-              Select an online teammate or group from the sidebar to start communicating or transferring files over the local network.
+              Select an online teammate or group from the sidebar to start communicating, sharing files, or launching P2P voice and video calls over LAN.
             </p>
 
             <div
@@ -82,11 +94,11 @@ export default function App() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Shield size={14} color="var(--status-online)" />
-                <span>P2P Encrypted Streams</span>
+                <span>Zero Server Dependency</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Activity size={14} color="var(--accent-primary)" />
-                <span>64 KB Chunk Streaming</span>
+                <span>P2P WebRTC Voice & Video</span>
               </div>
             </div>
           </div>
@@ -94,6 +106,8 @@ export default function App() {
       </AppShell>
 
       {incomingOffer && <FileTransferOffer offer={incomingOffer} />}
+      {incomingCall && <IncomingCallModal />}
+      {activeCall && <CallScreen />}
     </>
   );
 }

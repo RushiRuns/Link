@@ -77,15 +77,26 @@ contextBridge.exposeInMainWorld('link', {
     }
   },
   calls: {
-    offer: (peerId: string, mediaType: 'voice' | 'video') => ipcRenderer.invoke('calls:offer', peerId, mediaType),
-    answer: (callId: string, accepted: boolean) => ipcRenderer.invoke('calls:answer', callId, accepted),
-    end: (callId: string) => ipcRenderer.invoke('calls:end', callId),
+    offerCall: (peerId: string, mediaType: 'voice' | 'video', sdp: string) => ipcRenderer.invoke('calls:offer', peerId, mediaType, sdp),
+    answerCall: (callId: string, accepted: boolean, sdp?: string) => ipcRenderer.invoke('calls:answer', callId, accepted, sdp),
+    sendIceCandidate: (callId: string, candidate: any) => ipcRenderer.invoke('calls:ice-candidate', callId, candidate),
+    endCall: (callId: string) => ipcRenderer.invoke('calls:end', callId),
     onOfferReceived: (callback: (call: any) => void) => {
       const listener = (_: any, call: any) => callback(call);
       ipcRenderer.on('calls:offer-received', listener);
       return () => ipcRenderer.removeListener('calls:offer-received', listener);
     },
-    onEnded: (callback: (callId: string) => void) => {
+    onAnswerReceived: (callback: (data: any) => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('calls:answer-received', listener);
+      return () => ipcRenderer.removeListener('calls:answer-received', listener);
+    },
+    onIceCandidateReceived: (callback: (data: any) => void) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('calls:ice-candidate', listener);
+      return () => ipcRenderer.removeListener('calls:ice-candidate', listener);
+    },
+    onCallEnded: (callback: (callId: string) => void) => {
       const listener = (_: any, callId: string) => callback(callId);
       ipcRenderer.on('calls:ended', listener);
       return () => ipcRenderer.removeListener('calls:ended', listener);
