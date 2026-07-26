@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
 import { messageService } from '../messaging/message-service.js';
+import { groupService } from '../groups/group-service.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -37,28 +38,13 @@ export function registerIpcHandlers() {
     return messageService.sendMessage(peerId, content);
   });
 
-  ipcMain.handle('groups:create', async (_, name: string, _memberPeerIds: string[]) => {
-    return {
-      id: 'group_' + Date.now(),
-      name,
-      creatorId: getOrGenerateIdentity().deviceId,
-      members: [],
-      messages: [],
-      isActive: true,
-      createdAt: Date.now()
-    };
+  // Groups Handlers
+  ipcMain.handle('groups:create', async (_, name: string, memberPeerIds: string[]) => {
+    return groupService.createGroup(name, memberPeerIds);
   });
 
   ipcMain.handle('groups:send-message', async (_, groupId: string, content: string) => {
-    return {
-      id: 'gmsg_' + Date.now(),
-      groupId,
-      senderId: getOrGenerateIdentity().deviceId,
-      senderName: getOrGenerateIdentity().displayName,
-      content,
-      timestamp: Date.now(),
-      deliveryStatus: 'sent'
-    };
+    return groupService.sendGroupMessage(groupId, content);
   });
 
   ipcMain.handle('file-transfer:offer', async (_, peerId: string, filePath: string) => {

@@ -42,6 +42,7 @@ export interface LinkAPI {
   groups: {
     createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup>;
     sendGroupMessage: (groupId: string, content: string) => Promise<LinkMessage>;
+    onGroupCreated: (callback: (group: LinkGroup) => void) => () => void;
     onGroupMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
   };
   fileTransfer: {

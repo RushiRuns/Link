@@ -115,12 +115,12 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T035 [P] [US3] Create `electron/services/groups/group-service.ts` — implement `createGroup(name, memberPeerIds)`: generate groupId, build `GroupCreate` envelope with full member list (deviceId, displayName, publicKey, networkAddress, tcpPort), send individually to each invited member over their Noise-encrypted connection; on receiving `group.create`, open connections to all group members not yet connected
-- [ ] T036 [P] [US3] Add group message handling in `electron/services/groups/group-service.ts` — implement `sendGroupMessage(groupId, content)`: send `TextMessage` with `groupId` set to every currently online group member individually; handle incoming group `TextMessage`; emit `group-message:received` IPC event
-- [ ] T037 [P] [US3] Create `src/stores/groups.store.ts` — Zustand store: `GroupMap` keyed by `groupId`; holds group name, member list with runtime status, `Message[]` (in-memory); handles `group-message:received` IPC events; tracks which members are online via `peers.store`
-- [ ] T038 [P] [US3] Create `src/components/groups/GroupCreate.tsx` — modal/sheet to name the group and select online peers (checkboxes from `PeerList`); minimum 1 other peer required; calls `window.link.groups.create()`
-- [ ] T039 [P] [US3] Create `src/components/groups/GroupView.tsx` — renders group conversation: message list (with sender names), `MessageInput`; shows member sidebar with online/offline status per member; reuses `MessageBubble`
-- [ ] T040 [US3] Wire group management into `AppShell` — "New Group" button in sidebar triggers `GroupCreate`; created/joined groups appear in sidebar below direct conversations; clicking a group opens `GroupView`
+- [x] T035 [P] [US3] Create `electron/services/groups/group-service.ts` — implement `createGroup(name, memberPeerIds)`: generate groupId, build `GroupCreate` envelope with full member list (deviceId, displayName, publicKey, networkAddress, tcpPort), send individually to each invited member over their Noise-encrypted connection; on receiving `group.create`, open connections to all group members not yet connected
+- [x] T036 [P] [US3] Add group message handling in `electron/services/groups/group-service.ts` — implement `sendGroupMessage(groupId, content)`: send `TextMessage` with `groupId` set to every currently online group member individually; handle incoming group `TextMessage`; emit `group-message:received` IPC event
+- [x] T037 [P] [US3] Create `src/stores/groups.store.ts` — Zustand store: `GroupMap` keyed by `groupId`; holds group name, member list with runtime status, `Message[]` (in-memory); handles `group-message:received` IPC events; tracks which members are online via `peers.store`
+- [x] T038 [P] [US3] Create `src/components/groups/GroupCreate.tsx` — modal/sheet to name the group and select online peers (checkboxes from `PeerList`); minimum 1 other peer required; calls `window.link.groups.create()`
+- [x] T039 [P] [US3] Create `src/components/groups/GroupView.tsx` — renders group conversation: message list (with sender names), `MessageInput`; shows member sidebar with online/offline status per member; reuses `MessageBubble`
+- [x] T040 [US3] Wire group management into `AppShell` — "New Group" button in sidebar triggers `GroupCreate`; created/joined groups appear in sidebar below direct conversations; clicking a group opens `GroupView`
 
 **Checkpoint**: User Story 3 complete — group creation, distributed membership, and post-creator-disconnect messaging all work.
 

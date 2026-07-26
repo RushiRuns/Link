@@ -2,15 +2,19 @@ import { GlobalStyles } from './components/design-system/GlobalStyles';
 import { AppShell } from './components/layout/AppShell';
 import { PeerList } from './components/peers/PeerList';
 import { ConversationView } from './components/conversations/ConversationView';
+import { GroupView } from './components/groups/GroupView';
 import { useAppStore } from './stores/app.store';
 import { usePeersStore } from './stores/peers.store';
+import { useGroupsStore } from './stores/groups.store';
 import { Shield, Activity, Radio } from 'lucide-react';
 
 export default function App() {
-  const { selectedPeerId } = useAppStore();
+  const { selectedPeerId, selectedGroupId } = useAppStore();
   const { peers } = usePeersStore();
+  const { groups } = useGroupsStore();
 
   const selectedPeer = selectedPeerId ? peers.get(selectedPeerId) : null;
+  const selectedGroup = selectedGroupId ? groups.get(selectedGroupId) : null;
 
   return (
     <>
@@ -18,6 +22,8 @@ export default function App() {
       <AppShell sidebar={<PeerList />}>
         {selectedPeer ? (
           <ConversationView peer={selectedPeer} />
+        ) : selectedGroup ? (
+          <GroupView group={selectedGroup} />
         ) : (
           <div
             style={{
@@ -57,7 +63,7 @@ export default function App() {
                 marginBottom: 'var(--space-5)'
               }}
             >
-              Select an online teammate from the sidebar to start an end-to-end encrypted 1-to-1 conversation.
+              Select an online teammate or group from the sidebar to start communicating over the local network.
             </p>
 
             <div
@@ -73,11 +79,11 @@ export default function App() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Shield size={14} color="var(--status-online)" />
-                <span>Noise_XX Encrypted</span>
+                <span>P2P Mesh Encrypted</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Activity size={14} color="var(--accent-primary)" />
-                <span>Sub-Second Delivery</span>
+                <span>Zero Server Dependency</span>
               </div>
             </div>
           </div>
