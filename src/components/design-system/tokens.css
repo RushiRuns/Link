@@ -1,6 +1,6 @@
 /* Link Design System Tokens - macOS Sequoia-Inspired (Dark-Matte-First) */
 
-:root {
+:root, [data-theme="dark"] {
   /* Dark Mode (Primary Mode — Matte Grey, NOT pure black) */
   --bg-app: #1E1E20;
   --bg-sidebar: #252528;
@@ -55,6 +55,7 @@
 }
 
 [data-theme="light"] {
+  /* Light Mode per Design_Language.md */
   --bg-app: #F5F5F7;
   --bg-sidebar: #FFFFFF;
   --bg-card: #FFFFFF;

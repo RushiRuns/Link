@@ -45,21 +45,21 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1400,
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
       }}
     >
       <div
         style={{
           width: 440,
-          backgroundColor: 'var(--bg-card)',
+          backgroundColor: 'var(--bg-sidebar)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-lg)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -76,20 +76,20 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <Shield size={18} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Preferences & Identity</h3>
+            <Shield size={16} strokeWidth={1.5} color="var(--accent-primary)" />
+            <h3 style={{ fontSize: 'var(--font-size-title)', fontWeight: 600 }}>Preferences & Identity</h3>
           </div>
           <button
             onClick={onClose}
             style={{
               border: 'none',
               background: 'transparent',
-              color: 'var(--text-muted)',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: 4
             }}
           >
-            <X size={18} />
+            <X size={16} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -102,13 +102,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
                 marginBottom: 'var(--space-2)'
               }}
             >
-              <User size={14} /> DISPLAY NAME
+              <User size={14} strokeWidth={1.5} /> DISPLAY NAME
             </label>
 
             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -120,11 +120,11 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 style={{
                   flex: 1,
                   padding: 'var(--space-2) var(--space-3)',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-input)',
                   color: 'var(--text-primary)',
-                  fontSize: '0.88rem',
+                  fontSize: 'var(--font-size-body)',
                   outline: 'none'
                 }}
               />
@@ -133,7 +133,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 disabled={isSaving || !displayName.trim() || displayName.trim() === identity?.displayName}
                 style={{
                   padding: 'var(--space-2) var(--space-4)',
-                  borderRadius: 'var(--radius-md)',
+                  borderRadius: 'var(--radius-sm)',
                   border: 'none',
                   backgroundColor:
                     !displayName.trim() || displayName.trim() === identity?.displayName
@@ -147,8 +147,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     !displayName.trim() || displayName.trim() === identity?.displayName
                       ? 'default'
                       : 'pointer',
-                  fontWeight: 600,
-                  fontSize: '0.85rem'
+                  fontWeight: 500,
+                  fontSize: 'var(--font-size-body)'
                 }}
               >
                 Save
@@ -163,29 +163,29 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
                 marginBottom: 'var(--space-2)'
               }}
             >
-              <Key size={14} /> CRYPTOGRAPHIC PUBLIC KEY FINGERPRINT (TOFU)
+              <Key size={14} strokeWidth={1.5} /> CRYPTOGRAPHIC PUBLIC KEY FINGERPRINT (TOFU)
             </label>
             <div
               style={{
                 padding: 'var(--space-3)',
-                backgroundColor: 'var(--bg-sidebar)',
-                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--bg-app)',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-color)',
                 fontFamily: 'var(--font-mono)',
-                fontSize: '0.82rem',
+                fontSize: 'var(--font-size-meta)',
                 color: 'var(--text-primary)',
                 wordBreak: 'break-all'
               }}
             >
               {identity?.publicKeyFingerprint || 'Deriving Curve25519 fingerprint...'}
             </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+            <div style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginTop: '4px' }}>
               Teammates match this SHA-256 fingerprint for out-of-band identity verification (Trust On First Use).
             </div>
           </div>
@@ -197,13 +197,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
                 marginBottom: 'var(--space-2)'
               }}
             >
-              {isDarkMode ? <Moon size={14} /> : <Sun size={14} />} APPEARANCE
+              {isDarkMode ? <Moon size={14} strokeWidth={1.5} /> : <Sun size={14} strokeWidth={1.5} />} APPEARANCE
             </label>
             <div
               style={{
@@ -211,13 +211,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: 'var(--space-3)',
-                backgroundColor: 'var(--bg-sidebar)',
-                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--bg-app)',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-color)'
               }}
             >
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                Theme: <strong>{isDarkMode ? 'Matte Dark Grey' : 'macOS Light'}</strong>
+              <span style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>
+                Theme: <strong>{isDarkMode ? 'Dark (Matte Grey)' : 'Light (macOS)'}</strong>
               </span>
               <button
                 onClick={() => setDarkMode(!isDarkMode)}
@@ -228,7 +228,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                   backgroundColor: 'var(--bg-card)',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
-                  fontSize: '0.78rem'
+                  fontSize: 'var(--font-size-meta)',
+                  fontWeight: 500,
+                  transition: 'background-color var(--transition-fast)'
                 }}
               >
                 Toggle Theme
@@ -242,13 +244,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              fontSize: '0.75rem',
-              color: 'var(--text-muted)',
+              fontSize: 'var(--font-size-meta)',
+              color: 'var(--text-secondary)',
               borderTop: '1px solid var(--border-color)',
               paddingTop: 'var(--space-3)'
             }}
           >
-            <Info size={14} />
+            <Info size={14} strokeWidth={1.5} />
             <span>Link LAN Messenger v1.0.0 (MVP) • Peer-to-Peer Encrypted Network</span>
           </div>
         </div>
