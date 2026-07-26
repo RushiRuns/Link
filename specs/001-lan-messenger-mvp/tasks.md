@@ -74,14 +74,14 @@ description: "Task list for Link LAN Messenger MVP implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T020 [P] [US1] Create `electron/services/discovery/mdns.ts` — broadcast `DiscoveryAnnounce` via `multicast-dns` on launch and every 5s; listen for announces from other peers and emit `discovery:peer-found` events; advertise service type `_link._tcp`
-- [ ] T021 [P] [US1] Create `electron/services/discovery/udp-broadcast.ts` — broadcast `DiscoveryAnnounce` as UDP packet to subnet broadcast address (port 47431) as fallback; listen for incoming broadcasts on same port; emit `discovery:peer-found` events
-- [ ] T022 [US1] Create `electron/services/discovery/discovery-manager.ts` — orchestrate layered discovery: attempt mDNS first, fall back to UDP broadcast after 3s timeout if no peers found; deduplicate peer announcements from both sources; initiate TCP connection + Noise handshake for each newly discovered peer via connection-manager; emit `peer:online` when handshake completes
-- [ ] T023 [US1] Add `discovery:no-peers-found` IPC event in `electron/services/ipc/handlers.ts` — fire after 10s with no peers; renderer shows "No peers found — your network may block peer discovery" message
-- [ ] T024 [P] [US1] Create `src/components/peers/PeerList.tsx` — renders the sidebar peer list from `peers.store`; groups peers by online/offline; uses `PeerItem` component
-- [ ] T025 [P] [US1] Create `src/components/peers/PeerItem.tsx` — renders a single peer row: avatar placeholder, display name, `StatusBadge` (online/offline/version_mismatch indicator)
-- [ ] T026 [P] [US1] Create `src/components/peers/StatusBadge.tsx` — coloured dot indicating peer status; version mismatch shows warning icon + tooltip "Update Link to connect"
-- [ ] T027 [US1] Wire `PeerList` into `AppShell` sidebar; subscribe to `peers.store`; verify peer list updates reactively when peers come online/offline
+- [x] T020 [P] [US1] Create `electron/services/discovery/mdns.ts` — broadcast `DiscoveryAnnounce` via `multicast-dns` on launch and every 5s; listen for announces from other peers and emit `discovery:peer-found` events; advertise service type `_link._tcp`
+- [x] T021 [P] [US1] Create `electron/services/discovery/udp-broadcast.ts` — broadcast `DiscoveryAnnounce` as UDP packet to subnet broadcast address (port 47431) as fallback; listen for incoming broadcasts on same port; emit `discovery:peer-found` events
+- [x] T022 [US1] Create `electron/services/discovery/discovery-manager.ts` — orchestrate layered discovery: attempt mDNS first, fall back to UDP broadcast after 3s timeout if no peers found; deduplicate peer announcements from both sources; initiate TCP connection + Noise handshake for each newly discovered peer via connection-manager; emit `peer:online` when handshake completes
+- [x] T023 [US1] Add `discovery:no-peers-found` IPC event in `electron/services/ipc/handlers.ts` — fire after 10s with no peers; renderer shows "No peers found — your network may block peer discovery" message
+- [x] T024 [P] [US1] Create `src/components/peers/PeerList.tsx` — renders the sidebar peer list from `peers.store`; groups peers by online/offline; uses `PeerItem` component
+- [x] T025 [P] [US1] Create `src/components/peers/PeerItem.tsx` — renders a single peer row: avatar placeholder, display name, `StatusBadge` (online/offline/version_mismatch indicator)
+- [x] T026 [P] [US1] Create `src/components/peers/StatusBadge.tsx` — coloured dot indicating peer status; version mismatch shows warning icon + tooltip "Update Link to connect"
+- [x] T027 [US1] Wire `PeerList` into `AppShell` sidebar; subscribe to `peers.store`; verify peer list updates reactively when peers come online/offline
 
 **Checkpoint**: User Story 1 complete — both machines see each other in peer list; offline detection works; no-peers warning shows on isolated networks.
 

@@ -13,10 +13,12 @@
   "dependencies": {
     "@stablelib/chacha20poly1305": "^2.0.1",
     "@stablelib/x25519": "^2.0.1",
+    "@types/multicast-dns": "^7.2.4",
     "@types/uuid": "^10.0.0",
     "electron-store": "^11.0.2",
     "lucide-react": "^0.400.0",
     "msgpackr": "^2.0.4",
+    "multicast-dns": "^7.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "uuid": "^14.0.1",

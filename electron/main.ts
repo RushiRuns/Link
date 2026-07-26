@@ -8,6 +8,7 @@ import { registerIpcHandlers } from './services/ipc/handlers.js';
 import { setupHandshakeHandler } from './services/network/handshake.js';
 import { startKeepaliveMonitor } from './services/network/keepalive.js';
 import { connectionManager } from './services/network/connection-manager.js';
+import { discoveryManager } from './services/discovery/discovery-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,13 +72,32 @@ if (!gotTheLock) {
     startKeepaliveMonitor();
 
     // Start TCP listener on dynamic port
+    let tcpPort = 0;
     try {
-      await connectionManager.startServer();
+      tcpPort = await connectionManager.startServer();
     } catch (err) {
       console.warn('[Main] ConnectionManager server failed to start:', err);
     }
 
     createWindow();
+
+    // Forward network & discovery events to renderer
+    discoveryManager.on('peer:online', (peer) => {
+      mainWindow?.webContents.send('peer:connected', peer);
+    });
+
+    discoveryManager.on('discovery:no-peers-found', () => {
+      mainWindow?.webContents.send('discovery:no-peers-found');
+    });
+
+    connectionManager.on('peer:disconnected', (peerId) => {
+      mainWindow?.webContents.send('peer:disconnected', peerId);
+    });
+
+    // Start layered discovery (mDNS + UDP fallback)
+    if (tcpPort) {
+      discoveryManager.start(tcpPort);
+    }
 
     // Listen for OS theme changes
     nativeTheme.on('updated', () => {
@@ -93,6 +113,7 @@ if (!gotTheLock) {
 }
 
 app.on('window-all-closed', () => {
+  discoveryManager.stop();
   if (process.platform !== 'darwin') {
     app.quit();
   }

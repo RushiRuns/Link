@@ -22,6 +22,11 @@ contextBridge.exposeInMainWorld('link', {
       const listener = (_: any, peerId: string) => callback(peerId);
       ipcRenderer.on('peer:disconnected', listener);
       return () => ipcRenderer.removeListener('peer:disconnected', listener);
+    },
+    onNoPeersFound: (callback: () => void) => {
+      const listener = () => callback();
+      ipcRenderer.on('discovery:no-peers-found', listener);
+      return () => ipcRenderer.removeListener('discovery:no-peers-found', listener);
     }
   },
   messaging: {
