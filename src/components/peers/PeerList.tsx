@@ -50,8 +50,8 @@ export function PeerList() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <Users size={18} color="var(--accent-primary)" />
-            <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Teammates</span>
+            <Users size={16} strokeWidth={1.5} color="var(--text-secondary)" />
+            <span style={{ fontWeight: 600, fontSize: 'var(--font-size-header)' }}>Teammates</span>
           </div>
 
           <button
@@ -61,17 +61,18 @@ export function PeerList() {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 8px',
+              padding: 'var(--space-1) var(--space-2)',
               borderRadius: 'var(--radius-sm)',
               border: 'none',
               backgroundColor: 'var(--accent-light)',
               color: 'var(--accent-primary)',
               cursor: 'pointer',
-              fontSize: '0.75rem',
-              fontWeight: 600
+              fontSize: 'var(--font-size-meta)',
+              fontWeight: 500,
+              transition: 'background-color var(--transition-fast)'
             }}
           >
-            <Plus size={14} /> New Group
+            <Plus size={13} strokeWidth={1.5} /> New Group
           </button>
         </div>
 
@@ -79,10 +80,10 @@ export function PeerList() {
           <div
             style={{
               padding: 'var(--space-3)',
-              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              backgroundColor: 'rgba(255, 159, 10, 0.12)',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              fontSize: '0.78rem',
+              border: '1px solid rgba(255, 159, 10, 0.3)',
+              fontSize: 'var(--font-size-meta)',
               color: 'var(--status-warning)',
               display: 'flex',
               alignItems: 'flex-start',
@@ -90,7 +91,7 @@ export function PeerList() {
               marginBottom: 'var(--space-3)'
             }}
           >
-            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            <AlertTriangle size={15} strokeWidth={1.5} style={{ flexShrink: 0, marginTop: 2 }} />
             <span>No peers found — your network may block peer discovery.</span>
           </div>
         )}
@@ -101,10 +102,10 @@ export function PeerList() {
             <div style={{ marginBottom: 'var(--space-3)' }}>
               <div
                 style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-size-meta)',
+                  fontWeight: 500,
                   textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
+                  color: 'var(--text-secondary)',
                   marginBottom: '4px',
                   paddingLeft: 'var(--space-2)'
                 }}
@@ -121,11 +122,12 @@ export function PeerList() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 'var(--space-3)',
-                      padding: 'var(--space-3)',
+                      padding: 'var(--space-2) var(--space-3)',
                       borderRadius: 'var(--radius-md)',
                       backgroundColor: isSelected ? 'var(--bg-active)' : 'transparent',
                       cursor: 'pointer',
-                      userSelect: 'none'
+                      userSelect: 'none',
+                      transition: 'background-color var(--transition-fast)'
                     }}
                   >
                     <div
@@ -139,13 +141,13 @@ export function PeerList() {
                         justifyContent: 'center'
                       }}
                     >
-                      <MessageSquare size={16} color="var(--accent-primary)" />
+                      <MessageSquare size={16} strokeWidth={1.5} color="var(--accent-primary)" />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                      <span style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: 500, fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>
                         {g.name}
                       </span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)' }}>
                         {g.members.length} members
                       </span>
                     </div>
@@ -160,10 +162,10 @@ export function PeerList() {
             <div>
               <div
                 style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-size-meta)',
+                  fontWeight: 500,
                   textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
+                  color: 'var(--text-secondary)',
                   marginBottom: '4px',
                   paddingLeft: 'var(--space-2)'
                 }}
@@ -186,10 +188,10 @@ export function PeerList() {
             <div style={{ marginTop: 'var(--space-3)' }}>
               <div
                 style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
+                  fontSize: 'var(--font-size-meta)',
+                  fontWeight: 500,
                   textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
+                  color: 'var(--text-secondary)',
                   marginBottom: '4px',
                   paddingLeft: 'var(--space-2)'
                 }}
@@ -212,8 +214,8 @@ export function PeerList() {
               style={{
                 padding: 'var(--space-4)',
                 textAlign: 'center',
-                fontSize: '0.8rem',
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-body)',
+                color: 'var(--text-secondary)',
                 fontStyle: 'italic'
               }}
             >

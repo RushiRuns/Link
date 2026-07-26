@@ -56,17 +56,17 @@ export function GroupView({ group }: GroupViewProps) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <Users size={20} color="var(--accent-primary)" />
+            <Users size={18} strokeWidth={1.5} color="var(--accent-primary)" />
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{group.name}</div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              <div style={{ fontWeight: 600, fontSize: 'var(--font-size-header)' }}>{group.name}</div>
+              <div style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)' }}>
                 {group.members.length} members • P2P Mesh Group
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--status-online)' }}>
-            <Shield size={14} color="var(--status-online)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-meta)', color: 'var(--status-online)' }}>
+            <Shield size={14} strokeWidth={1.5} color="var(--status-online)" />
             <span>Encrypted Mesh</span>
           </div>
         </div>
@@ -90,14 +90,14 @@ export function GroupView({ group }: GroupViewProps) {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--text-muted)',
-                fontSize: '0.85rem',
+                color: 'var(--text-secondary)',
+                fontSize: 'var(--font-size-body)',
                 gap: 'var(--space-2)'
               }}
             >
-              <Users size={32} color="var(--text-muted)" style={{ opacity: 0.5 }} />
+              <Users size={32} strokeWidth={1.5} color="var(--text-secondary)" style={{ opacity: 0.5 }} />
               <div>Group "{group.name}" initialized</div>
-              <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message to all members in the mesh</div>
+              <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>Send a message to all members in the mesh</div>
             </div>
           ) : (
             groupMessages.map((msg) => (
@@ -129,7 +129,7 @@ export function GroupView({ group }: GroupViewProps) {
           gap: 'var(--space-3)'
         }}
       >
-        <div style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
           Members ({group.members.length})
         </div>
 
@@ -146,7 +146,7 @@ export function GroupView({ group }: GroupViewProps) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 'var(--space-2)',
-                  fontSize: '0.82rem',
+                  fontSize: 'var(--font-size-body)',
                   color: 'var(--text-primary)'
                 }}
               >

@@ -16,11 +16,11 @@ export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 'var(--space-3)',
+        padding: 'var(--space-2) var(--space-3)',
         borderRadius: 'var(--radius-md)',
         backgroundColor: isSelected ? 'var(--bg-active)' : 'transparent',
         cursor: 'pointer',
-        transition: 'background-color 0.15s ease',
+        transition: 'background-color var(--transition-fast)',
         userSelect: 'none'
       }}
       onMouseEnter={(e) => {
@@ -33,8 +33,8 @@ export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
         <div
           style={{
-            width: 36,
-            height: 36,
+            width: 32,
+            height: 32,
             borderRadius: '50%',
             backgroundColor: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
@@ -44,13 +44,13 @@ export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
             flexShrink: 0
           }}
         >
-          <User size={18} color="var(--text-secondary)" />
+          <User size={16} strokeWidth={1.5} color="var(--text-secondary)" />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span
             style={{
               fontWeight: 500,
-              fontSize: '0.85rem',
+              fontSize: 'var(--font-size-body)',
               color: 'var(--text-primary)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -59,7 +59,7 @@ export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
           >
             {peer.displayName}
           </span>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          <span style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
             {peer.publicKeyFingerprint ? peer.publicKeyFingerprint.substring(0, 9) : peer.id.substring(0, 8)}
           </span>
         </div>

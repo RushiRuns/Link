@@ -38,7 +38,8 @@ function createWindow() {
     minHeight: 550,
     frame: !isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#14161b' : '#f6f8fa',
+    vibrancy: isMac ? 'sidebar' : undefined,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1E1E20' : '#F5F5F7',
     show: false,
     webPreferences: {
       preload: preloadPath,

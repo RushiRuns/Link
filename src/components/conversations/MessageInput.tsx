@@ -31,7 +31,7 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
   const isNearLimit = charCount > MAX_CHAR_LIMIT * 0.8;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', width: '100%' }}>
       <div
         style={{
           display: 'flex',
@@ -39,7 +39,7 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
           gap: 'var(--space-2)',
           padding: 'var(--space-2) var(--space-3)',
           backgroundColor: 'var(--bg-input)',
-          borderRadius: 'var(--radius-lg)',
+          borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-color)'
         }}
       >
@@ -52,17 +52,18 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
+              width: 28,
+              height: 28,
+              borderRadius: 'var(--radius-sm)',
               backgroundColor: 'transparent',
               color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
               border: 'none',
               cursor: disabled ? 'default' : 'pointer',
-              flexShrink: 0
+              flexShrink: 0,
+              transition: 'color var(--transition-fast)'
             }}
           >
-            <Paperclip size={18} />
+            <Paperclip size={16} strokeWidth={1.5} />
           </button>
         )}
 
@@ -80,9 +81,9 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
             outline: 'none',
             backgroundColor: 'transparent',
             color: 'var(--text-primary)',
-            fontSize: '0.88rem',
+            fontSize: 'var(--font-size-body)',
             resize: 'none',
-            fontFamily: 'inherit',
+            fontFamily: 'var(--font-family)',
             maxHeight: 120,
             overflowY: 'auto'
           }}
@@ -95,18 +96,18 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
+            width: 30,
+            height: 30,
+            borderRadius: 'var(--radius-sm)',
             backgroundColor: disabled || !content.trim() ? 'var(--bg-card)' : 'var(--accent-primary)',
             color: disabled || !content.trim() ? 'var(--text-muted)' : '#ffffff',
             border: 'none',
             cursor: disabled || !content.trim() ? 'default' : 'pointer',
-            transition: 'background-color 0.15s ease',
+            transition: 'background-color var(--transition-fast)',
             flexShrink: 0
           }}
         >
-          <Send size={16} />
+          <Send size={15} strokeWidth={1.5} />
         </button>
       </div>
 
@@ -114,8 +115,8 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
         <div
           style={{
             textAlign: 'right',
-            fontSize: '0.68rem',
-            color: charCount >= MAX_CHAR_LIMIT ? 'var(--status-error)' : 'var(--text-muted)',
+            fontSize: 'var(--font-size-meta)',
+            color: charCount >= MAX_CHAR_LIMIT ? 'var(--status-error)' : 'var(--text-secondary)',
             paddingRight: 'var(--space-2)'
           }}
         >

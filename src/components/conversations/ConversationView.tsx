@@ -85,15 +85,16 @@ export function ConversationView({ peer }: ConversationViewProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{peer.displayName}</div>
+          <div style={{ fontWeight: 600, fontSize: 'var(--font-size-header)' }}>{peer.displayName}</div>
           <span
             style={{
-              fontSize: '0.72rem',
-              color: 'var(--text-muted)',
+              fontSize: 'var(--font-size-meta)',
+              color: 'var(--text-secondary)',
               fontFamily: 'var(--font-mono)',
               backgroundColor: 'var(--bg-card)',
               padding: '2px 6px',
-              borderRadius: 'var(--radius-sm)'
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-color)'
             }}
           >
             Fingerprint: {peer.publicKeyFingerprint}
@@ -111,16 +112,17 @@ export function ConversationView({ peer }: ConversationViewProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
+                  width: 30,
+                  height: 30,
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-card)',
                   color: 'var(--text-primary)',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'background-color var(--transition-fast)'
                 }}
               >
-                <Phone size={15} />
+                <Phone size={15} strokeWidth={1.5} />
               </button>
 
               <button
@@ -130,22 +132,23 @@ export function ConversationView({ peer }: ConversationViewProps) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
+                  width: 30,
+                  height: 30,
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-color)',
                   backgroundColor: 'var(--bg-card)',
                   color: 'var(--accent-primary)',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'background-color var(--transition-fast)'
                 }}
               >
-                <Video size={15} />
+                <Video size={15} strokeWidth={1.5} />
               </button>
             </div>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--status-online)' }}>
-            <Shield size={14} color="var(--status-online)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-meta)', color: 'var(--status-online)' }}>
+            <Shield size={14} strokeWidth={1.5} color="var(--status-online)" />
             <span>E2E Encrypted</span>
           </div>
         </div>
@@ -156,9 +159,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div
           style={{
             padding: 'var(--space-2) var(--space-4)',
-            backgroundColor: 'rgba(107, 114, 128, 0.12)',
-            color: 'var(--text-muted)',
-            fontSize: '0.78rem',
+            backgroundColor: 'rgba(110, 110, 115, 0.12)',
+            color: 'var(--text-secondary)',
+            fontSize: 'var(--font-size-meta)',
             textAlign: 'center',
             borderBottom: '1px solid var(--border-color)'
           }}
@@ -171,17 +174,17 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div
           style={{
             padding: 'var(--space-2) var(--space-4)',
-            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+            backgroundColor: 'rgba(255, 159, 10, 0.15)',
             color: 'var(--status-warning)',
-            fontSize: '0.78rem',
+            fontSize: 'var(--font-size-meta)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            borderBottom: '1px solid rgba(245, 158, 11, 0.3)'
+            borderBottom: '1px solid rgba(255, 159, 10, 0.3)'
           }}
         >
-          <AlertCircle size={15} />
+          <AlertCircle size={15} strokeWidth={1.5} />
           <span>Link version mismatch — please ensure all teammates are on the same version to connect.</span>
         </div>
       )}
@@ -205,14 +208,14 @@ export function ConversationView({ peer }: ConversationViewProps) {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--text-muted)',
-              fontSize: '0.85rem',
+              color: 'var(--text-secondary)',
+              fontSize: 'var(--font-size-body)',
               gap: 'var(--space-2)'
             }}
           >
-            <Shield size={32} color="var(--text-muted)" style={{ opacity: 0.5 }} />
+            <Shield size={32} strokeWidth={1.5} color="var(--text-secondary)" style={{ opacity: 0.5 }} />
             <div>Encrypted 1-to-1 conversation with {peer.displayName}</div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>Send a message or start a call to begin</div>
+            <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>Send a message or start a call to begin</div>
           </div>
         ) : (
           <>

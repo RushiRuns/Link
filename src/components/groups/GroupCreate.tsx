@@ -46,21 +46,21 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
       }}
     >
       <div
         style={{
           width: 420,
-          backgroundColor: 'var(--bg-card)',
+          backgroundColor: 'var(--bg-sidebar)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-lg)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -77,20 +77,20 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            <Users size={18} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1rem', fontWeight: 600 }}>Create New Group</h3>
+            <Users size={16} strokeWidth={1.5} color="var(--accent-primary)" />
+            <h3 style={{ fontSize: 'var(--font-size-title)', fontWeight: 600 }}>Create New Group</h3>
           </div>
           <button
             onClick={onClose}
             style={{
               border: 'none',
               background: 'transparent',
-              color: 'var(--text-muted)',
+              color: 'var(--text-secondary)',
               cursor: 'pointer',
               padding: 4
             }}
           >
-            <X size={18} />
+            <X size={16} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -100,9 +100,9 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
             <label
               style={{
                 display: 'block',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
                 marginBottom: 'var(--space-1)'
               }}
             >
@@ -116,11 +116,11 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
               style={{
                 width: '100%',
                 padding: 'var(--space-2) var(--space-3)',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-color)',
                 backgroundColor: 'var(--bg-input)',
                 color: 'var(--text-primary)',
-                fontSize: '0.88rem',
+                fontSize: 'var(--font-size-body)',
                 outline: 'none'
               }}
             />
@@ -130,9 +130,9 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
             <label
               style={{
                 display: 'block',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
                 marginBottom: 'var(--space-2)'
               }}
             >
@@ -147,12 +147,13 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
                 flexDirection: 'column',
                 gap: '4px',
                 border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                padding: 'var(--space-2)'
+                borderRadius: 'var(--radius-sm)',
+                padding: 'var(--space-2)',
+                backgroundColor: 'var(--bg-app)'
               }}
             >
               {peerList.length === 0 ? (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: 'var(--space-3)' }}>
+                <div style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', textAlign: 'center', padding: 'var(--space-3)' }}>
                   No online teammates available to add
                 </div>
               ) : (
@@ -169,14 +170,15 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
                         padding: 'var(--space-2) var(--space-3)',
                         borderRadius: 'var(--radius-sm)',
                         backgroundColor: isChecked ? 'var(--accent-light)' : 'transparent',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'background-color var(--transition-fast)'
                       }}
                     >
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{peer.displayName}</span>
+                      <span style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>{peer.displayName}</span>
                       <div
                         style={{
-                          width: 18,
-                          height: 18,
+                          width: 16,
+                          height: 16,
                           borderRadius: 4,
                           border: isChecked ? 'none' : '1px solid var(--border-color)',
                           backgroundColor: isChecked ? 'var(--accent-primary)' : 'transparent',
@@ -186,7 +188,7 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
                           color: '#ffffff'
                         }}
                       >
-                        {isChecked && <Check size={12} />}
+                        {isChecked && <Check size={12} strokeWidth={2} />}
                       </div>
                     </div>
                   );
@@ -205,19 +207,19 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
             gap: 'var(--space-2)',
             padding: 'var(--space-3) var(--space-4)',
             borderTop: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-sidebar)'
+            backgroundColor: 'var(--bg-app)'
           }}
         >
           <button
             onClick={onClose}
             style={{
               padding: 'var(--space-2) var(--space-4)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
               background: 'transparent',
               color: 'var(--text-primary)',
               cursor: 'pointer',
-              fontSize: '0.85rem'
+              fontSize: 'var(--font-size-body)'
             }}
           >
             Cancel
@@ -228,13 +230,13 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
             disabled={!groupName.trim() || selectedPeerIds.size === 0}
             style={{
               padding: 'var(--space-2) var(--space-4)',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-sm)',
               border: 'none',
               backgroundColor: !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--bg-card-hover)' : 'var(--accent-primary)',
-              color: !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--text-muted)' : '#ffffff',
+              color: !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--text-secondary)' : '#ffffff',
               cursor: !groupName.trim() || selectedPeerIds.size === 0 ? 'default' : 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 600
+              fontSize: 'var(--font-size-body)',
+              fontWeight: 500
             }}
           >
             Create Group
