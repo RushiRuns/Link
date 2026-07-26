@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu } from 'electron';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -38,6 +38,7 @@ function createWindow() {
     minHeight: 550,
     frame: !isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
+    autoHideMenuBar: true,
     vibrancy: isMac ? 'sidebar' : undefined,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1E1E20' : '#F5F5F7',
     show: false,
@@ -48,6 +49,9 @@ function createWindow() {
       sandbox: false
     }
   });
+
+  Menu.setApplicationMenu(null);
+  mainWindow.setMenu(null);
 
   // Reveal window smoothly when DOM & CSS render completely
   mainWindow.once('ready-to-show', () => {

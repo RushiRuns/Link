@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+type EventCallback<T = any> = (data: T) => void;
+
 contextBridge.exposeInMainWorld('electron', {
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
   ping: () => ipcRenderer.invoke('ping'),
@@ -13,12 +15,12 @@ contextBridge.exposeInMainWorld('link', {
   },
   peers: {
     getKnownPeers: () => ipcRenderer.invoke('peers:get-known'),
-    onPeerConnected: (callback: (peer: any) => void) => {
+    onPeerConnected: (callback: EventCallback) => {
       const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('peer:connected', listener);
       return () => ipcRenderer.removeListener('peer:connected', listener);
     },
-    onPeerDisconnected: (callback: (peerId: string) => void) => {
+    onPeerDisconnected: (callback: EventCallback<string>) => {
       const listener = (_: any, peerId: string) => callback(peerId);
       ipcRenderer.on('peer:disconnected', listener);
       return () => ipcRenderer.removeListener('peer:disconnected', listener);
@@ -31,12 +33,12 @@ contextBridge.exposeInMainWorld('link', {
   },
   messaging: {
     sendMessage: (peerId: string, content: string) => ipcRenderer.invoke('messaging:send', peerId, content),
-    onMessageReceived: (callback: (message: any) => void) => {
+    onMessageReceived: (callback: EventCallback) => {
       const listener = (_: any, msg: any) => callback(msg);
       ipcRenderer.on('message:received', listener);
       return () => ipcRenderer.removeListener('message:received', listener);
     },
-    onMessageDelivered: (callback: (messageId: string) => void) => {
+    onMessageDelivered: (callback: EventCallback<string>) => {
       const listener = (_: any, msgId: string) => callback(msgId);
       ipcRenderer.on('message:delivered', listener);
       return () => ipcRenderer.removeListener('message:delivered', listener);
@@ -45,12 +47,12 @@ contextBridge.exposeInMainWorld('link', {
   groups: {
     createGroup: (name: string, memberPeerIds: string[]) => ipcRenderer.invoke('groups:create', name, memberPeerIds),
     sendGroupMessage: (groupId: string, content: string) => ipcRenderer.invoke('groups:send-message', groupId, content),
-    onGroupCreated: (callback: (group: any) => void) => {
+    onGroupCreated: (callback: EventCallback) => {
       const listener = (_: any, group: any) => callback(group);
       ipcRenderer.on('group:created', listener);
       return () => ipcRenderer.removeListener('group:created', listener);
     },
-    onGroupMessageReceived: (callback: (message: any) => void) => {
+    onGroupMessageReceived: (callback: EventCallback) => {
       const listener = (_: any, msg: any) => callback(msg);
       ipcRenderer.on('group-message:received', listener);
       return () => ipcRenderer.removeListener('group-message:received', listener);
@@ -60,7 +62,7 @@ contextBridge.exposeInMainWorld('link', {
     offerFile: (peerId: string, filePath: string) => ipcRenderer.invoke('file-transfer:offer', peerId, filePath),
     respond: (transferId: string, accepted: boolean, savePath?: string) =>
       ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
-    onOfferReceived: (callback: (transfer: any) => void) => {
+    onOfferReceived: (callback: EventCallback) => {
       const listener = (_: any, transfer: any) => callback(transfer);
       ipcRenderer.on('file-transfer:offer-received', listener);
       return () => ipcRenderer.removeListener('file-transfer:offer-received', listener);
@@ -70,7 +72,7 @@ contextBridge.exposeInMainWorld('link', {
       ipcRenderer.on('file-transfer:progress', listener);
       return () => ipcRenderer.removeListener('file-transfer:progress', listener);
     },
-    onCompleted: (callback: (transferId: string) => void) => {
+    onCompleted: (callback: EventCallback<string>) => {
       const listener = (_: any, transferId: string) => callback(transferId);
       ipcRenderer.on('file-transfer:completed', listener);
       return () => ipcRenderer.removeListener('file-transfer:completed', listener);
@@ -81,29 +83,29 @@ contextBridge.exposeInMainWorld('link', {
     answerCall: (callId: string, accepted: boolean, sdp?: string) => ipcRenderer.invoke('calls:answer', callId, accepted, sdp),
     sendIceCandidate: (callId: string, candidate: any) => ipcRenderer.invoke('calls:ice-candidate', callId, candidate),
     endCall: (callId: string) => ipcRenderer.invoke('calls:end', callId),
-    onOfferReceived: (callback: (call: any) => void) => {
+    onOfferReceived: (callback: EventCallback) => {
       const listener = (_: any, call: any) => callback(call);
       ipcRenderer.on('calls:offer-received', listener);
       return () => ipcRenderer.removeListener('calls:offer-received', listener);
     },
-    onAnswerReceived: (callback: (data: any) => void) => {
+    onAnswerReceived: (callback: EventCallback) => {
       const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('calls:answer-received', listener);
       return () => ipcRenderer.removeListener('calls:answer-received', listener);
     },
-    onIceCandidateReceived: (callback: (data: any) => void) => {
+    onIceCandidateReceived: (callback: EventCallback) => {
       const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('calls:ice-candidate', listener);
       return () => ipcRenderer.removeListener('calls:ice-candidate', listener);
     },
-    onCallEnded: (callback: (callId: string) => void) => {
+    onCallEnded: (callback: EventCallback<string>) => {
       const listener = (_: any, callId: string) => callback(callId);
       ipcRenderer.on('calls:ended', listener);
       return () => ipcRenderer.removeListener('calls:ended', listener);
     }
   },
   theme: {
-    onThemeChanged: (callback: (isDark: boolean) => void) => {
+    onThemeChanged: (callback: EventCallback<boolean>) => {
       const listener = (_: any, isDark: boolean) => callback(isDark);
       ipcRenderer.on('theme:changed', listener);
       return () => ipcRenderer.removeListener('theme:changed', listener);
