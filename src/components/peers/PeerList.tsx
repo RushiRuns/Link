@@ -49,7 +49,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
 
   return (
     <>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 'var(--space-3)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 'var(--space-3)', position: 'relative' }}>
         {/* Header with New Group button */}
         <div
           data-nodrag

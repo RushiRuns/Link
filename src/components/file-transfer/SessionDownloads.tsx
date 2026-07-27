@@ -40,14 +40,14 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
     <div
       style={{
         position: 'absolute',
-        bottom: '60px',
-        left: '20px',
-        width: '320px',
-        maxHeight: '400px',
+        bottom: '56px',
+        left: '8px',
+        right: '8px',
+        maxHeight: '360px',
         backgroundColor: 'var(--bg-card)',
         border: '1px solid var(--border-color)',
         borderRadius: 'var(--radius-md)',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1000,
@@ -56,7 +56,7 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
     >
       <div
         style={{
-          padding: 'var(--space-3)',
+          padding: 'var(--space-2) var(--space-3)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
@@ -64,13 +64,23 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
           backgroundColor: 'var(--bg-card-hover)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <Download size={18} color="var(--text-primary)" />
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '0.5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minWidth: 0 }}>
+          <Download size={16} color="var(--text-primary)" style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                letterSpacing: '0.5px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}
+            >
               SESSION DOWNLOADS
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
               {savedCount} Files Saved • {formatBytes(totalSavedSize)}
             </span>
           </div>
@@ -82,16 +92,17 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
             border: 'none',
             color: 'var(--text-secondary)',
             cursor: 'pointer',
-            padding: 'var(--space-1)',
+            padding: '2px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '50%'
+            borderRadius: '50%',
+            flexShrink: 0
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
-          <X size={16} />
+          <X size={14} />
         </button>
       </div>
 
@@ -126,12 +137,12 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 'var(--space-3)',
-                    padding: 'var(--space-2)',
+                    gap: 'var(--space-2)',
+                    padding: '6px 8px',
                     borderRadius: 'var(--radius-sm)',
                     backgroundColor: isSaved ? 'var(--bg-sidebar)' : 'var(--bg-body)',
                     border: '1px solid',
-                    borderColor: isSaved ? 'rgba(46, 213, 115, 0.1)' : 'rgba(255, 71, 87, 0.1)',
+                    borderColor: isSaved ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 71, 87, 0.15)',
                     cursor: isSaved ? 'pointer' : 'default',
                     transition: 'background-color var(--transition-fast)'
                   }}
@@ -144,8 +155,8 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                 >
                   <div
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '30px',
+                      height: '30px',
                       borderRadius: 'var(--radius-sm)',
                       backgroundColor: 'var(--bg-card)',
                       display: 'flex',
@@ -156,10 +167,10 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                   >
                     {getFileIcon(transfer.mimeType)}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1px' }}>
                     <span
                       style={{
-                        fontSize: '13px',
+                        fontSize: '12px',
                         fontWeight: 500,
                         color: 'var(--text-primary)',
                         whiteSpace: 'nowrap',
@@ -170,7 +181,15 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                     >
                       {transfer.fileName}
                     </span>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        color: 'var(--text-secondary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
                       {formatBytes(transfer.fileSizeBytes)} • From {senderName}
                     </span>
                   </div>
@@ -180,8 +199,8 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px',
-                          backgroundColor: 'rgba(46, 213, 115, 0.1)',
+                          gap: '3px',
+                          backgroundColor: 'rgba(46, 213, 115, 0.15)',
                           color: 'var(--status-online)',
                           padding: '2px 6px',
                           borderRadius: '10px',
@@ -196,8 +215,8 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '4px',
-                          backgroundColor: 'rgba(255, 71, 87, 0.1)',
+                          gap: '3px',
+                          backgroundColor: 'rgba(255, 71, 87, 0.15)',
                           color: 'var(--status-offline)',
                           padding: '2px 6px',
                           borderRadius: '10px',
