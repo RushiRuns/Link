@@ -71,6 +71,26 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const isOffline = peer.status === 'offline';
   const isVersionMismatch = peer.status === 'version_mismatch';
 
+  // Merge messages and file transfers into a single chronologically sorted timeline
+  type ChatTimelineItem =
+    | { kind: 'message'; id: string; timestamp: number; data: typeof conversationMessages[0] }
+    | { kind: 'transfer'; id: string; timestamp: number; data: typeof peerTransfers[0] };
+
+  const timelineItems: ChatTimelineItem[] = [
+    ...conversationMessages.map((msg) => ({
+      kind: 'message' as const,
+      id: msg.id,
+      timestamp: msg.timestamp,
+      data: msg
+    })),
+    ...peerTransfers.map((transfer) => ({
+      kind: 'transfer' as const,
+      id: transfer.id,
+      timestamp: transfer.startedAt || 0,
+      data: transfer
+    }))
+  ].sort((a, b) => a.timestamp - b.timestamp);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
@@ -200,7 +220,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
           flexDirection: 'column'
         }}
       >
-        {conversationMessages.length === 0 && peerTransfers.length === 0 ? (
+        {timelineItems.length === 0 ? (
           <div
             style={{
               flex: 1,
@@ -218,19 +238,24 @@ export function ConversationView({ peer }: ConversationViewProps) {
             <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>Send a message or start a call to begin</div>
           </div>
         ) : (
-          <>
-            {conversationMessages.map((msg) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                isSelf={msg.senderId === localIdentity?.deviceId}
+          timelineItems.map((item) => {
+            if (item.kind === 'message') {
+              return (
+                <MessageBubble
+                  key={item.id}
+                  message={item.data}
+                  isSelf={item.data.senderId === localIdentity?.deviceId}
+                />
+              );
+            }
+            return (
+              <TransferProgress
+                key={item.id}
+                transfer={item.data}
+                isSelf={item.data.direction === 'outgoing'}
               />
-            ))}
-
-            {peerTransfers.map((transfer) => (
-              <TransferProgress key={transfer.id} transfer={transfer} />
-            ))}
-          </>
+            );
+          })
         )}
       </div>
 

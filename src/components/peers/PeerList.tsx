@@ -5,7 +5,8 @@ import { useAppStore } from '../../stores/app.store';
 import { PeerItem } from './PeerItem';
 import { GroupCreate } from '../groups/GroupCreate';
 import { LinkIdentity } from '../../types/ipc';
-import { Users, AlertTriangle, Plus, MessageSquare, Settings, User } from 'lucide-react';
+import { Users, AlertTriangle, Plus, MessageSquare, Settings, User, Download } from 'lucide-react';
+import { SessionDownloads } from '../file-transfer/SessionDownloads';
 
 interface PeerListProps {
   onOpenSettings?: () => void;
@@ -17,6 +18,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
   const { selectedPeerId, selectedGroupId, selectPeer, selectGroup } = useAppStore();
   const [noPeersFound, setNoPeersFound] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showDownloads, setShowDownloads] = useState(false);
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
 
   useEffect(() => {
@@ -296,38 +298,71 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
             </div>
           </div>
 
-          <button
-            onClick={onOpenSettings}
-            title="Settings & Preferences"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 30,
-              height: 30,
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              backgroundColor: 'transparent',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'background-color var(--transition-fast), color var(--transition-fast)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-          >
-            <Settings size={16} strokeWidth={1.5} />
-          </button>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            <button
+              onClick={() => setShowDownloads(!showDownloads)}
+              title="Session Downloads"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 30,
+                height: 30,
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                backgroundColor: showDownloads ? 'var(--bg-card-hover)' : 'transparent',
+                color: showDownloads ? 'var(--text-primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'background-color var(--transition-fast), color var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = showDownloads ? 'var(--bg-card-hover)' : 'transparent';
+                e.currentTarget.style.color = showDownloads ? 'var(--text-primary)' : 'var(--text-secondary)';
+              }}
+            >
+              <Download size={16} strokeWidth={1.5} />
+            </button>
+
+            <button
+              onClick={onOpenSettings}
+              title="Settings & Preferences"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 30,
+                height: 30,
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                backgroundColor: 'transparent',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'background-color var(--transition-fast), color var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              <Settings size={16} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
       </div>
 
       {showCreateGroupModal && (
         <GroupCreate onClose={() => setShowCreateGroupModal(false)} />
+      )}
+      {showDownloads && (
+        <SessionDownloads onClose={() => setShowDownloads(false)} />
       )}
     </>
   );

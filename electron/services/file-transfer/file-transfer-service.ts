@@ -15,6 +15,7 @@ export interface ActiveFileTransferState {
   mimeType: string;
   bytesTransferred: number;
   status: 'pending_accept' | 'transferring' | 'completed' | 'declined' | 'failed' | 'cancelled';
+  startedAt: number;
   savePath?: string;
   tempPath?: string;
   writeStream?: fs.WriteStream;
@@ -61,6 +62,10 @@ class FileTransferService {
     this.windowRef = mainWindow;
   }
 
+  public getTransferState(transferId: string): ActiveFileTransferState | undefined {
+    return this.transfers.get(transferId);
+  }
+
   public async selectAndOfferFile(peerId: string, groupId?: string) {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],
@@ -86,6 +91,7 @@ class FileTransferService {
     const chunkSize = 65536; // 64 KB
     const totalChunks = Math.ceil(stat.size / chunkSize);
 
+    const now = Date.now();
     const state: ActiveFileTransferState = {
       id: transferId,
       direction: 'outgoing',
@@ -96,7 +102,8 @@ class FileTransferService {
       fileSizeBytes: stat.size,
       mimeType: 'application/octet-stream',
       bytesTransferred: 0,
-      status: 'pending_accept'
+      status: 'pending_accept',
+      startedAt: now
     };
 
     this.transfers.set(transferId, state);
@@ -104,7 +111,7 @@ class FileTransferService {
     connectionManager.send(peerId, {
       type: 'file.offer',
       id: transferId,
-      ts: Date.now(),
+      ts: now,
       payload: {
         transferId,
         groupId,
@@ -125,7 +132,8 @@ class FileTransferService {
       fileSizeBytes: stat.size,
       mimeType: state.mimeType,
       status: 'pending_accept' as const,
-      bytesTransferred: 0
+      bytesTransferred: 0,
+      startedAt: now
     };
   }
 
@@ -170,6 +178,7 @@ class FileTransferService {
     const p = envelope.payload;
     if (!p || !p.transferId) return;
 
+    const now = envelope.ts || Date.now();
     const state: ActiveFileTransferState = {
       id: p.transferId,
       direction: 'incoming',
@@ -179,7 +188,8 @@ class FileTransferService {
       fileSizeBytes: p.fileSizeBytes,
       mimeType: p.mimeType || 'application/octet-stream',
       bytesTransferred: 0,
-      status: 'pending_accept'
+      status: 'pending_accept',
+      startedAt: now
     };
 
     this.transfers.set(p.transferId, state);
@@ -194,7 +204,8 @@ class FileTransferService {
       fileSizeBytes: p.fileSizeBytes,
       mimeType: state.mimeType,
       status: 'pending_accept',
-      bytesTransferred: 0
+      bytesTransferred: 0,
+      startedAt: now
     });
   }
 

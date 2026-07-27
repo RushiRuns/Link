@@ -48,6 +48,7 @@ export interface LinkAPI {
   fileTransfer: {
     offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer>;
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
+    openFolder: (transferId: string) => Promise<boolean>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;
     onProgress: (callback: (transferId: string, bytesTransferred: number) => void) => () => void;
     onCompleted: (callback: (transferId: string) => void) => () => void;

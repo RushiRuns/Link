@@ -3,6 +3,7 @@ import { FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface TransferProgressProps {
   transfer: LinkFileTransfer;
+  isSelf?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -13,7 +14,8 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-export function TransferProgress({ transfer }: TransferProgressProps) {
+export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
+  const isOutgoing = isSelf ?? (transfer.direction === 'outgoing');
   const percent = transfer.fileSizeBytes > 0
     ? Math.min(100, Math.round((transfer.bytesTransferred / transfer.fileSizeBytes) * 100))
     : 0;
@@ -24,12 +26,14 @@ export function TransferProgress({ transfer }: TransferProgressProps) {
   return (
     <div
       style={{
-        backgroundColor: 'var(--bg-sidebar)',
+        alignSelf: isOutgoing ? 'flex-end' : 'flex-start',
+        backgroundColor: isOutgoing ? 'var(--bg-card)' : 'var(--bg-sidebar)',
         borderRadius: 'var(--radius-md)',
         border: '1px solid var(--border-color)',
         padding: 'var(--space-3) var(--space-4)',
         margin: 'var(--space-2) 0',
         maxWidth: 380,
+        width: '100%',
         boxShadow: 'var(--shadow-sm)'
       }}
     >

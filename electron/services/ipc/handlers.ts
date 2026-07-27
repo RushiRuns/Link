@@ -1,4 +1,5 @@
-import { ipcMain } from 'electron';
+import { ipcMain, shell } from 'electron';
+import fs from 'fs';
 import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
 import { messageService } from '../messaging/message-service.js';
@@ -69,6 +70,18 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean, savePath?: string) => {
     return fileTransferService.respondToOffer(transferId, accepted, savePath);
+  });
+
+  ipcMain.handle('file-transfer:open-folder', async (_, transferId: string) => {
+    const state = fileTransferService.getTransferState(transferId);
+    if (!state) return false;
+    
+    const targetPath = state.savePath || state.filePath;
+    if (targetPath && fs.existsSync(targetPath)) {
+      shell.showItemInFolder(targetPath);
+      return true;
+    }
+    return false;
   });
 
   // Call Handlers

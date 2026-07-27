@@ -60,8 +60,8 @@ contextBridge.exposeInMainWorld('link', {
   },
   fileTransfer: {
     offerFile: (peerId: string, filePath: string) => ipcRenderer.invoke('file-transfer:offer', peerId, filePath),
-    respond: (transferId: string, accepted: boolean, savePath?: string) =>
-      ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
+    respond: (transferId: string, accepted: boolean, savePath?: string) => ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
+    openFolder: (transferId: string) => ipcRenderer.invoke('file-transfer:open-folder', transferId),
     onOfferReceived: (callback: EventCallback) => {
       const listener = (_: any, transfer: any) => callback(transfer);
       ipcRenderer.on('file-transfer:offer-received', listener);
