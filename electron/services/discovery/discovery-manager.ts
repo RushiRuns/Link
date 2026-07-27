@@ -49,6 +49,7 @@ class DiscoveryManager extends EventEmitter {
 
   private async handleDiscoveredPeer(peer: DiscoveredPeerAnnouncement) {
     if (!peer.deviceId || !peer.tcpPort) return;
+    if (!peer.ipAddress || peer.ipAddress.startsWith('127.')) return;
 
     // Deduplicate
     const existing = this.discoveredPeers.get(peer.deviceId);

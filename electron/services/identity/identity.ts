@@ -50,6 +50,15 @@ export function getOrGenerateIdentity(): LocalIdentityFull {
   } else {
     pubKey = new Uint8Array(Buffer.from(pubKeyBase64, 'base64'));
     secKey = new Uint8Array(Buffer.from(secretKeyBase64, 'base64'));
+
+    if (secKey.length !== 32) {
+      console.warn('[Identity] Stored secret key is invalid. Regenerating identity.');
+      configStore.set('deviceId', '');
+      configStore.set('publicKey', '');
+      configStore.set('encryptedPrivateKey', '');
+      cachedIdentity = null;
+      return getOrGenerateIdentity();
+    }
   }
 
   const fingerprint = getFingerprint(pubKey);

@@ -45,6 +45,7 @@ export const configStore = {
       }
     } catch (err) {
       console.error('[ConfigStore] Failed to decrypt key:', err);
+      store.set(key, '');
       return '';
     }
   }

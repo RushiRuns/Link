@@ -99,6 +99,8 @@ class ConnectionManager extends EventEmitter {
       lastActive: Date.now()
     };
 
+    this.connections.set(tempDeviceId, conn);
+
     let buffer = Buffer.alloc(0);
 
     socket.on('data', (chunk: Buffer) => {

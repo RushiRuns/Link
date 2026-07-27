@@ -119,10 +119,12 @@ class MDNSDiscovery extends EventEmitter {
           publicKey: txtData.pub || '',
           appVersion: txtData.ver || '1.0.0',
           tcpPort: srvRecord.data?.port || 0,
-          ipAddress: aRecord?.data || '127.0.0.1',
+          ipAddress: aRecord?.data || '',
           source: 'mdns'
         };
-        this.emit('peer-found', announcement);
+        if (announcement.ipAddress && !announcement.ipAddress.startsWith('127.')) {
+          this.emit('peer-found', announcement);
+        }
       }
     } catch (err) {
       console.error('[mDNS] Error parsing response:', err);
