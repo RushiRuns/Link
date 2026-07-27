@@ -49,7 +49,7 @@ class DiscoveryManager extends EventEmitter {
 
   private async handleDiscoveredPeer(peer: DiscoveredPeerAnnouncement) {
     if (!peer.deviceId || !peer.tcpPort) return;
-    if (!peer.ipAddress || peer.ipAddress.startsWith('127.')) return;
+    if (!peer.ipAddress) return;
 
     // Deduplicate
     const existing = this.discoveredPeers.get(peer.deviceId);
@@ -71,6 +71,9 @@ class DiscoveryManager extends EventEmitter {
         const expectedPubKey = peer.publicKey ? Buffer.from(peer.publicKey, 'base64') : undefined;
         const conn = await connectionManager.connectToPeer(peer.ipAddress, peer.tcpPort, expectedPubKey);
         
+        // Register the device ID IMMEDIATELY so the connection isn't stuck in pending_...
+        connectionManager.registerDeviceId(conn.deviceId, peer.deviceId);
+
         // Initiate post-Noise HandshakeHello
         sendHandshakeHello(conn);
 

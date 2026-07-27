@@ -128,6 +128,18 @@ if (!gotTheLock) {
       mainWindow?.webContents.send('discovery:no-peers-found');
     });
 
+    connectionManager.on('peer:connected', (conn) => {
+      const peer = db.getPeer(conn.deviceId);
+      if (peer) {
+        mainWindow?.webContents.send('peer:connected', {
+          ...peer,
+          status: 'online',
+          networkAddress: conn.socket.remoteAddress,
+          listeningPort: conn.socket.remotePort
+        });
+      }
+    });
+
     connectionManager.on('peer:disconnected', (peerId) => {
       mainWindow?.webContents.send('peer:disconnected', peerId);
     });

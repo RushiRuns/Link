@@ -39,6 +39,7 @@ class ConnectionManager extends EventEmitter {
   }
 
   private async handleIncomingConnection(socket: net.Socket) {
+    socket.setKeepAlive(true, 15000);
     socket.once('data', async (initialData: Buffer) => {
       try {
         const identity = getOrGenerateIdentity();
@@ -63,6 +64,7 @@ class ConnectionManager extends EventEmitter {
   ): Promise<ActiveConnection> {
     const identity = getOrGenerateIdentity();
     const socket = new net.Socket();
+    socket.setKeepAlive(true, 15000);
 
     return new Promise((resolve, reject) => {
       socket.connect(port, host, async () => {

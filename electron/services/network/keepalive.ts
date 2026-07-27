@@ -19,12 +19,8 @@ export function startKeepaliveMonitor() {
           payload: {}
         });
       }
-
-      // If no message or response received for >30s, treat peer as offline/timed out
-      if (now - conn.lastActive > 30000) {
-        console.warn(`[Keepalive] Peer ${conn.deviceId} timed out (no activity for 30s).`);
-        connectionManager.disconnect(conn.deviceId);
-      }
+      // Note: We no longer strictly disconnect on 30s of silence because Version 1.0 clients do not send keepalives.
+      // We rely on TCP keepalives and socket 'close'/'error' events to detect dead connections.
     }
   }, 15000);
 }

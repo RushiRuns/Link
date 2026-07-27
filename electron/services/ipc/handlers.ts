@@ -5,6 +5,7 @@ import { messageService } from '../messaging/message-service.js';
 import { groupService } from '../groups/group-service.js';
 import { fileTransferService } from '../file-transfer/file-transfer-service.js';
 import { callSignalingService } from '../calls/call-signaling.js';
+import { connectionManager } from '../network/connection-manager.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -32,7 +33,16 @@ export function registerIpcHandlers() {
 
   // Peers Handlers
   ipcMain.handle('peers:get-known', async () => {
-    return peersStore.getKnownPeers();
+    const peers = peersStore.getKnownPeers();
+    return peers.map((p) => {
+      const activeConn = connectionManager.getActiveConnection(p.id);
+      return {
+        ...p,
+        status: activeConn ? 'online' : 'offline',
+        networkAddress: activeConn?.socket.remoteAddress,
+        listeningPort: activeConn?.socket.remotePort
+      };
+    });
   });
 
   // Messaging Handlers

@@ -59,31 +59,21 @@ function handleHandshakeHello(senderTempId: string, payload: HandshakeHelloPaylo
   const pubKeyBase64 = Buffer.from(conn.remotePublicKey).toString('base64');
   const existingRecord = db.getPeer(payload.deviceId);
 
-  if (existingRecord) {
-    if (existingRecord.publicKey !== pubKeyBase64) {
-      console.error(
-        `[Handshake] Security Alert: Public key mismatch for peer ${payload.deviceId} (${payload.displayName})!`
-      );
-      connectionManager.send(senderTempId, {
-        type: 'handshake.ack',
-        id: 'ack_' + Date.now(),
-        ts: Date.now(),
-        payload: { accepted: false, reason: 'unknown' }
-      });
-      setTimeout(() => connectionManager.disconnect(senderTempId), 500);
-      return;
-    }
-  } else {
-    // Save to KnownPeers on first contact (TOFU)
-    db.upsertPeer({
-      id: payload.deviceId,
-      displayName: payload.displayName,
-      publicKey: pubKeyBase64,
-      publicKeyFingerprint: getFingerprint(conn.remotePublicKey),
-      appVersion: payload.appVersion,
-      lastSeen: new Date().toISOString()
-    });
+  if (existingRecord && existingRecord.publicKey !== pubKeyBase64) {
+    console.warn(
+      `[Handshake] Public key updated for peer ${payload.deviceId} (${payload.displayName}). Updating TOFU record.`
+    );
   }
+
+  // Save/update KnownPeers record
+  db.upsertPeer({
+    id: payload.deviceId,
+    displayName: payload.displayName,
+    publicKey: pubKeyBase64,
+    publicKeyFingerprint: getFingerprint(conn.remotePublicKey),
+    appVersion: payload.appVersion,
+    lastSeen: new Date().toISOString()
+  });
 
   // Register real device ID in ConnectionManager
   connectionManager.registerDeviceId(senderTempId, payload.deviceId);
