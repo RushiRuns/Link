@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { playNotificationSound } from '../utils/audio';
 
 export interface ActiveCallInfo {
   callId: string;
@@ -62,6 +63,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       };
       set({ incomingCall: incoming });
       window.electron?.flashFrame(true);
+      playNotificationSound();
     });
 
     const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted }) => {

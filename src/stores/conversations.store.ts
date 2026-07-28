@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { LinkMessage } from '../types/ipc';
+import { playNotificationSound } from '../utils/audio';
 
 interface ConversationsState {
   messages: Map<string, LinkMessage[]>; // conversationId -> LinkMessage[]
@@ -81,6 +82,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
       get().addMessage(message);
       window.electron?.flashFrame(true);
+      playNotificationSound();
     });
 
     const cleanDelivered = window.link.messaging.onMessageDelivered((messageId) => {

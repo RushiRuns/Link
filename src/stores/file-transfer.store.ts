@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { LinkFileTransfer } from '../types/ipc';
+import { playNotificationSound } from '../utils/audio';
 
 interface FileTransferState {
   transfers: Map<string, LinkFileTransfer>;
@@ -101,6 +102,7 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
       get().addTransfer(transfer);
       set({ incomingOffer: transfer });
       window.electron?.flashFrame(true);
+      playNotificationSound();
     });
 
     const cleanProgress = window.link.fileTransfer.onProgress((transferId, bytesTransferred) => {
