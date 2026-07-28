@@ -5,7 +5,8 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("electron", {
   getSystemInfo: () => ipcRenderer.invoke("get-system-info"),
   ping: () => ipcRenderer.invoke("ping"),
-  windowControl: (action) => ipcRenderer.send("window-control", action)
+  windowControl: (action) => ipcRenderer.send("window-control", action),
+  flashFrame: (flag) => ipcRenderer.send("window:flash", flag)
 });
 
 contextBridge.exposeInMainWorld("link", {

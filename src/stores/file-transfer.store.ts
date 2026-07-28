@@ -100,6 +100,7 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     const cleanOffer = window.link.fileTransfer.onOfferReceived((transfer) => {
       get().addTransfer(transfer);
       set({ incomingOffer: transfer });
+      window.electron?.flashFrame(true);
     });
 
     const cleanProgress = window.link.fileTransfer.onProgress((transferId, bytesTransferred) => {

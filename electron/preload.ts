@@ -5,7 +5,8 @@ type EventCallback<T = any> = (data: T) => void;
 contextBridge.exposeInMainWorld('electron', {
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),
   ping: () => ipcRenderer.invoke('ping'),
-  windowControl: (action: 'minimize' | 'maximize' | 'close') => ipcRenderer.send('window-control', action)
+  windowControl: (action: 'minimize' | 'maximize' | 'close') => ipcRenderer.send('window-control', action),
+  flashFrame: (flag: boolean) => ipcRenderer.send('window:flash', flag)
 });
 
 contextBridge.exposeInMainWorld('link', {

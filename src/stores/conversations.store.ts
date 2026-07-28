@@ -80,6 +80,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
       get().addMessage(message);
+      window.electron?.flashFrame(true);
     });
 
     const cleanDelivered = window.link.messaging.onMessageDelivered((messageId) => {

@@ -71,6 +71,11 @@ function createWindow() {
     mainWindow?.show();
   });
 
+  // Clear flash frame when window gains focus
+  mainWindow.on('focus', () => {
+    mainWindow?.flashFrame(false);
+  });
+
   // T057: Listen for OS theme changes and notify renderer
   nativeTheme.on('updated', () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -213,5 +218,17 @@ ipcMain.on('window-control', (_, action: 'minimize' | 'maximize' | 'close' | 'is
     case 'close':
       mainWindow.close();
       break;
+  }
+});
+
+// Flash Window Frame IPC Listener
+ipcMain.on('window:flash', (_, flag: boolean) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    // Only flash if we are asking to flash and the window is not currently focused
+    if (flag && !mainWindow.isFocused()) {
+      mainWindow.flashFrame(true);
+    } else if (!flag) {
+      mainWindow.flashFrame(false);
+    }
   }
 });

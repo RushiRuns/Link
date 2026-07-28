@@ -61,6 +61,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
         sdpOffer: call.sdp
       };
       set({ incomingCall: incoming });
+      window.electron?.flashFrame(true);
     });
 
     const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted }) => {
