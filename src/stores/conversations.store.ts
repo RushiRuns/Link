@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { LinkMessage } from '../types/ipc';
 import { playNotificationSound } from '../utils/audio';
+import { useAppStore } from './app.store';
 
 interface ConversationsState {
   messages: Map<string, LinkMessage[]>; // conversationId -> LinkMessage[]
@@ -29,8 +30,12 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
       const nextUnreads = new Map(state.unreadCounts);
       if (message.deliveryStatus === 'delivered') {
-        const count = nextUnreads.get(convId) || 0;
-        nextUnreads.set(convId, count + 1);
+        const { selectedPeerId } = useAppStore.getState();
+        // Only increment unread count if we are not actively viewing this peer's chat
+        if (selectedPeerId !== message.senderId) {
+          const count = nextUnreads.get(convId) || 0;
+          nextUnreads.set(convId, count + 1);
+        }
       }
 
       return { messages: nextMessages, unreadCounts: nextUnreads };
@@ -81,8 +86,13 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
       get().addMessage(message);
-      window.electron?.flashFrame(true);
-      playNotificationSound();
+      
+      const { selectedPeerId } = useAppStore.getState();
+      // Only flash and play sound if we are not actively viewing this peer's chat
+      if (selectedPeerId !== message.senderId) {
+        window.electron?.flashFrame(true);
+        playNotificationSound();
+      }
     });
 
     const cleanDelivered = window.link.messaging.onMessageDelivered((messageId) => {
