@@ -192,6 +192,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
                   peer={peer}
                   isSelected={selectedPeerId === peer.id}
                   onSelect={(p) => selectPeer(p.id)}
+                  localIdentity={localIdentity}
                 />
               ))}
             </div>
@@ -218,6 +219,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
                   peer={peer}
                   isSelected={selectedPeerId === peer.id}
                   onSelect={(p) => selectPeer(p.id)}
+                  localIdentity={localIdentity}
                 />
               ))}
             </div>

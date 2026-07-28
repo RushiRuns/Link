@@ -1,14 +1,22 @@
-import { LinkPeer } from '../../types/ipc';
-import { StatusBadge } from './StatusBadge';
+import { LinkPeer, LinkIdentity } from '../../types/ipc';
+import { useConversationsStore } from '../../stores/conversations.store';
 import { User } from 'lucide-react';
 
 interface PeerItemProps {
   peer: LinkPeer;
   isSelected?: boolean;
   onSelect?: (peer: LinkPeer) => void;
+  localIdentity?: LinkIdentity | null;
 }
 
-export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
+export function PeerItem({ peer, isSelected, onSelect, localIdentity }: PeerItemProps) {
+  const { unreadCounts } = useConversationsStore();
+  
+  const conversationId = localIdentity
+    ? [localIdentity.deviceId, peer.id].sort().join('_')
+    : 'default';
+    
+  const unreadCount = unreadCounts.get(conversationId) || 0;
   return (
     <div
       onClick={() => onSelect?.(peer)}
@@ -59,13 +67,28 @@ export function PeerItem({ peer, isSelected, onSelect }: PeerItemProps) {
           >
             {peer.displayName}
           </span>
-          <span style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-            {peer.publicKeyFingerprint ? peer.publicKeyFingerprint.substring(0, 9) : peer.id.substring(0, 8)}
+          <span style={{ fontSize: 'var(--font-size-meta)', color: peer.status === 'online' ? 'var(--status-online)' : 'var(--text-secondary)' }}>
+            {peer.status.charAt(0).toUpperCase() + peer.status.slice(1).replace('_', ' ')}
           </span>
         </div>
       </div>
 
-      <StatusBadge status={peer.status} />
+      {unreadCount > 0 && (
+        <div
+          style={{
+            backgroundColor: 'var(--accent-primary)',
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: 600,
+            padding: '2px 6px',
+            borderRadius: '10px',
+            minWidth: '20px',
+            textAlign: 'center'
+          }}
+        >
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </div>
+      )}
     </div>
   );
 }
