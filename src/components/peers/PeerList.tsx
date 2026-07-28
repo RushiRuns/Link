@@ -13,7 +13,7 @@ interface PeerListProps {
 }
 
 export function PeerList({ onOpenSettings }: PeerListProps) {
-  const { peers, loadKnownPeers, initListeners } = usePeersStore();
+  const { peers, loadKnownPeers } = usePeersStore();
   const { groups } = useGroupsStore();
   const { selectedPeerId, selectedGroupId, selectPeer, selectGroup } = useAppStore();
   const [noPeersFound, setNoPeersFound] = useState(false);
@@ -23,7 +23,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
 
   useEffect(() => {
     loadKnownPeers();
-    const cleanupListeners = initListeners();
+
 
     if (window.link?.identity) {
       window.link.identity.getIdentity().then(setLocalIdentity).catch(console.error);
@@ -37,10 +37,9 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
     }
 
     return () => {
-      cleanupListeners();
       cleanNoPeers?.();
     };
-  }, [loadKnownPeers, initListeners]);
+  }, [loadKnownPeers]);
 
   const peerList = Array.from(peers.values());
   const groupList = Array.from(groups.values());

@@ -14,25 +14,38 @@ import { usePeersStore } from './stores/peers.store';
 import { useGroupsStore } from './stores/groups.store';
 import { useFileTransferStore } from './stores/file-transfer.store';
 import { useCallsStore } from './stores/calls.store';
+import { useConversationsStore } from './stores/conversations.store';
 import { LinkPeer } from './types/ipc';
 import { Shield, Activity, Radio } from 'lucide-react';
 
 export default function App() {
   const { selectedPeerId, selectedGroupId } = useAppStore();
-  const { peers } = usePeersStore();
+  const { peers, initListeners: initPeersListeners } = usePeersStore();
   const { groups } = useGroupsStore();
   const { incomingOffer } = useFileTransferStore();
   const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
+  const { initListeners: initConversationsListeners } = useConversationsStore();
+  const { initListeners: initGroupsListeners } = useGroupsStore();
+  const { initListeners: initFtListeners } = useFileTransferStore();
 
   const [showSettings, setShowSettings] = useState(false);
   const [profilePeer, setProfilePeer] = useState<LinkPeer | null>(null);
 
   useEffect(() => {
     const cleanCalls = initCallListeners();
+    const cleanConversations = initConversationsListeners();
+    const cleanGroups = initGroupsListeners();
+    const cleanFt = initFtListeners();
+    const cleanPeers = initPeersListeners();
+    
     return () => {
       cleanCalls();
+      cleanConversations();
+      cleanGroups();
+      cleanFt();
+      cleanPeers();
     };
-  }, [initCallListeners]);
+  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners]);
 
   const selectedPeer = selectedPeerId ? peers.get(selectedPeerId) : null;
   const selectedGroup = selectedGroupId ? groups.get(selectedGroupId) : null;

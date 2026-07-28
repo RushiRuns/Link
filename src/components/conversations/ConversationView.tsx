@@ -13,8 +13,8 @@ interface ConversationViewProps {
 }
 
 export function ConversationView({ peer }: ConversationViewProps) {
-  const { messages, sendMessage, markConversationRead, initListeners } = useConversationsStore();
-  const { transfers, offerFile, initListeners: initFtListeners } = useFileTransferStore();
+  const { messages, sendMessage, markConversationRead } = useConversationsStore();
+  const { transfers, offerFile } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,13 +31,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   useEffect(() => {
     markConversationRead(conversationId);
-    const cleanupConv = initListeners();
-    const cleanupFt = initFtListeners();
-    return () => {
-      cleanupConv();
-      cleanupFt();
-    };
-  }, [conversationId, markConversationRead, initListeners, initFtListeners]);
+  }, [conversationId, markConversationRead]);
 
   const conversationMessages = messages.get(conversationId) || [];
   const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id);

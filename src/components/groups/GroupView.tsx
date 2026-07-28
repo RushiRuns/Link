@@ -11,7 +11,7 @@ interface GroupViewProps {
 }
 
 export function GroupView({ group }: GroupViewProps) {
-  const { sendGroupMessage, initListeners } = useGroupsStore();
+  const { sendGroupMessage } = useGroupsStore();
   const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -22,10 +22,7 @@ export function GroupView({ group }: GroupViewProps) {
     }
   }, []);
 
-  useEffect(() => {
-    const cleanup = initListeners();
-    return cleanup;
-  }, [initListeners]);
+
 
   const groupMessages = group.messages || [];
 
