@@ -48,8 +48,8 @@ export function registerIpcHandlers() {
   });
 
   // Messaging Handlers
-  ipcMain.handle('messaging:send', async (_, peerId: string, content: string) => {
-    return messageService.sendMessage(peerId, content);
+  ipcMain.handle('messaging:send', async (_, peerId: string, content: string, replyToMessageId?: string) => {
+    return messageService.sendMessage(peerId, content, replyToMessageId);
   });
 
   ipcMain.handle('messaging:send-typing', async (_, peerId: string, groupId?: string) => {

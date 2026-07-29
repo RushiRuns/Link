@@ -1,5 +1,5 @@
 import { LinkMessage } from '../../types/ipc';
-import { Copy, Edit2, Trash2 } from 'lucide-react';
+import { Copy, Edit2, Trash2, CornerUpLeft } from 'lucide-react';
 import { useState } from 'react';
 
 interface MessageBubbleProps {
@@ -7,12 +7,14 @@ interface MessageBubbleProps {
   isSelf: boolean;
   showSenderLabel?: boolean;
   isLatestMessage?: boolean;
+  repliedMessage?: LinkMessage | null; // null if not found
+  onReply?: () => void;
   onCopy?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, onCopy, onEdit, onDelete }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
@@ -124,6 +126,13 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
             }}
           >
             <button
+              onClick={onReply}
+              title="Reply"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center' }}
+            >
+              <CornerUpLeft size={12} strokeWidth={1.5} />
+            </button>
+            <button
               onClick={onCopy}
               title="Copy"
               style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center' }}
@@ -149,6 +158,31 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
           </div>
         )}
         
+        {message.replyToMessageId && (
+          <div
+            style={{
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderLeft: '3px solid var(--accent-primary)',
+              borderRadius: 'var(--radius-sm)',
+              padding: 'var(--space-1) var(--space-2)',
+              marginBottom: 'var(--space-2)',
+              fontSize: '0.85em',
+              opacity: 0.9,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px'
+            }}
+          >
+            <div style={{ color: 'var(--accent-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <CornerUpLeft size={12} strokeWidth={2} />
+              {repliedMessage ? repliedMessage.senderName : 'Unknown'}
+            </div>
+            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {repliedMessage ? repliedMessage.content : <i>Message not found</i>}
+            </div>
+          </div>
+        )}
+
         <div style={{ whiteSpace: 'pre-wrap' }}>{renderContentWithLinks(message.content)}</div>
 
         <div

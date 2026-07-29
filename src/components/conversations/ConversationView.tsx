@@ -6,7 +6,7 @@ import { useCallsStore } from '../../stores/calls.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
-import { Shield, AlertCircle, Phone, Video, Trash2 } from 'lucide-react';
+import { Shield, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -20,6 +20,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
     markConversationRead,
     editingMessageId,
     setEditingMessageId,
+    replyingToMessageId,
+    setReplyingToMessageId,
     editMessageLocally,
     deleteMessageLocally
   } = useConversationsStore();
@@ -55,6 +57,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const latestSentMessageId = [...conversationMessages].reverse().find(m => m.senderId === localIdentity?.deviceId)?.id;
   const editingMessageContent = conversationMessages.find(m => m.id === editingMessageId)?.content;
+  const replyingToMessage = conversationMessages.find(m => m.id === replyingToMessageId);
 
   const handleSend = (text: string) => {
     if (editingMessageId) {
@@ -64,7 +67,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
       }
       setEditingMessageId(null);
     } else {
-      sendMessage(peer.id, text);
+      sendMessage(peer.id, text, replyingToMessageId || undefined);
+      setReplyingToMessageId(null);
     }
   };
 
@@ -293,8 +297,16 @@ export function ConversationView({ peer }: ConversationViewProps) {
                   message={item.data}
                   isSelf={item.data.senderId === localIdentity?.deviceId}
                   isLatestMessage={item.data.id === latestSentMessageId}
+                  repliedMessage={item.data.replyToMessageId ? conversationMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
+                  onReply={() => {
+                    setReplyingToMessageId(item.data.id);
+                    setEditingMessageId(null); // Mutually exclusive
+                  }}
                   onCopy={() => handleCopy(item.data.content)}
-                  onEdit={() => setEditingMessageId(item.data.id)}
+                  onEdit={() => {
+                    setEditingMessageId(item.data.id);
+                    setReplyingToMessageId(null); // Mutually exclusive
+                  }}
                   onDelete={() => handleDelete(item.data.id)}
                 />
               );
@@ -334,6 +346,46 @@ export function ConversationView({ peer }: ConversationViewProps) {
           </div>
         )}
       </div>
+
+      {/* Reply Preview Banner */}
+      {replyingToMessage && (
+        <div
+          style={{
+            padding: 'var(--space-2) var(--space-4)',
+            backgroundColor: 'var(--bg-card)',
+            borderTop: '1px solid var(--border-color)',
+            borderLeft: '4px solid var(--accent-primary)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 'var(--space-3)'
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '2px' }}>
+              <CornerUpLeft size={14} strokeWidth={2} />
+              Replying to {replyingToMessage.senderName}
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {replyingToMessage.content}
+            </div>
+          </div>
+          <button
+            onClick={() => setReplyingToMessageId(null)}
+            title="Cancel reply"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              padding: '4px',
+              display: 'flex'
+            }}
+          >
+            <X size={16} strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
       {/* Message Input Footer */}
       <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)' }}>

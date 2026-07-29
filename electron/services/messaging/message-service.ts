@@ -32,18 +32,22 @@ class MessageService {
     this.windowRef = mainWindow;
   }
 
-  public async sendMessage(peerId: string, content: string) {
+  public async sendMessage(peerId: string, content: string, replyToMessageId?: string) {
     const identity = getOrGenerateIdentity();
     const messageId = uuidv4();
     const now = Date.now();
 
     const conversationId = [identity.deviceId, peerId].sort().join('_');
 
-    const payload = {
+    const payload: any = {
       messageId,
       conversationId,
       content
     };
+
+    if (replyToMessageId) {
+      payload.replyToMessageId = replyToMessageId;
+    }
 
     const sent = connectionManager.send(peerId, {
       type: 'message.text',
@@ -58,6 +62,7 @@ class MessageService {
       senderId: identity.deviceId,
       senderName: identity.displayName,
       content,
+      replyToMessageId,
       timestamp: now,
       deliveryStatus: sent ? ('sent' as const) : ('failed' as const)
     };
@@ -114,6 +119,7 @@ class MessageService {
       senderId: senderDeviceId,
       senderName: payload.senderName || 'Teammate',
       content: payload.content,
+      replyToMessageId: payload.replyToMessageId,
       timestamp: envelope.ts || Date.now(),
       deliveryStatus: 'delivered' as const
     };

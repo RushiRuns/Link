@@ -45,6 +45,7 @@ export interface LinkMessage {
   senderId: string;
   senderName: string;
   content: string;
+  replyToMessageId?: string;
   timestamp: number;
   deliveryStatus: DeliveryStatus;
 }

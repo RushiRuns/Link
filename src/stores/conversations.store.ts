@@ -8,6 +8,7 @@ interface ConversationsState {
   unreadCounts: Map<string, number>; // conversationId -> count
   typingPeers: Map<string, number>; // conversationId -> timestamp
   editingMessageId: string | null;
+  replyingToMessageId: string | null;
   addMessage: (message: LinkMessage) => void;
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
@@ -15,9 +16,10 @@ interface ConversationsState {
   setTyping: (conversationId: string) => void;
   clearExpiredTyping: () => void;
   setEditingMessageId: (id: string | null) => void;
+  setReplyingToMessageId: (id: string | null) => void;
   editMessageLocally: (conversationId: string, messageId: string, newContent: string) => void;
   deleteMessageLocally: (conversationId: string, messageId: string) => void;
-  sendMessage: (peerId: string, content: string) => Promise<void>;
+  sendMessage: (peerId: string, content: string, replyToMessageId?: string) => Promise<void>;
   loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
 }
@@ -27,6 +29,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
   unreadCounts: new Map(),
   typingPeers: new Map(),
   editingMessageId: null,
+  replyingToMessageId: null,
 
   addMessage: (message) => {
     const convId = message.conversationId || 'default';
@@ -117,6 +120,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
   },
 
   setEditingMessageId: (id) => set({ editingMessageId: id }),
+  setReplyingToMessageId: (id) => set({ replyingToMessageId: id }),
 
   editMessageLocally: (conversationId, messageId, newContent) => {
     set((state) => {
@@ -148,10 +152,10 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
   },
 
-  sendMessage: async (peerId, content) => {
+  sendMessage: async (peerId, content, replyToMessageId) => {
     if (window.link?.messaging) {
       try {
-        const msg = await window.link.messaging.sendMessage(peerId, content);
+        const msg = await window.link.messaging.sendMessage(peerId, content, replyToMessageId);
         get().addMessage(msg);
       } catch (err) {
         console.error('[ConversationsStore] Error sending message:', err);
