@@ -5,6 +5,7 @@ import { playNotificationSound } from '../utils/audio';
 interface FileTransferState {
   transfers: Map<string, LinkFileTransfer>;
   incomingOffer: LinkFileTransfer | null;
+  incomingOffersQueue: LinkFileTransfer[];
   addTransfer: (transfer: LinkFileTransfer) => void;
   updateProgress: (transferId: string, bytesTransferred: number) => void;
   setTransferStatus: (transferId: string, status: LinkFileTransfer['status']) => void;
@@ -19,6 +20,7 @@ interface FileTransferState {
 export const useFileTransferStore = create<FileTransferState>((set, get) => ({
   transfers: new Map(),
   incomingOffer: null,
+  incomingOffersQueue: [],
 
   addTransfer: (transfer) => {
     set((state) => {
@@ -56,7 +58,16 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     });
   },
 
-  clearIncomingOffer: () => set({ incomingOffer: null }),
+  clearIncomingOffer: () => set((state) => {
+    if (state.incomingOffersQueue.length > 0) {
+      const nextOffer = state.incomingOffersQueue[0];
+      return { 
+        incomingOffer: nextOffer,
+        incomingOffersQueue: state.incomingOffersQueue.slice(1)
+      };
+    }
+    return { incomingOffer: null };
+  }),
 
   offerFile: async (peerId) => {
     if (window.link?.fileTransfer) {
@@ -121,7 +132,14 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
 
     const cleanOffer = window.link.fileTransfer.onOfferReceived((transfer) => {
       get().addTransfer(transfer);
-      set({ incomingOffer: transfer });
+      
+      set((state) => {
+        if (!state.incomingOffer) {
+          return { incomingOffer: transfer };
+        }
+        return { incomingOffersQueue: [...state.incomingOffersQueue, transfer] };
+      });
+      
       window.electron?.flashFrame(true);
       playNotificationSound();
     });
