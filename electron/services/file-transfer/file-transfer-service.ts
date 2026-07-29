@@ -100,6 +100,24 @@ class FileTransferService {
     return offers;
   }
 
+  public async savePastedBuffer(buffer: ArrayBuffer, mimeType: string): Promise<string> {
+    const extMap: Record<string, string> = {
+      'image/png': '.png',
+      'image/jpeg': '.jpg',
+      'image/gif': '.gif',
+      'image/webp': '.webp',
+      'text/plain': '.txt',
+      'text/html': '.html'
+    };
+    const ext = extMap[mimeType] || '.bin';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `Pasted_${timestamp}${ext}`;
+    const tempPath = path.join(app.getPath('temp'), fileName);
+    
+    fs.writeFileSync(tempPath, Buffer.from(buffer));
+    return tempPath;
+  }
+
   public async offerFile(peerId: string, filePath: string, groupId?: string) {
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);

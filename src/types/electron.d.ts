@@ -48,6 +48,7 @@ export interface LinkAPI {
   fileTransfer: {
     offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer | LinkFileTransfer[]>;
     offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer>;
+    saveBuffer: (buffer: ArrayBuffer, mimeType: string) => Promise<string>;
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
     openFolder: (transferId: string) => Promise<boolean>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;

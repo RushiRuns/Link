@@ -5,6 +5,8 @@ interface MessageInputProps {
   onSend: (content: string) => void;
   onAttachFile?: () => void;
   onAttachFolder?: () => void;
+  onPasteFile?: (path: string) => void;
+  onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -13,7 +15,7 @@ const MAX_CHAR_LIMIT = 10000;
 
 import { FolderUp } from 'lucide-react';
 
-export function MessageInput({ onSend, onAttachFile, onAttachFolder, disabled, placeholder }: MessageInputProps) {
+export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile, onPasteBuffer, disabled, placeholder }: MessageInputProps) {
   const [content, setContent] = useState('');
 
   const handleSend = () => {
@@ -27,6 +29,24 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, disabled, p
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+      e.preventDefault();
+      const files = Array.from(e.clipboardData.files);
+      
+      for (const file of files) {
+        // @ts-ignore - path exists in Electron's File object implementation
+        const path = file.path;
+        if (path && onPasteFile) {
+          onPasteFile(path);
+        } else if (onPasteBuffer) {
+          const buffer = await file.arrayBuffer();
+          onPasteBuffer(buffer, file.type);
+        }
+      }
     }
   };
 
@@ -102,6 +122,7 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, disabled, p
           placeholder={disabled ? 'Peer is offline — messaging unavailable' : placeholder || 'Type a message...'}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           style={{
             flex: 1,
             border: 'none',

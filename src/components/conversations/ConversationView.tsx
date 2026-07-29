@@ -259,6 +259,27 @@ export function ConversationView({ peer }: ConversationViewProps) {
           onSend={handleSend}
           onAttachFile={handleAttachFile}
           onAttachFolder={() => offerFolder(peer.id)}
+          onPasteFile={async (path) => {
+            if (path && window.link?.fileTransfer) {
+              const transfers = await window.link.fileTransfer.offerFile(peer.id, path);
+              if (transfers) {
+                const transferArray = Array.isArray(transfers) ? transfers : [transfers];
+                transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
+              }
+            }
+          }}
+          onPasteBuffer={async (buffer, mimeType) => {
+            if (window.link?.fileTransfer) {
+              const savedPath = await window.link.fileTransfer.saveBuffer(buffer, mimeType);
+              if (savedPath) {
+                const transfers = await window.link.fileTransfer.offerFile(peer.id, savedPath);
+                if (transfers) {
+                  const transferArray = Array.isArray(transfers) ? transfers : [transfers];
+                  transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
+                }
+              }
+            }
+          }}
           disabled={isOffline || isVersionMismatch}
         />
       </div>

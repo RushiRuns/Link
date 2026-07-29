@@ -72,6 +72,10 @@ export function registerIpcHandlers() {
     return fileTransferService.selectAndOfferFolder(peerId, groupId);
   });
 
+  ipcMain.handle('file-transfer:save-buffer', async (_, buffer: ArrayBuffer, mimeType: string) => {
+    return fileTransferService.savePastedBuffer(buffer, mimeType);
+  });
+
   ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean, savePath?: string) => {
     return fileTransferService.respondToOffer(transferId, accepted, savePath);
   });
