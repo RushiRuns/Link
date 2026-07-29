@@ -14,7 +14,7 @@ interface ConversationViewProps {
 
 export function ConversationView({ peer }: ConversationViewProps) {
   const { messages, sendMessage, markConversationRead } = useConversationsStore();
-  const { transfers, offerFile } = useFileTransferStore();
+  const { transfers, offerFile, offerFolder } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -258,6 +258,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <MessageInput
           onSend={handleSend}
           onAttachFile={handleAttachFile}
+          onAttachFolder={() => offerFolder(peer.id)}
           disabled={isOffline || isVersionMismatch}
         />
       </div>

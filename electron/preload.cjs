@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld("link", {
   },
   fileTransfer: {
     offerFile: (peerId, filePath) => ipcRenderer.invoke("file-transfer:offer", peerId, filePath),
+    offerFolder: (peerId, groupId) => ipcRenderer.invoke("file-transfer:offer-folder", peerId, groupId),
     respond: (transferId, accepted, savePath) =>
       ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
     openFolder: (transferId) => ipcRenderer.invoke("file-transfer:open-folder", transferId),

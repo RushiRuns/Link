@@ -66,6 +66,7 @@ export interface LinkFileTransfer {
   groupId?: string;
   fileName: string;
   fileSizeBytes: number;
+  isFolder?: boolean;
   mimeType: string;
   status: FileTransferStatus;
   bytesTransferred: number;

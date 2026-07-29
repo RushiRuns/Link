@@ -1,5 +1,5 @@
 import { LinkFileTransfer } from '../../types/ipc';
-import { FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FileText, CheckCircle2, AlertCircle, Folder } from 'lucide-react';
 
 interface TransferProgressProps {
   transfer: LinkFileTransfer;
@@ -58,6 +58,8 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
             <CheckCircle2 size={18} color="var(--status-online)" />
           ) : isFailed ? (
             <AlertCircle size={18} color="var(--status-error)" />
+          ) : transfer.isFolder ? (
+            <Folder size={18} color="var(--accent-primary)" />
           ) : (
             <FileText size={18} color="var(--accent-primary)" />
           )}

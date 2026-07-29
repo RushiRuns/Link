@@ -4,13 +4,16 @@ import { Send, Paperclip } from 'lucide-react';
 interface MessageInputProps {
   onSend: (content: string) => void;
   onAttachFile?: () => void;
+  onAttachFolder?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
 const MAX_CHAR_LIMIT = 10000;
 
-export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: MessageInputProps) {
+import { FolderUp } from 'lucide-react';
+
+export function MessageInput({ onSend, onAttachFile, onAttachFolder, disabled, placeholder }: MessageInputProps) {
   const [content, setContent] = useState('');
 
   const handleSend = () => {
@@ -64,6 +67,30 @@ export function MessageInput({ onSend, onAttachFile, disabled, placeholder }: Me
             }}
           >
             <Paperclip size={16} strokeWidth={1.5} />
+          </button>
+        )}
+        
+        {onAttachFolder && (
+          <button
+            onClick={onAttachFolder}
+            disabled={disabled}
+            title="Attach Folder"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'transparent',
+              color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+              border: 'none',
+              cursor: disabled ? 'default' : 'pointer',
+              flexShrink: 0,
+              transition: 'color var(--transition-fast)'
+            }}
+          >
+            <FolderUp size={16} strokeWidth={1.5} />
           </button>
         )}
 

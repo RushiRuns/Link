@@ -3,6 +3,22 @@ import { app, dialog } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import tar from 'tar-fs';
+
+function getFolderSize(dirPath: string): number {
+  let size = 0;
+  const files = fs.readdirSync(dirPath);
+  for (let i = 0; i < files.length; i++) {
+    const filePath = path.join(dirPath, files[i]);
+    const stats = fs.statSync(filePath);
+    if (stats.isFile()) {
+      size += stats.size;
+    } else if (stats.isDirectory()) {
+      size += getFolderSize(filePath);
+    }
+  }
+  return size;
+}
 
 export interface ActiveFileTransferState {
   id: string;
@@ -18,7 +34,8 @@ export interface ActiveFileTransferState {
   startedAt: number;
   savePath?: string;
   tempPath?: string;
-  writeStream?: fs.WriteStream;
+  writeStream?: any;
+  isFolder?: boolean;
 }
 
 class FileTransferService {
@@ -137,6 +154,80 @@ class FileTransferService {
     };
   }
 
+  public async selectAndOfferFolder(peerId: string, groupId?: string) {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+      title: 'Select Folder to Send'
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    const folderPath = result.filePaths[0];
+    return this.offerFolder(peerId, folderPath, groupId);
+  }
+
+  public async offerFolder(peerId: string, folderPath: string, groupId?: string) {
+    if (!fs.existsSync(folderPath)) {
+      throw new Error(`Folder not found: ${folderPath}`);
+    }
+
+    const folderName = path.basename(folderPath);
+    const transferId = uuidv4();
+    const chunkSize = 65536; // 64 KB
+    const folderSize = getFolderSize(folderPath);
+    const totalChunks = Math.ceil(folderSize / chunkSize);
+
+    const now = Date.now();
+    const state: ActiveFileTransferState = {
+      id: transferId,
+      direction: 'outgoing',
+      peerId,
+      groupId,
+      filePath: folderPath,
+      fileName: folderName,
+      fileSizeBytes: folderSize,
+      mimeType: 'application/x-tar',
+      bytesTransferred: 0,
+      status: 'pending_accept',
+      startedAt: now,
+      isFolder: true
+    };
+
+    this.transfers.set(transferId, state);
+
+    connectionManager.send(peerId, {
+      type: 'file.offer',
+      id: transferId,
+      ts: now,
+      payload: {
+        transferId,
+        groupId,
+        fileName: folderName,
+        fileSizeBytes: folderSize,
+        mimeType: state.mimeType,
+        chunkSizeBytes: chunkSize,
+        totalChunks,
+        isFolder: true
+      }
+    });
+
+    return {
+      id: transferId,
+      direction: 'outgoing' as const,
+      peerId,
+      groupId,
+      fileName: folderName,
+      fileSizeBytes: folderSize,
+      mimeType: state.mimeType,
+      status: 'pending_accept' as const,
+      bytesTransferred: 0,
+      startedAt: now,
+      isFolder: true
+    };
+  }
+
   public async respondToOffer(transferId: string, accepted: boolean, customSavePath?: string) {
     const state = this.transfers.get(transferId);
     if (!state) return;
@@ -164,7 +255,13 @@ class FileTransferService {
     state.status = 'transferring';
     state.savePath = savePath;
     state.tempPath = tempPath;
-    state.writeStream = fs.createWriteStream(tempPath);
+    
+    if (state.isFolder) {
+      fs.mkdirSync(tempPath, { recursive: true });
+      state.writeStream = tar.extract(tempPath);
+    } else {
+      state.writeStream = fs.createWriteStream(tempPath);
+    }
 
     connectionManager.send(state.peerId, {
       type: 'file.response',
@@ -189,7 +286,8 @@ class FileTransferService {
       mimeType: p.mimeType || 'application/octet-stream',
       bytesTransferred: 0,
       status: 'pending_accept',
-      startedAt: now
+      startedAt: now,
+      isFolder: p.isFolder
     };
 
     this.transfers.set(p.transferId, state);
@@ -205,7 +303,8 @@ class FileTransferService {
       mimeType: state.mimeType,
       status: 'pending_accept',
       bytesTransferred: 0,
-      startedAt: now
+      startedAt: now,
+      isFolder: state.isFolder
     });
   }
 
@@ -230,7 +329,9 @@ class FileTransferService {
       return;
     }
 
-    const readStream = fs.createReadStream(state.filePath, { highWaterMark: 65536 });
+    const readStream = state.isFolder
+      ? tar.pack(state.filePath)
+      : fs.createReadStream(state.filePath, { highWaterMark: 65536 });
     let chunkIndex = 0;
 
     readStream.on('data', (chunkBuffer: Buffer | string) => {
@@ -245,7 +346,7 @@ class FileTransferService {
           transferId: state.id,
           chunkIndex: chunkIndex++,
           data: bytes.toString('base64'),
-          isLast: state.bytesTransferred >= state.fileSizeBytes
+          isLast: state.isFolder ? false : state.bytesTransferred >= state.fileSizeBytes
         }
       });
 
@@ -267,7 +368,7 @@ class FileTransferService {
       this.windowRef?.webContents?.send('file-transfer:completed', state.id);
     });
 
-    readStream.on('error', (err) => {
+    readStream.on('error', (err: any) => {
       console.error(`[FileTransfer] Stream read error for ${state.id}:`, err);
       state.status = 'failed';
       this.windowRef?.webContents?.send('file-transfer:failed', state.id);
@@ -302,9 +403,14 @@ class FileTransferService {
       state.writeStream.end(() => {
         if (state.tempPath && state.savePath) {
           try {
-            fs.copyFileSync(state.tempPath, state.savePath);
-            fs.unlinkSync(state.tempPath);
-          } catch (err) {
+            if (state.isFolder) {
+              fs.cpSync(state.tempPath, state.savePath, { recursive: true });
+              fs.rmSync(state.tempPath, { recursive: true, force: true });
+            } else {
+              fs.copyFileSync(state.tempPath, state.savePath);
+              fs.unlinkSync(state.tempPath);
+            }
+          } catch (err: any) {
             console.error(`[FileTransfer] Error finalizing saved file for ${state.id}:`, err);
           }
         }

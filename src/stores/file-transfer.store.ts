@@ -10,6 +10,7 @@ interface FileTransferState {
   setTransferStatus: (transferId: string, status: LinkFileTransfer['status']) => void;
   clearIncomingOffer: () => void;
   offerFile: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
+  offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
   respondToOffer: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
   openTransferFolder: (transferId: string) => Promise<boolean>;
   initListeners: () => () => void;
@@ -67,6 +68,21 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
         }
       } catch (err) {
         console.error('[FileTransferStore] Error offering file:', err);
+      }
+    }
+    return undefined;
+  },
+
+  offerFolder: async (peerId) => {
+    if (window.link?.fileTransfer) {
+      try {
+        const transfer = await window.link.fileTransfer.offerFolder(peerId, '');
+        if (transfer) {
+          get().addTransfer(transfer);
+          return transfer;
+        }
+      } catch (err) {
+        console.error('[FileTransferStore] Error offering folder:', err);
       }
     }
     return undefined;

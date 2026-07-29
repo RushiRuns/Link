@@ -200,10 +200,11 @@ interface FileTransferOffer {
   transferId: string;         // UUID v4
   groupId?: string;           // Set if offered to a group
   fileName: string;
-  fileSizeBytes: number;
+  fileSizeBytes: number;      // Note: for folders, this is an estimate
   mimeType: string;
   chunkSizeBytes: number;     // Fixed at 65536 (64 KB) for MVP
   totalChunks: number;        // Math.ceil(fileSizeBytes / chunkSizeBytes)
+  isFolder?: boolean;         // NEW: true if sending a folder
 }
 ```
 
