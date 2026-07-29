@@ -251,7 +251,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             }}
           >
             <Info size={14} strokeWidth={1.5} />
-            <span>Link LAN Messenger v1.0.0 (MVP) • Peer-to-Peer Encrypted Network</span>
+            <span>Link LAN Messenger v1.3.0 • Peer-to-Peer Encrypted Network</span>
           </div>
         </div>
       </div>
