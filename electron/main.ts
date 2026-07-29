@@ -31,11 +31,16 @@ function createWindow() {
 
   const isMac = process.platform === 'darwin';
 
+  const iconPath = process.env['VITE_DEV_SERVER_URL'] 
+    ? path.join(__dirname, '../public/icon.ico') 
+    : path.join(__dirname, '../dist/icon.ico');
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 720,
     minWidth: 800,
     minHeight: 550,
+    icon: iconPath,
     frame: !isMac,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     autoHideMenuBar: true,
