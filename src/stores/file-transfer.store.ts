@@ -61,13 +61,18 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
   offerFile: async (peerId) => {
     if (window.link?.fileTransfer) {
       try {
-        const transfer = await window.link.fileTransfer.offerFile(peerId, '');
-        if (transfer) {
-          get().addTransfer(transfer);
-          return transfer;
+        const transfers = await window.link.fileTransfer.offerFile(peerId, '');
+        if (transfers) {
+          if (Array.isArray(transfers)) {
+            transfers.forEach(t => get().addTransfer(t));
+            return transfers[0]; // Return the first one or adjust return type if needed
+          } else {
+            get().addTransfer(transfers);
+            return transfers;
+          }
         }
       } catch (err) {
-        console.error('[FileTransferStore] Error offering file:', err);
+        console.error('[FileTransferStore] Error offering file(s):', err);
       }
     }
     return undefined;

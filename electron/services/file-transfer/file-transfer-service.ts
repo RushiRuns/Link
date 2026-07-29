@@ -85,16 +85,19 @@ class FileTransferService {
 
   public async selectAndOfferFile(peerId: string, groupId?: string) {
     const result = await dialog.showOpenDialog({
-      properties: ['openFile'],
-      title: 'Select File to Send'
+      properties: ['openFile', 'multiSelections'],
+      title: 'Select File(s) to Send'
     });
 
     if (result.canceled || result.filePaths.length === 0) {
       return null;
     }
 
-    const filePath = result.filePaths[0];
-    return this.offerFile(peerId, filePath, groupId);
+    const offers = [];
+    for (const filePath of result.filePaths) {
+      offers.push(await this.offerFile(peerId, filePath, groupId));
+    }
+    return offers;
   }
 
   public async offerFile(peerId: string, filePath: string, groupId?: string) {

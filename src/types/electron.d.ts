@@ -46,7 +46,7 @@ export interface LinkAPI {
     onGroupMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
   };
   fileTransfer: {
-    offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer>;
+    offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer | LinkFileTransfer[]>;
     offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer>;
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
     openFolder: (transferId: string) => Promise<boolean>;
