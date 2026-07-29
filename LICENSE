@@ -1,0 +1,192 @@
+Copyright (c) 2026 Rushi
+
+CUSTOM SOFTWARE LICENSE
+Version 1.0
+
+IMPORTANT: BY OBTAINING, ACCESSING, COPYING, INSTALLING, OR USING THIS SOFTWARE,
+YOU AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE.
+
+If you do not agree to these terms, you must not use the Software.
+
+------------------------------------------------------------
+1. DEFINITIONS
+------------------------------------------------------------
+
+"Software" means all source code, executable binaries, documentation,
+assets, configuration files, examples, scripts, and any other material
+contained within this repository or distributed by the copyright holder.
+
+"Author" means the copyright holder of this Software.
+
+"User" means any individual or legal entity using the Software.
+
+"Distribution" means making the Software available to any third party by
+any means, including but not limited to:
+
+- uploading
+- sharing
+- emailing
+- copying
+- mirroring
+- hosting
+- publishing
+- selling
+- sublicensing
+- bundling
+- including in another project
+
+whether in source code, binary, modified, or compiled form.
+
+------------------------------------------------------------
+2. LICENSE GRANT
+------------------------------------------------------------
+
+Subject to the terms of this License, the Author grants every User a
+worldwide, non-exclusive, non-transferable, revocable license to:
+
+(a) use the Software;
+
+(b) use the Software for personal purposes;
+
+(c) use the Software for educational purposes;
+
+(d) use the Software inside businesses or organizations;
+
+(e) use the Software for commercial activities;
+
+(f) install the Software on any number of devices owned or controlled by
+the User;
+
+(g) modify the Software solely for the User's own internal use.
+
+------------------------------------------------------------
+3. COMMERCIAL USE
+------------------------------------------------------------
+
+Commercial use is expressly permitted.
+
+Users may use the Software in businesses, commercial environments,
+client work, consulting services, internal operations, or revenue-
+generating activities, provided the Software itself is not distributed
+to third parties.
+
+The User may charge for services performed using the Software.
+
+The User may generate revenue through the use of the Software.
+
+The User may not charge money for copies of the Software.
+
+------------------------------------------------------------
+4. RESTRICTIONS
+------------------------------------------------------------
+
+Without prior written permission from the Author, the User SHALL NOT:
+
+(a) distribute the Software;
+
+(b) redistribute the Software;
+
+(c) sell the Software;
+
+(d) sublicense the Software;
+
+(e) rent or lease the Software;
+
+(f) host downloadable copies of the Software;
+
+(g) upload the Software to another website;
+
+(h) mirror this repository;
+
+(i) publish the Software on package repositories,
+application stores, or marketplaces;
+
+(j) distribute modified versions of the Software;
+
+(k) distribute compiled binaries of the Software;
+
+(l) distribute any portion of the Software.
+
+------------------------------------------------------------
+5. MODIFICATIONS
+------------------------------------------------------------
+
+Users may modify the Software solely for their own internal use.
+
+Modified versions remain subject to this License.
+
+Modified versions may not be distributed to any third party.
+
+------------------------------------------------------------
+6. OWNERSHIP
+------------------------------------------------------------
+
+Ownership of the Software is not transferred.
+
+All copyrights, trademarks, trade secrets, intellectual property rights,
+and ownership interests remain exclusively with the Author.
+
+Nothing in this License grants ownership to any User.
+
+------------------------------------------------------------
+7. NO IMPLIED RIGHTS
+------------------------------------------------------------
+
+No rights are granted except those expressly stated in this License.
+
+Any right not expressly granted is reserved by the Author.
+
+------------------------------------------------------------
+8. TERMINATION
+------------------------------------------------------------
+
+Any violation of this License immediately terminates all rights granted
+under it.
+
+Upon termination, the User must cease all use of the Software and destroy
+all copies under their control unless otherwise required by law.
+
+------------------------------------------------------------
+9. WARRANTY DISCLAIMER
+------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT.
+
+THE ENTIRE RISK ARISING OUT OF THE USE OF THE SOFTWARE REMAINS WITH THE
+USER.
+
+------------------------------------------------------------
+10. LIMITATION OF LIABILITY
+------------------------------------------------------------
+
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
+OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+THIS LIMITATION APPLIES TO ALL DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+PUNITIVE, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
+
+------------------------------------------------------------
+11. GOVERNING LAW
+------------------------------------------------------------
+
+This License shall be governed by and interpreted in accordance with the
+laws applicable in the jurisdiction of the Author, without regard to
+conflict-of-law principles.
+
+------------------------------------------------------------
+12. ENTIRE AGREEMENT
+------------------------------------------------------------
+
+This License constitutes the complete agreement between the Author and
+the User concerning the Software and supersedes all prior agreements
+relating to the Software.
+
+------------------------------------------------------------
+13. CONTACT
+------------------------------------------------------------
+
+Questions regarding this License may be directed to the Author through
+the official repository.
