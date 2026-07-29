@@ -24,7 +24,7 @@ export default function App() {
   const { groups } = useGroupsStore();
   const { incomingOffer } = useFileTransferStore();
   const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
-  const { initListeners: initConversationsListeners } = useConversationsStore();
+  const { initListeners: initConversationsListeners, loadFromDisk } = useConversationsStore();
   const { initListeners: initGroupsListeners } = useGroupsStore();
   const { initListeners: initFtListeners } = useFileTransferStore();
 
@@ -32,6 +32,7 @@ export default function App() {
   const [profilePeer, setProfilePeer] = useState<LinkPeer | null>(null);
 
   useEffect(() => {
+    loadFromDisk();
     const cleanCalls = initCallListeners();
     const cleanConversations = initConversationsListeners();
     const cleanGroups = initGroupsListeners();
@@ -45,7 +46,7 @@ export default function App() {
       cleanFt();
       cleanPeers();
     };
-  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners]);
+  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, loadFromDisk]);
 
   const selectedPeer = selectedPeerId ? peers.get(selectedPeerId) : null;
   const selectedGroup = selectedGroupId ? groups.get(selectedGroupId) : null;

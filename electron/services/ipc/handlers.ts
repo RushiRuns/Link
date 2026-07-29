@@ -7,6 +7,7 @@ import { groupService } from '../groups/group-service.js';
 import { fileTransferService } from '../file-transfer/file-transfer-service.js';
 import { callSignalingService } from '../calls/call-signaling.js';
 import { connectionManager } from '../network/connection-manager.js';
+import { messageStore } from '../storage/message-store.js';
 
 export function registerIpcHandlers() {
   // Identity Handlers
@@ -49,6 +50,14 @@ export function registerIpcHandlers() {
   // Messaging Handlers
   ipcMain.handle('messaging:send', async (_, peerId: string, content: string) => {
     return messageService.sendMessage(peerId, content);
+  });
+
+  ipcMain.handle('messages:load', async () => {
+    return messageStore.loadMessages();
+  });
+
+  ipcMain.handle('messages:save', async (_, data: Record<string, any[]>) => {
+    return messageStore.saveMessages(data);
   });
 
   // Groups Handlers

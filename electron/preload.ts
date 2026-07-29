@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('link', {
     }
   },
   messaging: {
+    loadMessages: () => ipcRenderer.invoke('messages:load'),
+    saveMessages: (data: any) => ipcRenderer.invoke('messages:save', data),
     sendMessage: (peerId: string, content: string) => ipcRenderer.invoke('messaging:send', peerId, content),
     onMessageReceived: (callback: EventCallback) => {
       const listener = (_: any, msg: any) => callback(msg);

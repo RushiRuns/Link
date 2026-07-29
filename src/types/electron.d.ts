@@ -35,6 +35,8 @@ export interface LinkAPI {
     onNoPeersFound: (callback: () => void) => () => void;
   };
   messaging: {
+    loadMessages: () => Promise<Record<string, LinkMessage[]>>;
+    saveMessages: (data: Record<string, LinkMessage[]>) => Promise<void>;
     sendMessage: (peerId: string, content: string) => Promise<LinkMessage>;
     onMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
     onMessageDelivered: (callback: (messageId: string) => void) => () => void;

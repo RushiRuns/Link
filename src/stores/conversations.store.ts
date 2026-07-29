@@ -10,6 +10,7 @@ interface ConversationsState {
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
   sendMessage: (peerId: string, content: string) => Promise<void>;
+  loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
 }
 
@@ -81,6 +82,21 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     }
   },
 
+  loadFromDisk: async () => {
+    if (window.link?.messaging?.loadMessages) {
+      try {
+        const data = await window.link.messaging.loadMessages();
+        const map = new Map<string, LinkMessage[]>();
+        for (const [convId, msgs] of Object.entries(data)) {
+          map.set(convId, msgs);
+        }
+        set({ messages: map });
+      } catch (err) {
+        console.error('[ConversationsStore] Error loading messages from disk:', err);
+      }
+    }
+  },
+
   initListeners: () => {
     if (!window.link?.messaging) return () => {};
 
@@ -105,3 +121,39 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     };
   }
 }));
+
+let saveTimeout: any;
+let lastMessages: Map<string, LinkMessage[]> | null = null;
+
+useConversationsStore.subscribe((state) => {
+  if (state.messages !== lastMessages) {
+    lastMessages = state.messages;
+    
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      if (window.link?.messaging?.saveMessages) {
+        const record: Record<string, LinkMessage[]> = {};
+        for (const [convId, msgs] of state.messages.entries()) {
+          record[convId] = msgs;
+        }
+        try {
+          await window.link.messaging.saveMessages(record);
+        } catch (err) {
+          console.error('[ConversationsStore] Error saving messages to disk:', err);
+        }
+      }
+    }, 500); // 500ms debounce
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (saveTimeout && lastMessages && window.link?.messaging?.saveMessages) {
+    clearTimeout(saveTimeout);
+    const record: Record<string, LinkMessage[]> = {};
+    for (const [convId, msgs] of lastMessages.entries()) {
+      record[convId] = msgs;
+    }
+    // Fire and forget, OS usually allows small async IPC messages in beforeunload
+    window.link.messaging.saveMessages(record);
+  }
+});
