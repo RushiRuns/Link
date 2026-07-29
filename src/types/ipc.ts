@@ -23,6 +23,12 @@ export interface LinkPeer {
 
 export type DeliveryStatus = 'sending' | 'sent' | 'delivered' | 'failed';
 
+export interface LinkTypingEvent {
+  peerId: string;
+  conversationId?: string;
+  groupId?: string;
+}
+
 export interface LinkMessage {
   id: string;
   conversationId?: string;

@@ -156,6 +156,18 @@ interface MessageAck {
 }
 ```
 
+### 4.3 MessageTyping (Typing Indicator)
+
+Sent periodically while a user is actively typing a message in a 1-to-1 or group chat.
+
+```typescript
+interface MessageTyping {
+  type: 'message.typing';
+  conversationId?: string;    // Set for 1-to-1 typing
+  groupId?: string;           // Set for group typing
+}
+```
+
 ---
 
 ## 5. Group Management

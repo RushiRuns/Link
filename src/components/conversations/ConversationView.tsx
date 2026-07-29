@@ -13,7 +13,7 @@ interface ConversationViewProps {
 }
 
 export function ConversationView({ peer }: ConversationViewProps) {
-  const { messages, sendMessage, markConversationRead } = useConversationsStore();
+  const { messages, typingPeers, sendMessage, markConversationRead } = useConversationsStore();
   const { transfers, offerFile, offerFolder } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
@@ -65,6 +65,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const isOffline = peer.status === 'offline';
   const isVersionMismatch = peer.status === 'version_mismatch';
+  const isTyping = typingPeers.has(conversationId);
 
   // Merge messages and file transfers into a single chronologically sorted timeline
   type ChatTimelineItem =
@@ -269,12 +270,42 @@ export function ConversationView({ peer }: ConversationViewProps) {
             );
           })
         )}
+
+        {isTyping && (
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              padding: 'var(--space-2) var(--space-3)',
+              color: 'var(--text-secondary)',
+              fontSize: 'var(--font-size-meta)',
+              fontStyle: 'italic',
+              animation: 'typingPulse 1.5s infinite ease-in-out',
+              marginTop: 'var(--space-1)'
+            }}
+          >
+            <style>
+              {`
+                @keyframes typingPulse {
+                  0% { opacity: 0.4; }
+                  50% { opacity: 1; }
+                  100% { opacity: 0.4; }
+                }
+              `}
+            </style>
+            {peer.displayName} is typing...
+          </div>
+        )}
       </div>
 
       {/* Message Input Footer */}
       <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)' }}>
         <MessageInput
           onSend={handleSend}
+          onTyping={() => {
+            if (window.link?.messaging) {
+              window.link.messaging.sendTypingSignal(peer.id);
+            }
+          }}
           onAttachFile={handleAttachFile}
           onAttachFolder={() => offerFolder(peer.id)}
           onPasteFile={async (path) => {

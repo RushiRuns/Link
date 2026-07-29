@@ -5,7 +5,8 @@ import {
   LinkGroup,
   LinkFileTransfer,
   LinkCall,
-  CallMediaType
+  CallMediaType,
+  LinkTypingEvent
 } from './ipc';
 
 export interface SystemInfo {
@@ -40,6 +41,8 @@ export interface LinkAPI {
     sendMessage: (peerId: string, content: string) => Promise<LinkMessage>;
     onMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
     onMessageDelivered: (callback: (messageId: string) => void) => () => void;
+    sendTypingSignal: (peerId: string, groupId?: string) => Promise<void>;
+    onTypingReceived: (callback: (event: LinkTypingEvent) => void) => () => void;
   };
   groups: {
     createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup>;

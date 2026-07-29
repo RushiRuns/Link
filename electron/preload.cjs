@@ -45,6 +45,12 @@ contextBridge.exposeInMainWorld("link", {
       const listener = (_, msgId) => callback(msgId);
       ipcRenderer.on("message:delivered", listener);
       return () => ipcRenderer.removeListener("message:delivered", listener);
+    },
+    sendTypingSignal: (peerId, groupId) => ipcRenderer.invoke("messaging:send-typing", peerId, groupId),
+    onTypingReceived: (callback) => {
+      const listener = (_, event) => callback(event);
+      ipcRenderer.on("message:typing", listener);
+      return () => ipcRenderer.removeListener("message:typing", listener);
     }
   },
   groups: {

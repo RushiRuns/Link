@@ -7,6 +7,7 @@ interface MessageInputProps {
   onAttachFolder?: () => void;
   onPasteFile?: (path: string) => void;
   onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
+  onTyping?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -14,9 +15,23 @@ interface MessageInputProps {
 const MAX_CHAR_LIMIT = 10000;
 
 import { FolderUp } from 'lucide-react';
+import { useRef } from 'react';
 
-export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile, onPasteBuffer, disabled, placeholder }: MessageInputProps) {
+export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile, onPasteBuffer, onTyping, disabled, placeholder }: MessageInputProps) {
   const [content, setContent] = useState('');
+  const lastTypingTime = useRef(0);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    
+    if (onTyping) {
+      const now = Date.now();
+      if (now - lastTypingTime.current > 2000) {
+        lastTypingTime.current = now;
+        onTyping();
+      }
+    }
+  };
 
   const handleSend = () => {
     const trimmed = content.trim();
@@ -120,7 +135,7 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile
           maxLength={MAX_CHAR_LIMIT}
           disabled={disabled}
           placeholder={disabled ? 'Peer is offline — messaging unavailable' : placeholder || 'Type a message...'}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           style={{

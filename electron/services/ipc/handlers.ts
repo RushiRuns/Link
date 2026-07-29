@@ -52,6 +52,10 @@ export function registerIpcHandlers() {
     return messageService.sendMessage(peerId, content);
   });
 
+  ipcMain.handle('messaging:send-typing', async (_, peerId: string, groupId?: string) => {
+    return messageService.sendTypingSignal(peerId, groupId);
+  });
+
   ipcMain.handle('messages:load', async () => {
     return messageStore.loadMessages();
   });

@@ -6,10 +6,13 @@ import { useAppStore } from './app.store';
 interface ConversationsState {
   messages: Map<string, LinkMessage[]>; // conversationId -> LinkMessage[]
   unreadCounts: Map<string, number>; // conversationId -> count
+  typingPeers: Map<string, number>; // conversationId -> timestamp
   addMessage: (message: LinkMessage) => void;
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
   clearConversation: (conversationId: string) => void;
+  setTyping: (conversationId: string) => void;
+  clearExpiredTyping: () => void;
   sendMessage: (peerId: string, content: string) => Promise<void>;
   loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
@@ -18,6 +21,7 @@ interface ConversationsState {
 export const useConversationsStore = create<ConversationsState>((set, get) => ({
   messages: new Map(),
   unreadCounts: new Map(),
+  typingPeers: new Map(),
 
   addMessage: (message) => {
     const convId = message.conversationId || 'default';
@@ -84,6 +88,29 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
   },
 
+  setTyping: (conversationId) => {
+    set((state) => {
+      const nextTyping = new Map(state.typingPeers);
+      nextTyping.set(conversationId, Date.now());
+      return { typingPeers: nextTyping };
+    });
+  },
+
+  clearExpiredTyping: () => {
+    set((state) => {
+      const now = Date.now();
+      let changed = false;
+      const nextTyping = new Map(state.typingPeers);
+      for (const [convId, timestamp] of nextTyping.entries()) {
+        if (now - timestamp > 3000) { // 3 seconds timeout
+          nextTyping.delete(convId);
+          changed = true;
+        }
+      }
+      return changed ? { typingPeers: nextTyping } : state;
+    });
+  },
+
   sendMessage: async (peerId, content) => {
     if (window.link?.messaging) {
       try {
@@ -128,9 +155,21 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       get().updateDeliveryStatus(messageId, 'delivered');
     });
 
+    const cleanTyping = window.link.messaging.onTypingReceived((event) => {
+      if (event.conversationId) {
+        get().setTyping(event.conversationId);
+      }
+    });
+
+    const typingInterval = setInterval(() => {
+      get().clearExpiredTyping();
+    }, 1000);
+
     return () => {
       cleanReceived();
       cleanDelivered();
+      cleanTyping();
+      clearInterval(typingInterval);
     };
   }
 }));
