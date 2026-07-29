@@ -13,7 +13,16 @@ interface ConversationViewProps {
 }
 
 export function ConversationView({ peer }: ConversationViewProps) {
-  const { messages, typingPeers, sendMessage, markConversationRead } = useConversationsStore();
+  const { 
+    messages, 
+    typingPeers, 
+    sendMessage, 
+    markConversationRead,
+    editingMessageId,
+    setEditingMessageId,
+    editMessageLocally,
+    deleteMessageLocally
+  } = useConversationsStore();
   const { transfers, offerFile, offerFolder } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
@@ -44,8 +53,33 @@ export function ConversationView({ peer }: ConversationViewProps) {
     }
   }, [conversationMessages.length, peerTransfers.length]);
 
+  const latestSentMessageId = [...conversationMessages].reverse().find(m => m.senderId === localIdentity?.deviceId)?.id;
+  const editingMessageContent = conversationMessages.find(m => m.id === editingMessageId)?.content;
+
   const handleSend = (text: string) => {
-    sendMessage(peer.id, text);
+    if (editingMessageId) {
+      if (window.link?.messaging) {
+        window.link.messaging.sendEditMessage(peer.id, editingMessageId, text);
+        editMessageLocally(conversationId, editingMessageId, text);
+      }
+      setEditingMessageId(null);
+    } else {
+      sendMessage(peer.id, text);
+    }
+  };
+
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content).catch(console.error);
+  };
+
+  const handleDelete = (messageId: string) => {
+    if (window.link?.messaging) {
+      window.link.messaging.sendDeleteMessage(peer.id, messageId);
+      deleteMessageLocally(conversationId, messageId);
+      if (editingMessageId === messageId) {
+        setEditingMessageId(null);
+      }
+    }
   };
 
   const handleAttachFile = () => {
@@ -258,6 +292,10 @@ export function ConversationView({ peer }: ConversationViewProps) {
                   key={item.id}
                   message={item.data}
                   isSelf={item.data.senderId === localIdentity?.deviceId}
+                  isLatestMessage={item.data.id === latestSentMessageId}
+                  onCopy={() => handleCopy(item.data.content)}
+                  onEdit={() => setEditingMessageId(item.data.id)}
+                  onDelete={() => handleDelete(item.data.id)}
                 />
               );
             }
@@ -300,6 +338,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
       {/* Message Input Footer */}
       <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)' }}>
         <MessageInput
+          initialValue={editingMessageContent}
+          isEditing={!!editingMessageId}
+          onCancelEdit={() => setEditingMessageId(null)}
           onSend={handleSend}
           onTyping={() => {
             if (window.link?.messaging) {

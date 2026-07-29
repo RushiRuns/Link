@@ -7,12 +7,16 @@ interface ConversationsState {
   messages: Map<string, LinkMessage[]>; // conversationId -> LinkMessage[]
   unreadCounts: Map<string, number>; // conversationId -> count
   typingPeers: Map<string, number>; // conversationId -> timestamp
+  editingMessageId: string | null;
   addMessage: (message: LinkMessage) => void;
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
   clearConversation: (conversationId: string) => void;
   setTyping: (conversationId: string) => void;
   clearExpiredTyping: () => void;
+  setEditingMessageId: (id: string | null) => void;
+  editMessageLocally: (conversationId: string, messageId: string, newContent: string) => void;
+  deleteMessageLocally: (conversationId: string, messageId: string) => void;
   sendMessage: (peerId: string, content: string) => Promise<void>;
   loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
@@ -22,6 +26,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
   messages: new Map(),
   unreadCounts: new Map(),
   typingPeers: new Map(),
+  editingMessageId: null,
 
   addMessage: (message) => {
     const convId = message.conversationId || 'default';
@@ -111,6 +116,38 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
   },
 
+  setEditingMessageId: (id) => set({ editingMessageId: id }),
+
+  editMessageLocally: (conversationId, messageId, newContent) => {
+    set((state) => {
+      const nextMessages = new Map(state.messages);
+      const list = nextMessages.get(conversationId);
+      if (list) {
+        const index = list.findIndex(m => m.id === messageId);
+        if (index !== -1) {
+          const newList = [...list];
+          newList[index] = { ...newList[index], content: newContent };
+          nextMessages.set(conversationId, newList);
+          return { messages: nextMessages };
+        }
+      }
+      return state;
+    });
+  },
+
+  deleteMessageLocally: (conversationId, messageId) => {
+    set((state) => {
+      const nextMessages = new Map(state.messages);
+      const list = nextMessages.get(conversationId);
+      if (list) {
+        const newList = list.filter(m => m.id !== messageId);
+        nextMessages.set(conversationId, newList);
+        return { messages: nextMessages };
+      }
+      return state;
+    });
+  },
+
   sendMessage: async (peerId, content) => {
     if (window.link?.messaging) {
       try {
@@ -161,6 +198,44 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       }
     });
 
+    const cleanEdited = window.link.messaging.onMessageEdited((event) => {
+      const { selectedPeerId } = useAppStore.getState();
+      const identity = getOrGenerateIdentity(); // from peer perspective? No, we shouldn't import it here directly unless needed, or just calculate convId.
+      // Wait, we need identity to build convId. But we can just search all conversations for the messageId to be safe.
+      set((state) => {
+        const nextMessages = new Map(state.messages);
+        let changed = false;
+        for (const [convId, list] of nextMessages.entries()) {
+          const idx = list.findIndex(m => m.id === event.messageId);
+          if (idx !== -1 && list[idx].senderId === event.senderDeviceId) {
+            const newList = [...list];
+            newList[idx] = { ...newList[idx], content: event.newContent };
+            nextMessages.set(convId, newList);
+            changed = true;
+            break;
+          }
+        }
+        return changed ? { messages: nextMessages } : state;
+      });
+    });
+
+    const cleanDeleted = window.link.messaging.onMessageDeleted((event) => {
+      set((state) => {
+        const nextMessages = new Map(state.messages);
+        let changed = false;
+        for (const [convId, list] of nextMessages.entries()) {
+          const idx = list.findIndex(m => m.id === event.messageId);
+          if (idx !== -1 && list[idx].senderId === event.senderDeviceId) {
+            const newList = list.filter(m => m.id !== event.messageId);
+            nextMessages.set(convId, newList);
+            changed = true;
+            break;
+          }
+        }
+        return changed ? { messages: nextMessages } : state;
+      });
+    });
+
     const typingInterval = setInterval(() => {
       get().clearExpiredTyping();
     }, 1000);
@@ -169,6 +244,8 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       cleanReceived();
       cleanDelivered();
       cleanTyping();
+      cleanEdited();
+      cleanDeleted();
       clearInterval(typingInterval);
     };
   }

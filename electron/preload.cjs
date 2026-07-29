@@ -51,6 +51,18 @@ contextBridge.exposeInMainWorld("link", {
       const listener = (_, event) => callback(event);
       ipcRenderer.on("message:typing", listener);
       return () => ipcRenderer.removeListener("message:typing", listener);
+    },
+    sendEditMessage: (peerId, messageId, newContent) => ipcRenderer.invoke("messaging:edit-message", peerId, messageId, newContent),
+    sendDeleteMessage: (peerId, messageId) => ipcRenderer.invoke("messaging:delete-message", peerId, messageId),
+    onMessageEdited: (callback) => {
+      const listener = (_, event) => callback(event);
+      ipcRenderer.on("message:edited", listener);
+      return () => ipcRenderer.removeListener("message:edited", listener);
+    },
+    onMessageDeleted: (callback) => {
+      const listener = (_, event) => callback(event);
+      ipcRenderer.on("message:deleted", listener);
+      return () => ipcRenderer.removeListener("message:deleted", listener);
     }
   },
   groups: {

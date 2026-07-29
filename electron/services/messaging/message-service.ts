@@ -20,6 +20,10 @@ class MessageService {
         this.handleMessageAck(senderDeviceId, envelope);
       } else if (envelope.type === 'message.typing') {
         this.handleTypingSignal(senderDeviceId, envelope);
+      } else if (envelope.type === 'message.edit') {
+        this.handleMessageEdit(senderDeviceId, envelope);
+      } else if (envelope.type === 'message.delete') {
+        this.handleMessageDelete(senderDeviceId, envelope);
       }
     });
   }
@@ -79,6 +83,24 @@ class MessageService {
     });
   }
 
+  public editMessage(peerId: string, messageId: string, newContent: string) {
+    connectionManager.send(peerId, {
+      type: 'message.edit',
+      id: uuidv4(),
+      ts: Date.now(),
+      payload: { messageId, newContent }
+    });
+  }
+
+  public deleteMessage(peerId: string, messageId: string) {
+    connectionManager.send(peerId, {
+      type: 'message.delete',
+      id: uuidv4(),
+      ts: Date.now(),
+      payload: { messageId }
+    });
+  }
+
   private handleTextMessage(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (!payload || !payload.content) return;
@@ -126,6 +148,27 @@ class MessageService {
         peerId: senderDeviceId,
         conversationId: payload.conversationId,
         groupId: payload.groupId
+      });
+    }
+  }
+
+  private handleMessageEdit(senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (payload && payload.messageId && payload.newContent) {
+      this.windowRef?.webContents?.send('message:edited', {
+        senderDeviceId,
+        messageId: payload.messageId,
+        newContent: payload.newContent
+      });
+    }
+  }
+
+  private handleMessageDelete(senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (payload && payload.messageId) {
+      this.windowRef?.webContents?.send('message:deleted', {
+        senderDeviceId,
+        messageId: payload.messageId
       });
     }
   }

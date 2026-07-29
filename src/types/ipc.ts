@@ -29,6 +29,15 @@ export interface LinkTypingEvent {
   groupId?: string;
 }
 
+export interface LinkMessageEditEvent {
+  messageId: string;
+  newContent: string;
+}
+
+export interface LinkMessageDeleteEvent {
+  messageId: string;
+}
+
 export interface LinkMessage {
   id: string;
   conversationId?: string;

@@ -56,6 +56,14 @@ export function registerIpcHandlers() {
     return messageService.sendTypingSignal(peerId, groupId);
   });
 
+  ipcMain.handle('messaging:edit-message', async (_, peerId: string, messageId: string, newContent: string) => {
+    return messageService.editMessage(peerId, messageId, newContent);
+  });
+
+  ipcMain.handle('messaging:delete-message', async (_, peerId: string, messageId: string) => {
+    return messageService.deleteMessage(peerId, messageId);
+  });
+
   ipcMain.handle('messages:load', async () => {
     return messageStore.loadMessages();
   });

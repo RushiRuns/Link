@@ -168,6 +168,29 @@ interface MessageTyping {
 }
 ```
 
+### 4.4 MessageEdit
+
+Sent to replace the content of a previously sent message.
+
+```typescript
+interface MessageEdit {
+  type: 'message.edit';
+  messageId: string;
+  newContent: string;
+}
+```
+
+### 4.5 MessageDelete
+
+Sent to completely delete a previously sent message from both peers' local history.
+
+```typescript
+interface MessageDelete {
+  type: 'message.delete';
+  messageId: string;
+}
+```
+
 ---
 
 ## 5. Group Management

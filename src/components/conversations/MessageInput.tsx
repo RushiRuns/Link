@@ -8,18 +8,39 @@ interface MessageInputProps {
   onPasteFile?: (path: string) => void;
   onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
   onTyping?: () => void;
+  initialValue?: string;
+  isEditing?: boolean;
+  onCancelEdit?: () => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
 const MAX_CHAR_LIMIT = 10000;
 
-import { FolderUp } from 'lucide-react';
-import { useRef } from 'react';
+import { FolderUp, X, Check } from 'lucide-react';
+import { useRef, useEffect } from 'react';
 
-export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile, onPasteBuffer, onTyping, disabled, placeholder }: MessageInputProps) {
+export function MessageInput({ 
+  onSend, 
+  onAttachFile, 
+  onAttachFolder, 
+  onPasteFile, 
+  onPasteBuffer, 
+  onTyping, 
+  initialValue,
+  isEditing,
+  onCancelEdit,
+  disabled, 
+  placeholder 
+}: MessageInputProps) {
   const [content, setContent] = useState('');
   const lastTypingTime = useRef(0);
+
+  useEffect(() => {
+    if (initialValue !== undefined) {
+      setContent(initialValue);
+    }
+  }, [initialValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
@@ -37,7 +58,9 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile
     const trimmed = content.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
-    setContent('');
+    if (!isEditing) {
+      setContent('');
+    }
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -155,6 +178,7 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile
         <button
           onClick={handleSend}
           disabled={disabled || !content.trim()}
+          title={isEditing ? 'Update message' : 'Send message'}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -170,8 +194,29 @@ export function MessageInput({ onSend, onAttachFile, onAttachFolder, onPasteFile
             flexShrink: 0
           }}
         >
-          <Send size={15} strokeWidth={1.5} />
+          {isEditing ? <Check size={15} strokeWidth={2} /> : <Send size={15} strokeWidth={1.5} />}
         </button>
+        {isEditing && (
+          <button
+            onClick={onCancelEdit}
+            title="Cancel edit"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 30,
+              height: 30,
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--bg-card)',
+              color: 'var(--status-offline)',
+              border: '1px solid var(--border-color)',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
+          >
+            <X size={15} strokeWidth={2} />
+          </button>
+        )}
       </div>
 
       {isNearLimit && (

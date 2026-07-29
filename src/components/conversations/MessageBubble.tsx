@@ -1,12 +1,20 @@
 import { LinkMessage } from '../../types/ipc';
+import { Copy, Edit2, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface MessageBubbleProps {
   message: LinkMessage;
   isSelf: boolean;
   showSenderLabel?: boolean;
+  isLatestMessage?: boolean;
+  onCopy?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, onCopy, onEdit, onDelete }: MessageBubbleProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit'
@@ -83,7 +91,10 @@ export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbl
       )}
 
       <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         style={{
+          position: 'relative',
           maxWidth: '70%',
           padding: 'var(--space-2) var(--space-3)',
           borderRadius: 'var(--radius-md)',
@@ -95,6 +106,49 @@ export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbl
           lineHeight: 1.45
         }}
       >
+        {isHovered && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '-14px',
+              left: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 6px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow-sm)',
+              zIndex: 10
+            }}
+          >
+            <button
+              onClick={onCopy}
+              title="Copy"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center' }}
+            >
+              <Copy size={12} strokeWidth={1.5} />
+            </button>
+            {isSelf && isLatestMessage && (
+              <button
+                onClick={onEdit}
+                title="Edit"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center' }}
+              >
+                <Edit2 size={12} strokeWidth={1.5} />
+              </button>
+            )}
+            <button
+              onClick={onDelete}
+              title="Delete"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--status-offline)', padding: '2px', display: 'flex', alignItems: 'center' }}
+            >
+              <Trash2 size={12} strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+        
         <div style={{ whiteSpace: 'pre-wrap' }}>{renderContentWithLinks(message.content)}</div>
 
         <div
