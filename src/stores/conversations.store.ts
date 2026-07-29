@@ -88,8 +88,8 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       get().addMessage(message);
       
       const { selectedPeerId } = useAppStore.getState();
-      // Only flash and play sound if we are not actively viewing this peer's chat
-      if (selectedPeerId !== message.senderId) {
+      // Flash and play sound if we are not actively viewing this peer's chat, OR if the app is in the background
+      if (selectedPeerId !== message.senderId || !document.hasFocus()) {
         window.electron?.flashFrame(true);
         playNotificationSound();
       }
