@@ -29,6 +29,36 @@ export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbl
     }
   };
 
+  const renderContentWithLinks = (text: string) => {
+    // Basic regex to match http:// and https:// URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--accent-primary)',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              wordBreak: 'break-all'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'none')}
+            onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div
       style={{
@@ -65,7 +95,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel }: MessageBubbl
           lineHeight: 1.45
         }}
       >
-        <div>{message.content}</div>
+        <div style={{ whiteSpace: 'pre-wrap' }}>{renderContentWithLinks(message.content)}</div>
 
         <div
           style={{

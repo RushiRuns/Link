@@ -58,6 +58,14 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   mainWindow.setMenu(null);
 
+  // Intercept external links and open them in the default browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      import('electron').then(({ shell }) => shell.openExternal(url));
+    }
+    return { action: 'deny' };
+  });
+
   // Enable Ctrl+Shift+I / F12 for DevTools & Ctrl+R / F5 for reload
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return;
