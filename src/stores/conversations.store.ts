@@ -199,9 +199,6 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
 
     const cleanEdited = window.link.messaging.onMessageEdited((event) => {
-      const { selectedPeerId } = useAppStore.getState();
-      const identity = getOrGenerateIdentity(); // from peer perspective? No, we shouldn't import it here directly unless needed, or just calculate convId.
-      // Wait, we need identity to build convId. But we can just search all conversations for the messageId to be safe.
       set((state) => {
         const nextMessages = new Map(state.messages);
         let changed = false;
