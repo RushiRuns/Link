@@ -6,7 +6,7 @@ import { useCallsStore } from '../../stores/calls.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
-import { Shield, AlertCircle, Phone, Video } from 'lucide-react';
+import { Shield, AlertCircle, Phone, Video, Trash2 } from 'lucide-react';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -17,6 +17,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const { transfers, offerFile, offerFolder } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -116,54 +117,71 @@ export function ConversationView({ peer }: ConversationViewProps) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          {/* Call Initiation Buttons */}
-          {!isOffline && !isVersionMismatch && (
-            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-              <button
-                onClick={() => handleStartCall('voice')}
-                title="Start Voice Call"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 30,
-                  height: 30,
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
-                  cursor: 'pointer',
-                  transition: 'background-color var(--transition-fast)'
-                }}
-              >
-                <Phone size={15} strokeWidth={1.5} />
-              </button>
+          {/* Call Initiation Buttons & Clear Button */}
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            {!isOffline && !isVersionMismatch && (
+              <>
+                <button
+                  onClick={() => handleStartCall('voice')}
+                  title="Start Voice Call"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 30,
+                    height: 30,
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    transition: 'background-color var(--transition-fast)'
+                  }}
+                >
+                  <Phone size={15} strokeWidth={1.5} />
+                </button>
 
-              <button
-                onClick={() => handleStartCall('video')}
-                title="Start Video Call"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 30,
-                  height: 30,
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--accent-primary)',
-                  cursor: 'pointer',
-                  transition: 'background-color var(--transition-fast)'
-                }}
-              >
-                <Video size={15} strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => handleStartCall('video')}
+                  title="Start Video Call"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 30,
+                    height: 30,
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-card)',
+                    color: 'var(--accent-primary)',
+                    cursor: 'pointer',
+                    transition: 'background-color var(--transition-fast)'
+                  }}
+                >
+                  <Video size={15} strokeWidth={1.5} />
+                </button>
+              </>
+            )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-meta)', color: 'var(--status-online)' }}>
-            <Shield size={14} strokeWidth={1.5} color="var(--status-online)" />
-            <span>E2E Encrypted</span>
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              title="Clear Conversation"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 30,
+                height: 30,
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-card)',
+                color: 'var(--status-offline)',
+                cursor: 'pointer',
+                transition: 'background-color var(--transition-fast)'
+              }}
+            >
+              <Trash2 size={15} strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </div>
@@ -283,6 +301,82 @@ export function ConversationView({ peer }: ConversationViewProps) {
           disabled={isOffline || isVersionMismatch}
         />
       </div>
+
+      {/* Clear Confirmation Modal */}
+      {showClearConfirm && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1100, backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div
+            style={{
+              width: 360,
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-color)',
+              boxShadow: 'var(--shadow-lg)',
+              padding: 'var(--space-5)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center'
+            }}
+          >
+            <div
+              style={{
+                width: 52, height: 52, borderRadius: '50%',
+                backgroundColor: 'rgba(255, 71, 87, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 'var(--space-3)'
+              }}
+            >
+              <Trash2 size={26} color="var(--status-offline)" />
+            </div>
+            
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+              Clear Conversation?
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-5)', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete all messages and file transfer history with {peer.displayName}? This cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: 'var(--space-3)', width: '100%' }}>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                style={{
+                  flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-color)', background: 'transparent',
+                  color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600,
+                  fontSize: '0.85rem'
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  useConversationsStore.getState().clearConversation(conversationId);
+                  useFileTransferStore.getState().clearPeerTransfers(peer.id);
+                  setShowClearConfirm(false);
+                }}
+                style={{
+                  flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--radius-md)',
+                  border: 'none', backgroundColor: 'var(--status-offline)',
+                  color: '#ffffff', cursor: 'pointer', fontWeight: 600,
+                  fontSize: '0.85rem'
+                }}
+              >
+                Clear History
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

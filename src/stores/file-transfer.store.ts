@@ -10,6 +10,7 @@ interface FileTransferState {
   updateProgress: (transferId: string, bytesTransferred: number) => void;
   setTransferStatus: (transferId: string, status: LinkFileTransfer['status']) => void;
   clearIncomingOffer: () => void;
+  clearPeerTransfers: (peerId: string) => void;
   offerFile: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
   offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
   respondToOffer: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
@@ -68,6 +69,18 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     }
     return { incomingOffer: null };
   }),
+
+  clearPeerTransfers: (peerId) => {
+    set((state) => {
+      const nextMap = new Map(state.transfers);
+      for (const [key, value] of nextMap.entries()) {
+        if (value.peerId === peerId) {
+          nextMap.delete(key);
+        }
+      }
+      return { transfers: nextMap };
+    });
+  },
 
   offerFile: async (peerId) => {
     if (window.link?.fileTransfer) {

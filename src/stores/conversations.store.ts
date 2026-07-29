@@ -9,6 +9,7 @@ interface ConversationsState {
   addMessage: (message: LinkMessage) => void;
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
+  clearConversation: (conversationId: string) => void;
   sendMessage: (peerId: string, content: string) => Promise<void>;
   loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
@@ -68,6 +69,18 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       const nextUnreads = new Map(state.unreadCounts);
       nextUnreads.delete(conversationId);
       return { unreadCounts: nextUnreads };
+    });
+  },
+
+  clearConversation: (conversationId) => {
+    set((state) => {
+      const nextMessages = new Map(state.messages);
+      nextMessages.delete(conversationId);
+      
+      const nextUnreads = new Map(state.unreadCounts);
+      nextUnreads.delete(conversationId);
+      
+      return { messages: nextMessages, unreadCounts: nextUnreads };
     });
   },
 
