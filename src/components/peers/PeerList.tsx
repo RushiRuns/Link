@@ -76,16 +76,16 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
               gap: '4px',
               padding: 'var(--space-1) var(--space-2)',
               borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              backgroundColor: 'var(--accent-light)',
-              color: 'var(--accent-primary)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              backgroundColor: '#0a84ff',
+              color: '#ffffff',
               cursor: 'pointer',
               fontSize: 'var(--font-size-meta)',
               fontWeight: 500,
               transition: 'background-color var(--transition-fast)'
             }}
           >
-            <Plus size={13} strokeWidth={1.5} /> New Group
+            <Plus size={13} strokeWidth={1.5} color="#ffffff" /> New Group
           </button>
         </div>
 
