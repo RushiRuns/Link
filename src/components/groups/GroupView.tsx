@@ -4,7 +4,7 @@ import { useGroupsStore } from '../../stores/groups.store';
 import { usePeersStore } from '../../stores/peers.store';
 import { MessageBubble } from '../conversations/MessageBubble';
 import { MessageInput } from '../conversations/MessageInput';
-import { Users, Shield } from 'lucide-react';
+import { Users, Shield, X } from 'lucide-react';
 
 interface GroupViewProps {
   group: LinkGroup;
@@ -15,6 +15,7 @@ export function GroupView({ group }: GroupViewProps) {
   const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -49,8 +50,10 @@ export function GroupView({ group }: GroupViewProps) {
             justifyContent: 'space-between',
             padding: 'var(--space-3) var(--space-5)',
             borderBottom: '1px solid var(--border-color)',
-            backgroundColor: 'var(--bg-sidebar)'
+            backgroundColor: 'var(--bg-sidebar)',
+            cursor: 'pointer'
           }}
+          onClick={() => setIsSidebarOpen(true)}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
             <Users size={18} strokeWidth={1.5} color="var(--accent-primary)" />
@@ -115,20 +118,34 @@ export function GroupView({ group }: GroupViewProps) {
       </div>
 
       {/* Group Member Sidebar */}
-      <div
-        style={{
-          width: 200,
-          borderLeft: '1px solid var(--border-color)',
-          backgroundColor: 'var(--bg-sidebar)',
-          padding: 'var(--space-4)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-3)'
-        }}
-      >
-        <div style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-          Members ({group.members.length})
-        </div>
+      {isSidebarOpen && (
+        <div
+          style={{
+            width: 200,
+            borderLeft: '1px solid var(--border-color)',
+            backgroundColor: 'var(--bg-sidebar)',
+            padding: 'var(--space-4)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-3)'
+          }}
+        >
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            fontSize: 'var(--font-size-meta)', 
+            fontWeight: 600, 
+            textTransform: 'uppercase', 
+            color: 'var(--text-secondary)' 
+          }}>
+            <span>Members ({group.members.length})</span>
+            <X 
+              size={14} 
+              style={{ cursor: 'pointer' }} 
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {group.members.map((m) => {
@@ -162,8 +179,9 @@ export function GroupView({ group }: GroupViewProps) {
               </div>
             );
           })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
