@@ -215,7 +215,7 @@ export function GroupView({ group }: GroupViewProps) {
                   />
                 );
               } else if (item.kind === 'transfer') {
-                return <TransferProgress key={item.id} transferId={item.id} />;
+                return <TransferProgress key={item.id} transfer={item.data} isSelf={true} />;
               } else if (item.kind === 'transfer_batch') {
                 return (
                   <div key={item.id} style={{ margin: 'var(--space-2) 0', padding: 'var(--space-3)', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius-md)' }}>
@@ -223,7 +223,7 @@ export function GroupView({ group }: GroupViewProps) {
                       Shared with {item.data.length} members
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                      {item.data.map(t => <TransferProgress key={t.id} transferId={t.id} />)}
+                      {item.data.map(t => <TransferProgress key={t.id} transfer={t} isSelf={true} />)}
                     </div>
                   </div>
                 );
