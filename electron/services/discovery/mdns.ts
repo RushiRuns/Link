@@ -117,7 +117,7 @@ class MDNSDiscovery extends EventEmitter {
           deviceId: txtData.id,
           displayName: txtData.name || 'Peer',
           publicKey: txtData.pub || '',
-          appVersion: txtData.ver || '1.0.0',
+          appVersion: txtData.ver || '2.0.0',
           tcpPort: srvRecord.data?.port || 0,
           ipAddress: aRecord?.data || '',
           source: 'mdns'

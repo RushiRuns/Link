@@ -91,7 +91,7 @@ class UDPBroadcastDiscovery extends EventEmitter {
             deviceId: data.deviceId,
             displayName: data.displayName || 'Peer',
             publicKey: data.publicKey || '',
-            appVersion: data.appVersion || '1.0.0',
+            appVersion: data.appVersion || '2.0.0',
             tcpPort: data.tcpPort || 0,
             ipAddress: senderIp,
             source: 'udp'
