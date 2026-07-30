@@ -77,6 +77,18 @@ contextBridge.exposeInMainWorld('link', {
       const listener = (_: any, msg: any) => callback(msg);
       ipcRenderer.on('group-message:received', listener);
       return () => ipcRenderer.removeListener('group-message:received', listener);
+    },
+    renameGroup: (groupId: string, newName: string) => ipcRenderer.invoke('groups:rename', groupId, newName),
+    deleteGroup: (groupId: string) => ipcRenderer.invoke('groups:delete', groupId),
+    onGroupRenamed: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('group:renamed', listener);
+      return () => ipcRenderer.removeListener('group:renamed', listener);
+    },
+    onGroupDeleted: (callback: EventCallback) => {
+      const listener = (_: any, groupId: string) => callback(groupId);
+      ipcRenderer.on('group:deleted', listener);
+      return () => ipcRenderer.removeListener('group:deleted', listener);
     }
   },
   fileTransfer: {

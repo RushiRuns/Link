@@ -30,6 +30,10 @@ class GroupService {
     connectionManager.on('message', (senderDeviceId: string, envelope: any) => {
       if (envelope.type === 'group.create') {
         this.handleGroupCreate(senderDeviceId, envelope);
+      } else if (envelope.type === 'group.rename') {
+        this.handleGroupRename(senderDeviceId, envelope);
+      } else if (envelope.type === 'group.delete') {
+        this.handleGroupDelete(senderDeviceId, envelope);
       } else if (envelope.type === 'message.text' && envelope.payload?.groupId) {
         this.handleGroupMessage(senderDeviceId, envelope);
       }
@@ -135,6 +139,53 @@ class GroupService {
     return linkMsg;
   }
 
+  public async renameGroup(groupId: string, newName: string) {
+    const identity = getOrGenerateIdentity();
+    const group = this.groupsMap.get(groupId);
+    if (!group) return;
+
+    group.name = newName;
+    this.groupsMap.set(groupId, group);
+
+    const now = Date.now();
+    for (const member of group.members) {
+      if (member.deviceId !== identity.deviceId) {
+        connectionManager.send(member.deviceId, {
+          type: 'group.rename',
+          id: 'grename_' + uuidv4(),
+          ts: now,
+          payload: { groupId, newName }
+        });
+      }
+    }
+
+    // Notify local renderer
+    this.windowRef?.webContents?.send('group:renamed', { groupId, newName });
+  }
+
+  public async deleteGroup(groupId: string) {
+    const identity = getOrGenerateIdentity();
+    const group = this.groupsMap.get(groupId);
+    if (!group) return;
+
+    this.groupsMap.delete(groupId);
+
+    const now = Date.now();
+    for (const member of group.members) {
+      if (member.deviceId !== identity.deviceId) {
+        connectionManager.send(member.deviceId, {
+          type: 'group.delete',
+          id: 'gdelete_' + uuidv4(),
+          ts: now,
+          payload: { groupId }
+        });
+      }
+    }
+
+    // Notify local renderer
+    this.windowRef?.webContents?.send('group:deleted', groupId);
+  }
+
   private async handleGroupCreate(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (!payload || !payload.groupId) return;
@@ -184,6 +235,28 @@ class GroupService {
 
     // Forward group message to renderer
     this.windowRef?.webContents?.send('group-message:received', incomingMsg);
+  }
+
+  private handleGroupRename(_senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (!payload || !payload.groupId || !payload.newName) return;
+
+    const group = this.groupsMap.get(payload.groupId);
+    if (group) {
+      group.name = payload.newName;
+      this.groupsMap.set(payload.groupId, group);
+      this.windowRef?.webContents?.send('group:renamed', { groupId: payload.groupId, newName: payload.newName });
+    }
+  }
+
+  private handleGroupDelete(_senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (!payload || !payload.groupId) return;
+
+    if (this.groupsMap.has(payload.groupId)) {
+      this.groupsMap.delete(payload.groupId);
+      this.windowRef?.webContents?.send('group:deleted', payload.groupId);
+    }
   }
 }
 

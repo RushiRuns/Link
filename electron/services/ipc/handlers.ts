@@ -81,6 +81,14 @@ export function registerIpcHandlers() {
     return groupService.sendGroupMessage(groupId, content);
   });
 
+  ipcMain.handle('groups:rename', async (_, groupId: string, newName: string) => {
+    return groupService.renameGroup(groupId, newName);
+  });
+
+  ipcMain.handle('groups:delete', async (_, groupId: string) => {
+    return groupService.deleteGroup(groupId);
+  });
+
   // File Transfer Handlers
   ipcMain.handle('file-transfer:offer', async (_, peerId: string, filePath: string) => {
     if (!filePath) {
