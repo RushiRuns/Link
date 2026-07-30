@@ -5,6 +5,7 @@ interface MessageInputProps {
   onSend: (content: string) => void;
   onAttachFile?: () => void;
   onAttachFolder?: () => void;
+  onAttachSelective?: () => void;
   onPasteFile?: (path: string) => void;
   onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
   onTyping?: () => void;
@@ -17,13 +18,14 @@ interface MessageInputProps {
 
 const MAX_CHAR_LIMIT = 10000;
 
-import { FolderUp, X, Check } from 'lucide-react';
+import { FolderUp, X, Check, Users } from 'lucide-react';
 import { useRef, useEffect } from 'react';
 
 export function MessageInput({ 
   onSend, 
   onAttachFile, 
   onAttachFolder, 
+  onAttachSelective,
   onPasteFile, 
   onPasteBuffer, 
   onTyping, 
@@ -149,6 +151,30 @@ export function MessageInput({
             }}
           >
             <FolderUp size={16} strokeWidth={1.5} />
+          </button>
+        )}
+
+        {onAttachSelective && (
+          <button
+            onClick={onAttachSelective}
+            disabled={disabled}
+            title="Selective Share"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 28,
+              height: 28,
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'transparent',
+              color: disabled ? 'var(--text-muted)' : 'var(--text-secondary)',
+              border: 'none',
+              cursor: disabled ? 'default' : 'pointer',
+              flexShrink: 0,
+              transition: 'color var(--transition-fast)'
+            }}
+          >
+            <Users size={16} strokeWidth={1.5} />
           </button>
         )}
 

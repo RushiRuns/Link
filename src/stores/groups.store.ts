@@ -20,8 +20,18 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
 
   addGroup: (group) => {
     set((state) => {
+      // Ensure all members have peerId and status
+      const mappedGroup = {
+        ...group,
+        members: group.members.map((m: any) => ({
+          ...m,
+          peerId: m.peerId || m.deviceId,
+          status: m.status || 'online',
+        }))
+      };
+      
       const nextMap = new Map(state.groups);
-      nextMap.set(group.id, group);
+      nextMap.set(mappedGroup.id, mappedGroup);
       return { groups: nextMap };
     });
   },

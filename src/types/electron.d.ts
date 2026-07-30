@@ -68,6 +68,10 @@ export interface LinkAPI {
     offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer | LinkFileTransfer[]>;
     offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer>;
     saveBuffer: (buffer: ArrayBuffer, mimeType: string) => Promise<string>;
+    offerFileToMultiple: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | null>;
+    offerFolderToMultiple: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | null>;
+    offerPastedFileToMultiple: (peerIds: string[], filePath: string, groupId?: string) => Promise<LinkFileTransfer[]>;
+    offerPastedBufferToMultiple: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => Promise<LinkFileTransfer[]>;
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
     openFolder: (transferId: string) => Promise<boolean>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;

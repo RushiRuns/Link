@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LinkGroup, LinkIdentity } from '../../types/ipc';
 import { useGroupsStore } from '../../stores/groups.store';
 import { usePeersStore } from '../../stores/peers.store';
 import { useAppStore } from '../../stores/app.store';
+import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { MessageBubble } from '../conversations/MessageBubble';
+import { TransferProgress } from '../file-transfer/TransferProgress';
 import { MessageInput } from '../conversations/MessageInput';
 import { Users, Shield, X, Pencil, Trash2, UserPlus } from 'lucide-react';
 
@@ -14,6 +16,7 @@ interface GroupViewProps {
 export function GroupView({ group }: GroupViewProps) {
   const { sendGroupMessage, renameGroup, deleteGroup, addMembersToGroup, removeMemberFromGroup } = useGroupsStore();
   const { selectGroup } = useAppStore();
+  const { transfers, offerFileToGroup, offerFolderToGroup, offerPastedFileToGroup, offerPastedBufferToGroup } = useFileTransferStore();
   const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -23,6 +26,10 @@ export function GroupView({ group }: GroupViewProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [selectedPeersToAdd, setSelectedPeersToAdd] = useState<string[]>([]);
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
+
+  const [isSelectiveShareOpen, setIsSelectiveShareOpen] = useState(false);
+  const [selectedPeersForShare, setSelectedPeersForShare] = useState<string[]>([]);
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -33,16 +40,106 @@ export function GroupView({ group }: GroupViewProps) {
 
 
   const groupMessages = group.messages || [];
+  const groupTransfers = Array.from(transfers.values()).filter(t => t.groupId === group.id);
 
-  // Auto scroll to bottom when new group messages arrive
+  // Group outgoing transfers by transferBatchId
+  const batchedTransfers: Record<string, typeof groupTransfers> = {};
+  const unbatchedTransfers: typeof groupTransfers = [];
+  
+  groupTransfers.forEach(t => {
+    if (t.direction === 'outgoing' && t.transferBatchId) {
+      if (!batchedTransfers[t.transferBatchId]) batchedTransfers[t.transferBatchId] = [];
+      batchedTransfers[t.transferBatchId].push(t);
+    } else {
+      unbatchedTransfers.push(t);
+    }
+  });
+
+  type ChatTimelineItem = 
+    | { kind: 'message'; id: string; timestamp: number; data: typeof groupMessages[0] }
+    | { kind: 'transfer'; id: string; timestamp: number; data: typeof groupTransfers[0] }
+    | { kind: 'transfer_batch'; id: string; timestamp: number; data: typeof groupTransfers };
+
+  const timelineItems: ChatTimelineItem[] = [
+    ...groupMessages.map(msg => ({
+      kind: 'message' as const,
+      id: msg.id,
+      timestamp: msg.timestamp,
+      data: msg
+    })),
+    ...unbatchedTransfers.map(t => ({
+      kind: 'transfer' as const,
+      id: t.id,
+      timestamp: t.startedAt || 0,
+      data: t
+    })),
+    ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
+      kind: 'transfer_batch' as const,
+      id: batchId,
+      timestamp: batchTransfers[0].startedAt || 0,
+      data: batchTransfers
+    }))
+  ].sort((a, b) => a.timestamp - b.timestamp);
+
+  // Auto scroll to bottom when new items arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [groupMessages.length]);
+  }, [timelineItems.length]);
 
   const handleSend = (text: string) => {
     sendGroupMessage(group.id, text);
+  };
+
+  const getOnlinePeerIds = () => {
+    return group.members
+      .filter(m => {
+        if (m.peerId === localIdentity?.deviceId) return false;
+        const p = peers.get(m.peerId);
+        return p?.status === 'online';
+      })
+      .map(m => m.peerId);
+  };
+
+  const handleAttachFile = () => {
+    const peerIds = getOnlinePeerIds();
+    if (peerIds.length === 0) return;
+    offerFileToGroup(peerIds, group.id);
+  };
+
+  const handleAttachFolder = () => {
+    const peerIds = getOnlinePeerIds();
+    if (peerIds.length === 0) return;
+    offerFolderToGroup(peerIds, group.id);
+  };
+
+  const handlePasteFile = (path: string) => {
+    const peerIds = getOnlinePeerIds();
+    if (peerIds.length === 0) return;
+    offerPastedFileToGroup(peerIds, path, group.id);
+  };
+
+  const handlePasteBuffer = (buffer: ArrayBuffer, mimeType: string) => {
+    const peerIds = getOnlinePeerIds();
+    if (peerIds.length === 0) return;
+    offerPastedBufferToGroup(peerIds, buffer, mimeType, group.id);
+  };
+
+  const executeSelectiveShare = async (type: 'file' | 'folder') => {
+    if (selectedPeersForShare.length === 0) return;
+    
+    // Add fallback message to group chat for non-selected members
+    sendGroupMessage(group.id, `🔒 Shared a ${type} selectively with ${selectedPeersForShare.length} members`);
+    
+    if (type === 'file') {
+      await offerFileToGroup(selectedPeersForShare, group.id);
+    } else {
+      await offerFolderToGroup(selectedPeersForShare, group.id);
+    }
+    
+    setIsSelectiveShareOpen(false);
+    setSelectedPeersForShare([]);
   };
 
   return (
@@ -89,7 +186,7 @@ export function GroupView({ group }: GroupViewProps) {
             flexDirection: 'column'
           }}
         >
-          {groupMessages.length === 0 ? (
+          {timelineItems.length === 0 ? (
             <div
               style={{
                 flex: 1,
@@ -107,20 +204,104 @@ export function GroupView({ group }: GroupViewProps) {
               <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>Send a message to all members in the mesh</div>
             </div>
           ) : (
-            groupMessages.map((msg, i) => (
-              <MessageBubble
-                key={msg.id || `msg-${i}`}
-                message={msg}
-                isSelf={msg.senderId === localIdentity?.deviceId}
-                showSenderLabel={true}
-              />
-            ))
+            timelineItems.map((item, i) => {
+              if (item.kind === 'message') {
+                return (
+                  <MessageBubble
+                    key={item.id || `msg-${i}`}
+                    message={item.data}
+                    isSelf={item.data.senderId === localIdentity?.deviceId}
+                    showSenderLabel={true}
+                  />
+                );
+              } else if (item.kind === 'transfer') {
+                return <TransferProgress key={item.id} transferId={item.id} />;
+              } else if (item.kind === 'transfer_batch') {
+                return (
+                  <div key={item.id} style={{ margin: 'var(--space-2) 0', padding: 'var(--space-3)', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius-md)' }}>
+                    <div style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
+                      Shared with {item.data.length} members
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                      {item.data.map(t => <TransferProgress key={t.id} transferId={t.id} />)}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })
           )}
         </div>
 
         {/* Input Footer */}
-        <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)' }}>
-          <MessageInput onSend={handleSend} placeholder={`Message #${group.name}...`} />
+        <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-color)', position: 'relative' }}>
+          {isSelectiveShareOpen && (
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '100%', 
+              left: 'var(--space-5)', 
+              marginBottom: 'var(--space-2)',
+              backgroundColor: 'var(--bg-sidebar)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-3)',
+              width: 250,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              zIndex: 10
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                <span style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600 }}>Selective Share</span>
+                <X size={14} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => setIsSelectiveShareOpen(false)} />
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '150px', overflowY: 'auto', marginBottom: 'var(--space-3)' }}>
+                {group.members.filter(m => m.peerId !== localIdentity?.deviceId).map(m => {
+                  const p = peers.get(m.peerId);
+                  const isOnline = p?.status === 'online';
+                  return (
+                    <label key={m.peerId} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-body)', cursor: isOnline ? 'pointer' : 'not-allowed', opacity: isOnline ? 1 : 0.5 }}>
+                      <input 
+                        type="checkbox" 
+                        disabled={!isOnline}
+                        checked={selectedPeersForShare.includes(m.peerId)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedPeersForShare([...selectedPeersForShare, m.peerId]);
+                          else setSelectedPeersForShare(selectedPeersForShare.filter(id => id !== m.peerId));
+                        }}
+                      />
+                      {m.displayName}
+                    </label>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                <button 
+                  disabled={selectedPeersForShare.length === 0}
+                  onClick={() => executeSelectiveShare('file')}
+                  style={{ flex: 1, padding: '4px', cursor: selectedPeersForShare.length > 0 ? 'pointer' : 'not-allowed', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px', fontSize: 'var(--font-size-meta)' }}
+                >
+                  Send File
+                </button>
+                <button 
+                  disabled={selectedPeersForShare.length === 0}
+                  onClick={() => executeSelectiveShare('folder')}
+                  style={{ flex: 1, padding: '4px', cursor: selectedPeersForShare.length > 0 ? 'pointer' : 'not-allowed', backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: 'var(--font-size-meta)' }}
+                >
+                  Send Folder
+                </button>
+              </div>
+            </div>
+          )}
+          <MessageInput 
+            onSend={handleSend} 
+            placeholder={`Message #${group.name}...`}
+            onAttachFile={handleAttachFile}
+            onAttachFolder={handleAttachFolder}
+            onAttachSelective={() => setIsSelectiveShareOpen(!isSelectiveShareOpen)}
+            onPasteFile={handlePasteFile}
+            onPasteBuffer={handlePasteBuffer}
+          />
         </div>
       </div>
 
@@ -301,48 +482,63 @@ export function GroupView({ group }: GroupViewProps) {
             const isOnline = isSelf || runtimePeer?.status === 'online';
 
             return (
-              <div
-                key={m.peerId ? `${m.peerId}-${i}` : `member-${i}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 'var(--space-2)',
-                  fontSize: 'var(--font-size-body)',
-                  color: 'var(--text-primary)',
-                  padding: '2px 0'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <div
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      backgroundColor: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
-                      flexShrink: 0
-                    }}
-                  />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {m.displayName} {isSelf && '(You)'}
-                  </span>
-                </div>
-                {group.creatorId === localIdentity?.deviceId && !isSelf && (
-                  <span title="Remove member" style={{ display: 'flex', alignItems: 'center' }}>
-                    <X 
-                      size={14} 
-                      style={{ cursor: 'pointer', color: 'var(--text-secondary)', opacity: 0.6 }} 
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to remove ${m.displayName} from the group?`)) {
-                          removeMemberFromGroup(group.id, m.peerId!);
-                        }
-                      }} 
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--status-error)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+              <React.Fragment key={m.peerId ? `${m.peerId}-${i}` : `member-${i}`}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--space-2)',
+                    fontSize: 'var(--font-size-body)',
+                    color: 'var(--text-primary)',
+                    padding: '2px 0'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                    <div
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        backgroundColor: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
+                        flexShrink: 0
+                      }}
                     />
-                  </span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {m.displayName} {isSelf && '(You)'}
+                    </span>
+                  </div>
+                  {group.creatorId === localIdentity?.deviceId && !isSelf && (
+                    <span title="Remove member" style={{ display: 'flex', alignItems: 'center' }}>
+                      <X 
+                        size={14} 
+                        style={{ cursor: 'pointer', color: 'var(--text-secondary)', opacity: 0.6 }} 
+                        onClick={() => setMemberToRemove(m.peerId)} 
+                        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--status-error)'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                      />
+                    </span>
+                  )}
+                </div>
+                {memberToRemove === m.peerId && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', border: '1px solid var(--status-error)', borderRadius: '4px', padding: 'var(--space-2)', marginTop: '4px', marginBottom: '8px' }}>
+                    <span style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-primary)' }}>Remove {m.displayName}?</span>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                      <button 
+                        style={{ flex: 1, padding: '2px 4px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--status-error)', color: 'white', border: 'none', borderRadius: '4px' }}
+                        onClick={() => {
+                          removeMemberFromGroup(group.id, m.peerId!);
+                          setMemberToRemove(null);
+                        }}
+                      >Remove</button>
+                      <button 
+                        style={{ flex: 1, padding: '2px 4px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                        onClick={() => setMemberToRemove(null)}
+                      >Cancel</button>
+                    </div>
+                  </div>
                 )}
-              </div>
+              </React.Fragment>
             );
           })}
           </div>

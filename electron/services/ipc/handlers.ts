@@ -105,12 +105,28 @@ export function registerIpcHandlers() {
     return fileTransferService.offerFile(peerId, filePath);
   });
 
+  ipcMain.handle('file-transfer:offer-multiple', async (_, peerIds: string[], groupId?: string) => {
+    return fileTransferService.selectAndOfferFileToMultiple(peerIds, groupId);
+  });
+
   ipcMain.handle('file-transfer:offer-folder', async (_, peerId: string, groupId?: string) => {
     return fileTransferService.selectAndOfferFolder(peerId, groupId);
   });
 
+  ipcMain.handle('file-transfer:offer-folder-multiple', async (_, peerIds: string[], groupId?: string) => {
+    return fileTransferService.selectAndOfferFolderToMultiple(peerIds, groupId);
+  });
+
   ipcMain.handle('file-transfer:save-buffer', async (_, buffer: ArrayBuffer, mimeType: string) => {
     return fileTransferService.savePastedBuffer(buffer, mimeType);
+  });
+
+  ipcMain.handle('file-transfer:offer-pasted-multiple', async (_, peerIds: string[], filePath: string, groupId?: string) => {
+    return fileTransferService.offerPastedFileToMultiple(peerIds, filePath, groupId);
+  });
+
+  ipcMain.handle('file-transfer:offer-pasted-buffer-multiple', async (_, peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => {
+    return fileTransferService.saveAndOfferBufferToMultiple(peerIds, buffer, mimeType, groupId);
   });
 
   ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean, savePath?: string) => {

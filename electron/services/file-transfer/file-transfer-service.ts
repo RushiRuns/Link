@@ -25,6 +25,7 @@ export interface ActiveFileTransferState {
   direction: 'outgoing' | 'incoming';
   peerId: string;
   groupId?: string;
+  transferBatchId?: string;
   filePath?: string;
   fileName: string;
   fileSizeBytes: number;
@@ -100,6 +101,45 @@ class FileTransferService {
     return offers;
   }
 
+  public async selectAndOfferFileToMultiple(peerIds: string[], groupId?: string) {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+      title: 'Select File(s) to Send'
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    const offers = [];
+    const transferBatchId = uuidv4();
+    for (const filePath of result.filePaths) {
+      for (const peerId of peerIds) {
+        offers.push(await this.offerFile(peerId, filePath, groupId, transferBatchId));
+      }
+    }
+    return offers;
+  }
+
+  public async offerPastedFileToMultiple(peerIds: string[], filePath: string, groupId?: string) {
+    const offers = [];
+    const transferBatchId = uuidv4();
+    for (const peerId of peerIds) {
+      offers.push(await this.offerFile(peerId, filePath, groupId, transferBatchId));
+    }
+    return offers;
+  }
+
+  public async saveAndOfferBufferToMultiple(peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) {
+    const tempPath = await this.savePastedBuffer(buffer, mimeType);
+    const offers = [];
+    const transferBatchId = uuidv4();
+    for (const peerId of peerIds) {
+      offers.push(await this.offerFile(peerId, tempPath, groupId, transferBatchId));
+    }
+    return offers;
+  }
+
   public async savePastedBuffer(buffer: ArrayBuffer, mimeType: string): Promise<string> {
     const extMap: Record<string, string> = {
       'image/png': '.png',
@@ -118,7 +158,7 @@ class FileTransferService {
     return tempPath;
   }
 
-  public async offerFile(peerId: string, filePath: string, groupId?: string) {
+  public async offerFile(peerId: string, filePath: string, groupId?: string, transferBatchId?: string) {
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }
@@ -135,6 +175,7 @@ class FileTransferService {
       direction: 'outgoing',
       peerId,
       groupId,
+      transferBatchId,
       filePath,
       fileName,
       fileSizeBytes: stat.size,
@@ -166,6 +207,7 @@ class FileTransferService {
       direction: 'outgoing' as const,
       peerId,
       groupId,
+      transferBatchId,
       fileName,
       fileSizeBytes: stat.size,
       mimeType: state.mimeType,
@@ -189,7 +231,26 @@ class FileTransferService {
     return this.offerFolder(peerId, folderPath, groupId);
   }
 
-  public async offerFolder(peerId: string, folderPath: string, groupId?: string) {
+  public async selectAndOfferFolderToMultiple(peerIds: string[], groupId?: string) {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+      title: 'Select Folder to Send'
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    const folderPath = result.filePaths[0];
+    const offers = [];
+    const transferBatchId = uuidv4();
+    for (const peerId of peerIds) {
+      offers.push(await this.offerFolder(peerId, folderPath, groupId, transferBatchId));
+    }
+    return offers;
+  }
+
+  public async offerFolder(peerId: string, folderPath: string, groupId?: string, transferBatchId?: string) {
     if (!fs.existsSync(folderPath)) {
       throw new Error(`Folder not found: ${folderPath}`);
     }
@@ -206,6 +267,7 @@ class FileTransferService {
       direction: 'outgoing',
       peerId,
       groupId,
+      transferBatchId,
       filePath: folderPath,
       fileName: folderName,
       fileSizeBytes: folderSize,
@@ -239,7 +301,8 @@ class FileTransferService {
       direction: 'outgoing' as const,
       peerId,
       groupId,
-      fileName: folderName,
+      transferBatchId,
+      fileName: `${folderName}.tar`,
       fileSizeBytes: folderSize,
       mimeType: state.mimeType,
       status: 'pending_accept' as const,

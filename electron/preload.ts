@@ -107,6 +107,10 @@ contextBridge.exposeInMainWorld('link', {
     offerFile: (peerId: string, filePath: string) => ipcRenderer.invoke('file-transfer:offer', peerId, filePath),
     offerFolder: (peerId: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-folder', peerId, groupId),
     saveBuffer: (buffer: ArrayBuffer, mimeType: string) => ipcRenderer.invoke('file-transfer:save-buffer', buffer, mimeType),
+    offerFileToMultiple: (peerIds: string[], groupId?: string) => ipcRenderer.invoke('file-transfer:offer-multiple', peerIds, groupId),
+    offerFolderToMultiple: (peerIds: string[], groupId?: string) => ipcRenderer.invoke('file-transfer:offer-folder-multiple', peerIds, groupId),
+    offerPastedFileToMultiple: (peerIds: string[], filePath: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-pasted-multiple', peerIds, filePath, groupId),
+    offerPastedBufferToMultiple: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-pasted-buffer-multiple', peerIds, buffer, mimeType, groupId),
     respond: (transferId: string, accepted: boolean, savePath?: string) => 
       ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
     openFolder: (transferId: string) => ipcRenderer.invoke('file-transfer:open-folder', transferId),

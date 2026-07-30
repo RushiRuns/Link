@@ -80,6 +80,7 @@ export interface LinkFileTransfer {
   direction: 'outgoing' | 'incoming';
   peerId: string;
   groupId?: string;
+  transferBatchId?: string;
   fileName: string;
   fileSizeBytes: number;
   isFolder?: boolean;

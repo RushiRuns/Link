@@ -13,6 +13,10 @@ interface FileTransferState {
   clearPeerTransfers: (peerId: string) => void;
   offerFile: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
   offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer | undefined>;
+  offerFileToGroup: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | undefined>;
+  offerFolderToGroup: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | undefined>;
+  offerPastedFileToGroup: (peerIds: string[], filePath: string, groupId?: string) => Promise<LinkFileTransfer[] | undefined>;
+  offerPastedBufferToGroup: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => Promise<LinkFileTransfer[] | undefined>;
   respondToOffer: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
   openTransferFolder: (transferId: string) => Promise<boolean>;
   initListeners: () => () => void;
@@ -102,16 +106,76 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     return undefined;
   },
 
-  offerFolder: async (peerId) => {
+  offerFolder: async (peerId, groupId) => {
     if (window.link?.fileTransfer) {
       try {
-        const transfer = await window.link.fileTransfer.offerFolder(peerId, '');
+        const transfer = await window.link.fileTransfer.offerFolder(peerId, groupId || '');
         if (transfer) {
           get().addTransfer(transfer);
           return transfer;
         }
       } catch (err) {
         console.error('[FileTransferStore] Error offering folder:', err);
+      }
+    }
+    return undefined;
+  },
+
+  offerFileToGroup: async (peerIds, groupId) => {
+    if (window.link?.fileTransfer) {
+      try {
+        const transfers = await window.link.fileTransfer.offerFileToMultiple(peerIds, groupId);
+        if (transfers && Array.isArray(transfers)) {
+          transfers.forEach(t => get().addTransfer(t));
+          return transfers;
+        }
+      } catch (err) {
+        console.error('[FileTransferStore] Error offering file to multiple:', err);
+      }
+    }
+    return undefined;
+  },
+
+  offerFolderToGroup: async (peerIds, groupId) => {
+    if (window.link?.fileTransfer) {
+      try {
+        const transfers = await window.link.fileTransfer.offerFolderToMultiple(peerIds, groupId);
+        if (transfers && Array.isArray(transfers)) {
+          transfers.forEach(t => get().addTransfer(t));
+          return transfers;
+        }
+      } catch (err) {
+        console.error('[FileTransferStore] Error offering folder to multiple:', err);
+      }
+    }
+    return undefined;
+  },
+
+  offerPastedFileToGroup: async (peerIds, filePath, groupId) => {
+    if (window.link?.fileTransfer) {
+      try {
+        const transfers = await window.link.fileTransfer.offerPastedFileToMultiple(peerIds, filePath, groupId);
+        if (transfers && Array.isArray(transfers)) {
+          transfers.forEach(t => get().addTransfer(t));
+          return transfers;
+        }
+      } catch (err) {
+        console.error('[FileTransferStore] Error offering pasted file to multiple:', err);
+      }
+    }
+    return undefined;
+  },
+
+  offerPastedBufferToGroup: async (peerIds, buffer, mimeType, groupId) => {
+    if (window.link?.fileTransfer) {
+      try {
+        const transfers = await window.link.fileTransfer.offerPastedBufferToMultiple(peerIds, buffer, mimeType, groupId);
+        if (transfers && Array.isArray(transfers)) {
+          transfers.forEach(t => get().addTransfer(t));
+          return transfers;
+        }
+      } catch (err) {
+        console.error('[FileTransferStore] Error offering pasted buffer to multiple:', err);
       }
     }
     return undefined;

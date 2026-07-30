@@ -107,8 +107,11 @@ contextBridge.exposeInMainWorld("link", {
     offerFile: (peerId, filePath) => ipcRenderer.invoke("file-transfer:offer", peerId, filePath),
     offerFolder: (peerId, groupId) => ipcRenderer.invoke("file-transfer:offer-folder", peerId, groupId),
     saveBuffer: (buffer, mimeType) => ipcRenderer.invoke("file-transfer:save-buffer", buffer, mimeType),
-    respond: (transferId, accepted, savePath) =>
-      ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
+    offerFileToMultiple: (peerIds, groupId) => ipcRenderer.invoke("file-transfer:offer-multiple", peerIds, groupId),
+    offerFolderToMultiple: (peerIds, groupId) => ipcRenderer.invoke("file-transfer:offer-folder-multiple", peerIds, groupId),
+    offerPastedFileToMultiple: (peerIds, filePath, groupId) => ipcRenderer.invoke("file-transfer:offer-pasted-multiple", peerIds, filePath, groupId),
+    offerPastedBufferToMultiple: (peerIds, buffer, mimeType, groupId) => ipcRenderer.invoke("file-transfer:offer-pasted-buffer-multiple", peerIds, buffer, mimeType, groupId),
+    respond: (transferId, accepted, savePath) => ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
     openFolder: (transferId) => ipcRenderer.invoke("file-transfer:open-folder", transferId),
     onOfferReceived: (callback) => {
       const listener = (_, transfer) => callback(transfer);
