@@ -14,7 +14,7 @@ class MessageService {
     this.windowRef = mainWindow;
 
     connectionManager.on('message', (senderDeviceId: string, envelope: any) => {
-      if (envelope.type === 'message.text') {
+      if (envelope.type === 'message.text' && !envelope.payload?.groupId) {
         this.handleTextMessage(senderDeviceId, envelope);
       } else if (envelope.type === 'message.ack') {
         this.handleMessageAck(senderDeviceId, envelope);
