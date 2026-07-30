@@ -242,7 +242,7 @@ class GroupService {
     if (!payload || !payload.groupId || !payload.newName) return;
 
     const group = this.groupsMap.get(payload.groupId);
-    if (group) {
+    if (group && group.creatorId === _senderDeviceId) {
       group.name = payload.newName;
       this.groupsMap.set(payload.groupId, group);
       this.windowRef?.webContents?.send('group:renamed', { groupId: payload.groupId, newName: payload.newName });
@@ -253,7 +253,8 @@ class GroupService {
     const payload = envelope.payload;
     if (!payload || !payload.groupId) return;
 
-    if (this.groupsMap.has(payload.groupId)) {
+    const group = this.groupsMap.get(payload.groupId);
+    if (group && group.creatorId === _senderDeviceId) {
       this.groupsMap.delete(payload.groupId);
       this.windowRef?.webContents?.send('group:deleted', payload.groupId);
     }

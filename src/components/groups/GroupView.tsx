@@ -152,87 +152,89 @@ export function GroupView({ group }: GroupViewProps) {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-            <div style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>
-              Options
-            </div>
-            
-            {!isRenaming ? (
-              <div 
-                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--text-primary)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
-                onClick={() => {
-                  setRenameInput(group.name);
-                  setIsRenaming(true);
-                  setIsConfirmingDelete(false);
-                }}
-              >
-                 <Pencil size={14} /> Rename Group
+          {group.creatorId === localIdentity?.deviceId && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+              <div style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>
+                Options
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-2) 0' }}>
-                <input 
-                  autoFocus
-                  style={{ padding: 'var(--space-2)', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
-                  value={renameInput}
-                  onChange={(e) => setRenameInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (renameInput.trim() !== '' && renameInput !== group.name) {
-                        renameGroup(group.id, renameInput.trim());
-                      }
-                      setIsRenaming(false);
-                    } else if (e.key === 'Escape') {
-                      setIsRenaming(false);
-                    }
+              
+              {!isRenaming ? (
+                <div 
+                  style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--text-primary)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
+                  onClick={() => {
+                    setRenameInput(group.name);
+                    setIsRenaming(true);
+                    setIsConfirmingDelete(false);
                   }}
-                />
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <button 
-                    style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px' }}
-                    onClick={() => {
-                      if (renameInput.trim() !== '' && renameInput !== group.name) {
-                        renameGroup(group.id, renameInput.trim());
+                >
+                   <Pencil size={14} /> Rename Group
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-2) 0' }}>
+                  <input 
+                    autoFocus
+                    style={{ padding: 'var(--space-2)', borderRadius: '4px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    value={renameInput}
+                    onChange={(e) => setRenameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (renameInput.trim() !== '' && renameInput !== group.name) {
+                          renameGroup(group.id, renameInput.trim());
+                        }
+                        setIsRenaming(false);
+                      } else if (e.key === 'Escape') {
+                        setIsRenaming(false);
                       }
-                      setIsRenaming(false);
                     }}
-                  >Save</button>
-                  <button 
-                    style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
-                    onClick={() => setIsRenaming(false)}
-                  >Cancel</button>
+                  />
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px' }}
+                      onClick={() => {
+                        if (renameInput.trim() !== '' && renameInput !== group.name) {
+                          renameGroup(group.id, renameInput.trim());
+                        }
+                        setIsRenaming(false);
+                      }}
+                    >Save</button>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                      onClick={() => setIsRenaming(false)}
+                    >Cancel</button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!isConfirmingDelete ? (
-              <div 
-                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--status-error)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
-                onClick={() => {
-                  setIsConfirmingDelete(true);
-                  setIsRenaming(false);
-                }}
-              >
-                 <Trash2 size={14} /> Delete Group
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', border: '1px solid var(--status-error)', borderRadius: '4px', padding: 'var(--space-3)' }}>
-                <span style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>Are you sure?</span>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <button 
-                    style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--status-error)', color: 'white', border: 'none', borderRadius: '4px' }}
-                    onClick={() => {
-                      deleteGroup(group.id);
-                      selectGroup(null);
-                    }}
-                  >Yes, Delete</button>
-                  <button 
-                    style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
-                    onClick={() => setIsConfirmingDelete(false)}
-                  >Cancel</button>
+              {!isConfirmingDelete ? (
+                <div 
+                  style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--status-error)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
+                  onClick={() => {
+                    setIsConfirmingDelete(true);
+                    setIsRenaming(false);
+                  }}
+                >
+                   <Trash2 size={14} /> Delete Group
                 </div>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', border: '1px solid var(--status-error)', borderRadius: '4px', padding: 'var(--space-3)' }}>
+                  <span style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>Are you sure?</span>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--status-error)', color: 'white', border: 'none', borderRadius: '4px' }}
+                      onClick={() => {
+                        deleteGroup(group.id);
+                        selectGroup(null);
+                      }}
+                    >Yes, Delete</button>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                      onClick={() => setIsConfirmingDelete(false)}
+                    >Cancel</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             <div style={{ fontSize: 'var(--font-size-meta)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
