@@ -59,7 +59,6 @@
     "nsis": {
       "oneClick": true,
       "allowToChangeInstallationDirectory": false,
-      "killProcessOnUninstall": true,
       "warningsAsErrors": false
     }
   }
