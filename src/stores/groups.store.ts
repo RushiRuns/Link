@@ -10,6 +10,8 @@ interface GroupsState {
   addGroup: (group: LinkGroup) => void;
   renameGroup: (groupId: string, newName: string) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
+  addMembersToGroup: (groupId: string, memberPeerIds: string[]) => Promise<void>;
+  removeMemberFromGroup: (groupId: string, peerIdToRemove: string) => Promise<void>;
   initListeners: () => () => void;
 }
 
@@ -53,6 +55,26 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
         await window.link.groups.deleteGroup(groupId);
       } catch (err) {
         console.error('[GroupsStore] Error deleting group:', err);
+      }
+    }
+  },
+
+  addMembersToGroup: async (groupId, memberPeerIds) => {
+    if (window.link?.groups) {
+      try {
+        await window.link.groups.addMembers(groupId, memberPeerIds);
+      } catch (err) {
+        console.error('[GroupsStore] Error adding members to group:', err);
+      }
+    }
+  },
+
+  removeMemberFromGroup: async (groupId, peerIdToRemove) => {
+    if (window.link?.groups) {
+      try {
+        await window.link.groups.removeMember(groupId, peerIdToRemove);
+      } catch (err) {
+        console.error('[GroupsStore] Error removing member from group:', err);
       }
     }
   },
@@ -125,11 +147,66 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       }
     });
 
+    const cleanMembersAdded = window.link.groups.onGroupMembersAdded(({ groupId, newMembers }) => {
+      set((state) => {
+        const nextMap = new Map(state.groups);
+        const group = nextMap.get(groupId);
+        if (group) {
+          const existingIds = new Set(group.members.map(m => m.peerId));
+          const toAdd = newMembers
+            .filter((m: any) => !existingIds.has(m.deviceId))
+            .map((m: any) => ({
+              peerId: m.deviceId,
+              displayName: m.displayName,
+              publicKey: m.publicKey,
+              status: m.status || 'online',
+              networkAddress: m.networkAddress,
+              tcpPort: m.tcpPort
+            }));
+
+          nextMap.set(groupId, { ...group, members: [...group.members, ...toAdd] });
+        }
+        return { groups: nextMap };
+      });
+    });
+
+    const cleanMemberRemoved = window.link.groups.onGroupMemberRemoved(({ groupId, removedPeerId }) => {
+      set((state) => {
+        const nextMap = new Map(state.groups);
+        const group = nextMap.get(groupId);
+        if (group) {
+          nextMap.set(groupId, { 
+            ...group, 
+            members: group.members.filter(m => m.peerId !== removedPeerId) 
+          });
+        }
+        return { groups: nextMap };
+      });
+
+      // Self-kicked check
+      window.link?.identity?.getIdentity().then(identity => {
+        if (identity.deviceId === removedPeerId) {
+          set((state) => {
+            const nextMap = new Map(state.groups);
+            nextMap.delete(groupId);
+            return { groups: nextMap };
+          });
+          
+          const appStore = useAppStore.getState();
+          if (appStore.selectedGroupId === groupId) {
+            appStore.selectGroup(null);
+          }
+        }
+      });
+    });
+
     return () => {
       cleanCreated();
       cleanMsg();
       cleanRenamed();
       cleanDeleted();
+      cleanMembersAdded();
+      cleanMemberRemoved();
     };
   }
 }));

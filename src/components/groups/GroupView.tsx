@@ -5,14 +5,14 @@ import { usePeersStore } from '../../stores/peers.store';
 import { useAppStore } from '../../stores/app.store';
 import { MessageBubble } from '../conversations/MessageBubble';
 import { MessageInput } from '../conversations/MessageInput';
-import { Users, Shield, X, Pencil, Trash2 } from 'lucide-react';
+import { Users, Shield, X, Pencil, Trash2, UserPlus } from 'lucide-react';
 
 interface GroupViewProps {
   group: LinkGroup;
 }
 
 export function GroupView({ group }: GroupViewProps) {
-  const { sendGroupMessage, renameGroup, deleteGroup } = useGroupsStore();
+  const { sendGroupMessage, renameGroup, deleteGroup, addMembersToGroup, removeMemberFromGroup } = useGroupsStore();
   const { selectGroup } = useAppStore();
   const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
@@ -21,6 +21,8 @@ export function GroupView({ group }: GroupViewProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState('');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [selectedPeersToAdd, setSelectedPeersToAdd] = useState<string[]>([]);
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -158,7 +160,7 @@ export function GroupView({ group }: GroupViewProps) {
                 Options
               </div>
               
-              {!isRenaming ? (
+              {!isRenaming && !isAddingMember ? (
                 <div 
                   style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--text-primary)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
                   onClick={() => {
@@ -169,7 +171,7 @@ export function GroupView({ group }: GroupViewProps) {
                 >
                    <Pencil size={14} /> Rename Group
                 </div>
-              ) : (
+              ) : isRenaming ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-2) 0' }}>
                   <input 
                     autoFocus
@@ -203,9 +205,62 @@ export function GroupView({ group }: GroupViewProps) {
                     >Cancel</button>
                   </div>
                 </div>
-              )}
+              ) : null}
 
-              {!isConfirmingDelete ? (
+              {!isAddingMember && !isRenaming && !isConfirmingDelete ? (
+                <div 
+                  style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--text-primary)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
+                  onClick={() => {
+                    setIsAddingMember(true);
+                  }}
+                >
+                   <UserPlus size={14} /> Add Member
+                </div>
+              ) : isAddingMember ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-2) 0' }}>
+                  <span style={{ fontSize: 'var(--font-size-meta)' }}>Select Peers</span>
+                  <div style={{ maxHeight: '100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {Array.from(peers.values())
+                      .filter(p => p.status === 'online' && !group.members.some(m => m.peerId === p.id))
+                      .map(p => (
+                        <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: 'var(--font-size-meta)', cursor: 'pointer' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedPeersToAdd.includes(p.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedPeersToAdd([...selectedPeersToAdd, p.id]);
+                              else setSelectedPeersToAdd(selectedPeersToAdd.filter(id => id !== p.id));
+                            }}
+                          />
+                          {p.displayName}
+                        </label>
+                      ))}
+                    {Array.from(peers.values()).filter(p => p.status === 'online' && !group.members.some(m => m.peerId === p.id)).length === 0 && (
+                      <span style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)' }}>No other online peers available.</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px' }}
+                      disabled={selectedPeersToAdd.length === 0}
+                      onClick={() => {
+                        addMembersToGroup(group.id, selectedPeersToAdd);
+                        setIsAddingMember(false);
+                        setSelectedPeersToAdd([]);
+                      }}
+                    >Add</button>
+                    <button 
+                      style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--bg-hover)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                      onClick={() => {
+                        setIsAddingMember(false);
+                        setSelectedPeersToAdd([]);
+                      }}
+                    >Cancel</button>
+                  </div>
+                </div>
+              ) : null}
+
+              {!isConfirmingDelete && !isAddingMember && !isRenaming ? (
                 <div 
                   style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', cursor: 'pointer', color: 'var(--status-error)', fontSize: 'var(--font-size-body)', padding: 'var(--space-1) 0' }} 
                   onClick={() => {
@@ -215,7 +270,7 @@ export function GroupView({ group }: GroupViewProps) {
                 >
                    <Trash2 size={14} /> Delete Group
                 </div>
-              ) : (
+              ) : isConfirmingDelete ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', border: '1px solid var(--status-error)', borderRadius: '4px', padding: 'var(--space-3)' }}>
                   <span style={{ fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>Are you sure?</span>
                   <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
@@ -232,7 +287,7 @@ export function GroupView({ group }: GroupViewProps) {
                     >Cancel</button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
 
@@ -251,23 +306,42 @@ export function GroupView({ group }: GroupViewProps) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'space-between',
                   gap: 'var(--space-2)',
                   fontSize: 'var(--font-size-body)',
-                  color: 'var(--text-primary)'
+                  color: 'var(--text-primary)',
+                  padding: '2px 0'
                 }}
               >
-                <div
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    backgroundColor: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
-                    flexShrink: 0
-                  }}
-                />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {m.displayName} {isSelf && '(You)'}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <div
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      backgroundColor: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
+                      flexShrink: 0
+                    }}
+                  />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {m.displayName} {isSelf && '(You)'}
+                  </span>
+                </div>
+                {group.creatorId === localIdentity?.deviceId && !isSelf && (
+                  <span title="Remove member" style={{ display: 'flex', alignItems: 'center' }}>
+                    <X 
+                      size={14} 
+                      style={{ cursor: 'pointer', color: 'var(--text-secondary)', opacity: 0.6 }} 
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to remove ${m.displayName} from the group?`)) {
+                          removeMemberFromGroup(group.id, m.peerId!);
+                        }
+                      }} 
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--status-error)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                    />
+                  </span>
+                )}
               </div>
             );
           })}

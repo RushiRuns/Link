@@ -89,6 +89,18 @@ contextBridge.exposeInMainWorld('link', {
       const listener = (_: any, groupId: string) => callback(groupId);
       ipcRenderer.on('group:deleted', listener);
       return () => ipcRenderer.removeListener('group:deleted', listener);
+    },
+    addMembers: (groupId: string, memberPeerIds: string[]) => ipcRenderer.invoke('groups:add-members', groupId, memberPeerIds),
+    removeMember: (groupId: string, peerIdToRemove: string) => ipcRenderer.invoke('groups:remove-member', groupId, peerIdToRemove),
+    onGroupMembersAdded: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('group:members-added', listener);
+      return () => ipcRenderer.removeListener('group:members-added', listener);
+    },
+    onGroupMemberRemoved: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('group:member-removed', listener);
+      return () => ipcRenderer.removeListener('group:member-removed', listener);
     }
   },
   fileTransfer: {

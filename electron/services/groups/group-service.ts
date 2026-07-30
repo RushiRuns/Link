@@ -34,6 +34,10 @@ class GroupService {
         this.handleGroupRename(senderDeviceId, envelope);
       } else if (envelope.type === 'group.delete') {
         this.handleGroupDelete(senderDeviceId, envelope);
+      } else if (envelope.type === 'group.members.add') {
+        this.handleGroupMembersAdd(senderDeviceId, envelope);
+      } else if (envelope.type === 'group.member.remove') {
+        this.handleGroupMemberRemove(senderDeviceId, envelope);
       } else if (envelope.type === 'message.text' && envelope.payload?.groupId) {
         this.handleGroupMessage(senderDeviceId, envelope);
       }
@@ -186,6 +190,97 @@ class GroupService {
     this.windowRef?.webContents?.send('group:deleted', groupId);
   }
 
+  public async addMembers(groupId: string, memberPeerIds: string[]) {
+    const identity = getOrGenerateIdentity();
+    const group = this.groupsMap.get(groupId);
+    if (!group || group.creatorId !== identity.deviceId) return;
+
+    const newMembers: GroupMemberInfo[] = [];
+    const now = Date.now();
+
+    for (const peerId of memberPeerIds) {
+      if (!group.members.some(m => m.deviceId === peerId)) {
+        const known = db.getPeer(peerId);
+        const activeConn = connectionManager.getActiveConnection(peerId);
+        if (known || activeConn) {
+          newMembers.push({
+            deviceId: peerId,
+            displayName: known?.displayName || 'Peer',
+            publicKey: known?.publicKey || '',
+            networkAddress: activeConn?.socket.remoteAddress || '127.0.0.1',
+            tcpPort: activeConn?.socket.remotePort || 0
+          });
+        }
+      }
+    }
+
+    if (newMembers.length === 0) return;
+
+    group.members.push(...newMembers);
+    this.groupsMap.set(groupId, group);
+
+    // Broadcast `group.create` to NEW members so they have full state
+    for (const member of newMembers) {
+      connectionManager.send(member.deviceId, {
+        type: 'group.create',
+        id: 'gcreate_' + uuidv4(),
+        ts: now,
+        payload: {
+          groupId,
+          groupName: group.name,
+          members: group.members
+        }
+      });
+    }
+
+    // Broadcast `group.members.add` to EXISTING members
+    for (const member of group.members) {
+      if (member.deviceId !== identity.deviceId && !newMembers.some(m => m.deviceId === member.deviceId)) {
+        connectionManager.send(member.deviceId, {
+          type: 'group.members.add',
+          id: 'gadd_' + uuidv4(),
+          ts: now,
+          payload: { groupId, newMembers }
+        });
+      }
+    }
+
+    // Notify local renderer
+    this.windowRef?.webContents?.send('group:members-added', { groupId, newMembers });
+  }
+
+  public async removeMember(groupId: string, peerIdToRemove: string) {
+    const identity = getOrGenerateIdentity();
+    const group = this.groupsMap.get(groupId);
+    if (!group || group.creatorId !== identity.deviceId) return;
+
+    // Can't remove creator
+    if (peerIdToRemove === identity.deviceId) return;
+
+    const memberExists = group.members.some(m => m.deviceId === peerIdToRemove);
+    if (!memberExists) return;
+
+    const now = Date.now();
+    
+    // Broadcast `group.member.remove` to ALL current members (including the one being kicked)
+    for (const member of group.members) {
+      if (member.deviceId !== identity.deviceId) {
+        connectionManager.send(member.deviceId, {
+          type: 'group.member.remove',
+          id: 'gremove_' + uuidv4(),
+          ts: now,
+          payload: { groupId, removedPeerId: peerIdToRemove }
+        });
+      }
+    }
+
+    group.members = group.members.filter(m => m.deviceId !== peerIdToRemove);
+    this.groupsMap.set(groupId, group);
+
+    // Notify local renderer
+    this.windowRef?.webContents?.send('group:member-removed', { groupId, removedPeerId: peerIdToRemove });
+  }
+
   private async handleGroupCreate(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (!payload || !payload.groupId) return;
@@ -223,6 +318,9 @@ class GroupService {
     const payload = envelope.payload;
     if (!payload || !payload.groupId || !payload.content) return;
 
+    const group = this.groupsMap.get(payload.groupId);
+    if (!group || !group.members.some(m => m.deviceId === senderDeviceId)) return;
+
     const incomingMsg = {
       id: payload.messageId || envelope.id,
       groupId: payload.groupId,
@@ -257,6 +355,30 @@ class GroupService {
     if (group && group.creatorId === _senderDeviceId) {
       this.groupsMap.delete(payload.groupId);
       this.windowRef?.webContents?.send('group:deleted', payload.groupId);
+    }
+  }
+
+  private handleGroupMembersAdd(senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (!payload || !payload.groupId || !payload.newMembers) return;
+
+    const group = this.groupsMap.get(payload.groupId);
+    if (group && group.creatorId === senderDeviceId) {
+      group.members.push(...payload.newMembers);
+      this.groupsMap.set(payload.groupId, group);
+      this.windowRef?.webContents?.send('group:members-added', { groupId: payload.groupId, newMembers: payload.newMembers });
+    }
+  }
+
+  private handleGroupMemberRemove(senderDeviceId: string, envelope: any) {
+    const payload = envelope.payload;
+    if (!payload || !payload.groupId || !payload.removedPeerId) return;
+
+    const group = this.groupsMap.get(payload.groupId);
+    if (group && group.creatorId === senderDeviceId) {
+      group.members = group.members.filter(m => m.deviceId !== payload.removedPeerId);
+      this.groupsMap.set(payload.groupId, group);
+      this.windowRef?.webContents?.send('group:member-removed', { groupId: payload.groupId, removedPeerId: payload.removedPeerId });
     }
   }
 }

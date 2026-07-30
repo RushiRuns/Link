@@ -59,6 +59,10 @@ export interface LinkAPI {
     deleteGroup: (groupId: string) => Promise<void>;
     onGroupRenamed: (callback: (data: { groupId: string, newName: string }) => void) => () => void;
     onGroupDeleted: (callback: (groupId: string) => void) => () => void;
+    addMembers: (groupId: string, memberPeerIds: string[]) => Promise<void>;
+    removeMember: (groupId: string, peerIdToRemove: string) => Promise<void>;
+    onGroupMembersAdded: (callback: (data: { groupId: string, newMembers: any[] }) => void) => () => void;
+    onGroupMemberRemoved: (callback: (data: { groupId: string, removedPeerId: string }) => void) => () => void;
   };
   fileTransfer: {
     offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer | LinkFileTransfer[]>;

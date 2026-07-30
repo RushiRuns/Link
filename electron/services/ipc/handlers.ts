@@ -89,6 +89,14 @@ export function registerIpcHandlers() {
     return groupService.deleteGroup(groupId);
   });
 
+  ipcMain.handle('groups:add-members', async (_, groupId: string, memberPeerIds: string[]) => {
+    return groupService.addMembers(groupId, memberPeerIds);
+  });
+
+  ipcMain.handle('groups:remove-member', async (_, groupId: string, peerIdToRemove: string) => {
+    return groupService.removeMember(groupId, peerIdToRemove);
+  });
+
   // File Transfer Handlers
   ipcMain.handle('file-transfer:offer', async (_, peerId: string, filePath: string) => {
     if (!filePath) {
