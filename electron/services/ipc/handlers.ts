@@ -139,7 +139,11 @@ export function registerIpcHandlers() {
     
     const targetPath = state.savePath || state.filePath;
     if (targetPath && fs.existsSync(targetPath)) {
-      shell.showItemInFolder(targetPath);
+      const errorMsg = await shell.openPath(targetPath);
+      if (errorMsg) {
+        console.error(`[FileTransfer] Error opening path ${targetPath}:`, errorMsg);
+        return false;
+      }
       return true;
     }
     return false;
