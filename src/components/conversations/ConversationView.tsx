@@ -47,7 +47,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   }, [conversationId, markConversationRead]);
 
   const conversationMessages = messages.get(conversationId) || [];
-  const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id);
+  const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id && !t.groupId);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
