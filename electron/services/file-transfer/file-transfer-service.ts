@@ -422,7 +422,7 @@ class FileTransferService {
       const bytes = typeof chunkBuffer === 'string' ? Buffer.from(chunkBuffer) : chunkBuffer;
       state.bytesTransferred += bytes.length;
 
-      connectionManager.send(state.peerId, {
+      const ok = connectionManager.send(state.peerId, {
         type: 'file.chunk',
         id: 'chunk_' + uuidv4(),
         ts: Date.now(),
@@ -438,6 +438,17 @@ class FileTransferService {
         transferId: state.id,
         bytesTransferred: state.bytesTransferred
       });
+
+      if (!ok) {
+        readStream.pause();
+        const onDrain = (deviceId: string) => {
+          if (deviceId === state.peerId) {
+            readStream.resume();
+            connectionManager.removeListener('peer:drain', onDrain);
+          }
+        };
+        connectionManager.on('peer:drain', onDrain);
+      }
     });
 
     readStream.on('end', () => {

@@ -40,6 +40,7 @@ class ConnectionManager extends EventEmitter {
 
   private async handleIncomingConnection(socket: net.Socket) {
     socket.setKeepAlive(true, 15000);
+    socket.setNoDelay(true);
     socket.once('data', async (initialData: Buffer) => {
       try {
         const identity = getOrGenerateIdentity();
@@ -65,6 +66,7 @@ class ConnectionManager extends EventEmitter {
     const identity = getOrGenerateIdentity();
     const socket = new net.Socket();
     socket.setKeepAlive(true, 15000);
+    socket.setNoDelay(true);
 
     return new Promise((resolve, reject) => {
       socket.connect(port, host, async () => {
@@ -127,6 +129,10 @@ class ConnectionManager extends EventEmitter {
       }
     });
 
+    socket.on('drain', () => {
+      this.emit('peer:drain', conn.deviceId);
+    });
+
     socket.on('close', () => {
       if (this.connections.has(conn.deviceId)) {
         this.connections.delete(conn.deviceId);
@@ -165,8 +171,7 @@ class ConnectionManager extends EventEmitter {
       const frameHeader = Buffer.alloc(4);
       frameHeader.writeUInt32BE(ciphertext.length, 0);
 
-      conn.socket.write(Buffer.concat([frameHeader, Buffer.from(ciphertext)]));
-      return true;
+      return conn.socket.write(Buffer.concat([frameHeader, Buffer.from(ciphertext)]));
     } catch (err) {
       console.error(`[ConnectionManager] Send error to ${deviceId}:`, err);
       return false;
