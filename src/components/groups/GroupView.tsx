@@ -21,6 +21,7 @@ export function GroupView({ group }: GroupViewProps) {
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameInput, setRenameInput] = useState('');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -128,6 +129,37 @@ export function GroupView({ group }: GroupViewProps) {
     offerPastedBufferToGroup(peerIds, buffer, mimeType, group.id);
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Must prevent default to allow dropping
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      for (const file of Array.from(e.dataTransfer.files)) {
+        const path = (file as any).path;
+        if (path) {
+          handlePasteFile(path);
+        }
+      }
+    }
+  };
+
   const executeSelectiveShare = async (type: 'file' | 'folder') => {
     if (selectedPeersForShare.length === 0) return;
     
@@ -145,7 +177,37 @@ export function GroupView({ group }: GroupViewProps) {
   };
 
   return (
-    <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+    <div 
+      style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden', position: 'relative' }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Drag Overlay */}
+      {isDragging && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          border: '2px dashed var(--accent-primary)',
+          borderRadius: 'var(--radius-md)',
+          margin: 'var(--space-2)'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div style={{ padding: 'var(--space-4)', backgroundColor: 'var(--accent-primary)', borderRadius: '50%', color: 'white' }}>
+              <Users size={40} />
+            </div>
+            <h2 style={{ margin: 0 }}>Drop files to send to {group.name}</h2>
+          </div>
+        </div>
+      )}
       {/* Main Chat Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Group Header */}

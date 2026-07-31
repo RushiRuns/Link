@@ -29,6 +29,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,6 +106,49 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const isVersionMismatch = peer.status === 'version_mismatch';
   const isTyping = typingPeers.has(conversationId);
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isOffline && !isVersionMismatch) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Must prevent default to allow dropping
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (isOffline || isVersionMismatch) return;
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      for (const file of Array.from(e.dataTransfer.files)) {
+        const path = (file as any).path;
+        if (path && window.link?.fileTransfer) {
+          try {
+            const transfers = await window.link.fileTransfer.offerFile(peer.id, path);
+            if (transfers) {
+              const transferArray = Array.isArray(transfers) ? transfers : [transfers];
+              transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
+            }
+          } catch (err) {
+            console.error('Failed to send dropped file:', err);
+          }
+        }
+      }
+    }
+  };
+
   // Merge messages and file transfers into a single chronologically sorted timeline
   type ChatTimelineItem =
     | { kind: 'message'; id: string; timestamp: number; data: typeof conversationMessages[0] }
@@ -126,7 +170,37 @@ export function ConversationView({ peer }: ConversationViewProps) {
   ].sort((a, b) => a.timestamp - b.timestamp);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div 
+      style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', position: 'relative' }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Drag Overlay */}
+      {isDragging && (
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          border: '2px dashed var(--accent-primary)',
+          borderRadius: 'var(--radius-md)',
+          margin: 'var(--space-2)'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div style={{ padding: 'var(--space-4)', backgroundColor: 'var(--accent-primary)', borderRadius: '50%', color: 'white' }}>
+              <Shield size={40} />
+            </div>
+            <h2 style={{ margin: 0 }}>Drop files to send to {peer.displayName}</h2>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div
         style={{
