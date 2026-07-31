@@ -14,7 +14,7 @@ interface GroupViewProps {
 }
 
 export function GroupView({ group }: GroupViewProps) {
-  const { sendGroupMessage, renameGroup, deleteGroup, addMembersToGroup, removeMemberFromGroup } = useGroupsStore();
+  const { sendGroupMessage, renameGroup, deleteGroup, addMembersToGroup, removeMemberFromGroup, markGroupRead } = useGroupsStore();
   const { selectGroup } = useAppStore();
   const { transfers, offerFileToGroup, offerFolderToGroup, offerPastedFileToGroup, offerPastedBufferToGroup } = useFileTransferStore();
   const { peers } = usePeersStore();
@@ -37,7 +37,9 @@ export function GroupView({ group }: GroupViewProps) {
     }
   }, []);
 
-
+  useEffect(() => {
+    markGroupRead(group.id);
+  }, [group.id, markGroupRead]);
 
   const groupMessages = group.messages || [];
   const groupTransfers = Array.from(transfers.values()).filter(t => t.groupId === group.id);

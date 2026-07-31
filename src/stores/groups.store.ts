@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { LinkGroup, LinkMessage } from '../types/ipc';
 import { useAppStore } from './app.store';
+import { playNotificationSound } from '../utils/audio';
 
 interface GroupsState {
   groups: Map<string, LinkGroup>; // groupId -> LinkGroup
+  unreadCounts: Map<string, number>; // groupId -> count
   createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup | undefined>;
   sendGroupMessage: (groupId: string, content: string) => Promise<void>;
   addGroupMessage: (message: LinkMessage) => void;
@@ -12,11 +14,21 @@ interface GroupsState {
   deleteGroup: (groupId: string) => Promise<void>;
   addMembersToGroup: (groupId: string, memberPeerIds: string[]) => Promise<void>;
   removeMemberFromGroup: (groupId: string, peerIdToRemove: string) => Promise<void>;
+  markGroupRead: (groupId: string) => void;
   initListeners: () => () => void;
 }
 
 export const useGroupsStore = create<GroupsState>((set, get) => ({
   groups: new Map(),
+  unreadCounts: new Map(),
+
+  markGroupRead: (groupId) => {
+    set((state) => {
+      const nextUnreads = new Map(state.unreadCounts);
+      nextUnreads.delete(groupId);
+      return { unreadCounts: nextUnreads };
+    });
+  },
 
   addGroup: (group) => {
     set((state) => {
@@ -115,6 +127,14 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
             messages: [...existingMessages, message]
           };
           nextMap.set(groupId, updatedGroup);
+
+          const { selectedGroupId } = useAppStore.getState();
+          const nextUnreads = new Map(state.unreadCounts);
+          if (selectedGroupId !== groupId) {
+            const count = nextUnreads.get(groupId) || 0;
+            nextUnreads.set(groupId, count + 1);
+          }
+          return { groups: nextMap, unreadCounts: nextUnreads };
         }
       }
       return { groups: nextMap };
@@ -130,6 +150,12 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
 
     const cleanMsg = window.link.groups.onGroupMessageReceived((message) => {
       get().addGroupMessage(message);
+
+      const { selectedGroupId } = useAppStore.getState();
+      if (selectedGroupId !== message.groupId || !document.hasFocus()) {
+        window.electron?.flashFrame(true);
+        playNotificationSound();
+      }
     });
 
     const cleanRenamed = window.link.groups.onGroupRenamed(({ groupId, newName }) => {
@@ -147,7 +173,9 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       set((state) => {
         const nextMap = new Map(state.groups);
         nextMap.delete(groupId);
-        return { groups: nextMap };
+        const nextUnreads = new Map(state.unreadCounts);
+        nextUnreads.delete(groupId);
+        return { groups: nextMap, unreadCounts: nextUnreads };
       });
 
       // Navigate away if we're currently viewing this group
@@ -199,7 +227,9 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
           set((state) => {
             const nextMap = new Map(state.groups);
             nextMap.delete(groupId);
-            return { groups: nextMap };
+            const nextUnreads = new Map(state.unreadCounts);
+            nextUnreads.delete(groupId);
+            return { groups: nextMap, unreadCounts: nextUnreads };
           });
           
           const appStore = useAppStore.getState();

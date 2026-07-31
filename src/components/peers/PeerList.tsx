@@ -14,7 +14,7 @@ interface PeerListProps {
 
 export function PeerList({ onOpenSettings }: PeerListProps) {
   const { peers, loadKnownPeers } = usePeersStore();
-  const { groups } = useGroupsStore();
+  const { groups, unreadCounts } = useGroupsStore();
   const { selectedPeerId, selectedGroupId, selectPeer, selectGroup } = useAppStore();
   const [noPeersFound, setNoPeersFound] = useState(false);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
@@ -157,7 +157,7 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
                     >
                       <MessageSquare size={16} strokeWidth={1.5} color="var(--accent-primary)" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                       <span style={{ fontWeight: 500, fontSize: 'var(--font-size-body)', color: 'var(--text-primary)' }}>
                         {g.name}
                       </span>
@@ -165,6 +165,23 @@ export function PeerList({ onOpenSettings }: PeerListProps) {
                         {g.members.length} members
                       </span>
                     </div>
+                    
+                    {(unreadCounts.get(g.id) || 0) > 0 && (
+                      <div
+                        style={{
+                          backgroundColor: 'var(--accent-primary)',
+                          color: '#ffffff',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          padding: '2px 6px',
+                          borderRadius: '10px',
+                          minWidth: '20px',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {(unreadCounts.get(g.id) || 0) > 99 ? '99+' : (unreadCounts.get(g.id) || 0)}
+                      </div>
+                    )}
                   </div>
                 );
               })}
