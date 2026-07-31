@@ -21,7 +21,8 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
     : 0;
 
   const isComplete = transfer.status === 'completed';
-  const isFailed = transfer.status === 'failed' || transfer.status === 'declined';
+  const isDeclinedByRecipient = isOutgoing && transfer.status === 'declined';
+  const isFailed = transfer.status === 'failed' || (transfer.status === 'declined' && !isDeclinedByRecipient);
 
   return (
     <div
@@ -45,6 +46,8 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
             borderRadius: 'var(--radius-md)',
             backgroundColor: isComplete
               ? 'rgba(16, 185, 129, 0.15)'
+              : isDeclinedByRecipient
+              ? 'rgba(234, 179, 8, 0.15)'
               : isFailed
               ? 'rgba(239, 68, 68, 0.15)'
               : 'var(--accent-light)',
@@ -56,6 +59,8 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
         >
           {isComplete ? (
             <CheckCircle2 size={18} color="var(--status-online)" />
+          ) : isDeclinedByRecipient ? (
+            <AlertCircle size={18} color="#eab308" />
           ) : isFailed ? (
             <AlertCircle size={18} color="var(--status-error)" />
           ) : transfer.isFolder ? (
@@ -69,14 +74,16 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
           <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {transfer.fileName}
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            {formatBytes(transfer.bytesTransferred)} / {formatBytes(transfer.fileSizeBytes)} ({percent}%)
+          <div style={{ fontSize: '0.72rem', color: isDeclinedByRecipient ? '#eab308' : 'var(--text-muted)' }}>
+            {isDeclinedByRecipient 
+              ? 'Declined by recipient' 
+              : `${formatBytes(transfer.bytesTransferred)} / ${formatBytes(transfer.fileSizeBytes)} (${percent}%)`}
           </div>
         </div>
       </div>
 
       {/* Progress Bar Track */}
-      {!isComplete && !isFailed && (
+      {!isComplete && !isFailed && !isDeclinedByRecipient && (
         <div
           style={{
             width: '100%',

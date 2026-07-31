@@ -127,6 +127,16 @@ contextBridge.exposeInMainWorld("link", {
       const listener = (_, transferId) => callback(transferId);
       ipcRenderer.on("file-transfer:completed", listener);
       return () => ipcRenderer.removeListener("file-transfer:completed", listener);
+    },
+    onDeclined: (callback) => {
+      const listener = (_, transferId) => callback(transferId);
+      ipcRenderer.on("file-transfer:declined", listener);
+      return () => ipcRenderer.removeListener("file-transfer:declined", listener);
+    },
+    onFailed: (callback) => {
+      const listener = (_, transferId) => callback(transferId);
+      ipcRenderer.on("file-transfer:failed", listener);
+      return () => ipcRenderer.removeListener("file-transfer:failed", listener);
     }
   },
   calls: {

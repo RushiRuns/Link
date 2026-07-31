@@ -77,6 +77,8 @@ export interface LinkAPI {
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;
     onProgress: (callback: (transferId: string, bytesTransferred: number) => void) => () => void;
     onCompleted: (callback: (transferId: string) => void) => () => void;
+    onDeclined: (callback: (transferId: string) => void) => () => void;
+    onFailed: (callback: (transferId: string) => void) => () => void;
   };
   calls: {
     offerCall: (peerId: string, mediaType: 'voice' | 'video', sdp: string) => Promise<LinkCall>;

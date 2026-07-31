@@ -128,6 +128,16 @@ contextBridge.exposeInMainWorld('link', {
       const listener = (_: any, transferId: string) => callback(transferId);
       ipcRenderer.on('file-transfer:completed', listener);
       return () => ipcRenderer.removeListener('file-transfer:completed', listener);
+    },
+    onDeclined: (callback: EventCallback<string>) => {
+      const listener = (_: any, transferId: string) => callback(transferId);
+      ipcRenderer.on('file-transfer:declined', listener);
+      return () => ipcRenderer.removeListener('file-transfer:declined', listener);
+    },
+    onFailed: (callback: EventCallback<string>) => {
+      const listener = (_: any, transferId: string) => callback(transferId);
+      ipcRenderer.on('file-transfer:failed', listener);
+      return () => ipcRenderer.removeListener('file-transfer:failed', listener);
     }
   },
   calls: {

@@ -229,10 +229,20 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
       get().setTransferStatus(transferId, 'completed');
     });
 
+    const cleanDeclined = window.link.fileTransfer.onDeclined((transferId) => {
+      get().setTransferStatus(transferId, 'declined');
+    });
+
+    const cleanFailed = window.link.fileTransfer.onFailed((transferId) => {
+      get().setTransferStatus(transferId, 'failed');
+    });
+
     return () => {
       cleanOffer();
       cleanProgress();
       cleanCompleted();
+      cleanDeclined();
+      cleanFailed();
     };
   }
 }));

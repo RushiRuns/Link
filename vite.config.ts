@@ -25,6 +25,18 @@ export default defineConfig({
                   path.resolve(__dirname, 'electron/preload.cjs'),
                   path.resolve(__dirname, 'dist-electron/preload.cjs')
                 );
+              },
+              configureServer(server) {
+                const preloadSrc = path.resolve(__dirname, 'electron/preload.cjs');
+                const preloadDest = path.resolve(__dirname, 'dist-electron/preload.cjs');
+                server.watcher.add(preloadSrc);
+                server.watcher.on('change', (file) => {
+                  if (file === preloadSrc) {
+                    mkdirSync('dist-electron', { recursive: true });
+                    copyFileSync(preloadSrc, preloadDest);
+                    console.log('[copy-preload] preload.cjs updated in dist-electron');
+                  }
+                });
               }
             }
           ],
