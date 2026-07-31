@@ -7,7 +7,7 @@ import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { MessageBubble } from '../conversations/MessageBubble';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { MessageInput } from '../conversations/MessageInput';
-import { Users, Shield, X, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock } from 'lucide-react';
 
 interface GroupViewProps {
   group: LinkGroup;
@@ -163,9 +163,6 @@ export function GroupView({ group }: GroupViewProps) {
   const executeSelectiveShare = async (type: 'file' | 'folder') => {
     if (selectedPeersForShare.length === 0) return;
     
-    // Add fallback message to group chat for non-selected members
-    sendGroupMessage(group.id, `🔒 Shared a ${type} selectively with ${selectedPeersForShare.length} members`);
-    
     if (type === 'file') {
       await offerFileToGroup(selectedPeersForShare, group.id);
     } else {
@@ -279,16 +276,20 @@ export function GroupView({ group }: GroupViewProps) {
                   />
                 );
               } else if (item.kind === 'transfer') {
-                return <TransferProgress key={item.id} transfer={item.data} isSelf={true} />;
+                return <TransferProgress key={item.id} transfer={item.data} isSelf={item.data.direction === 'outgoing'} />;
               } else if (item.kind === 'transfer_batch') {
+                const recipientNames = item.data.map(t => {
+                  const p = peers.get(t.peerId);
+                  return p ? p.displayName : 'Unknown';
+                }).join(', ');
+
                 return (
-                  <div key={item.id} style={{ margin: 'var(--space-2) 0', padding: 'var(--space-3)', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: 'var(--space-2)' }}>
-                      Shared with {item.data.length} members
+                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', margin: 'var(--space-1) 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingRight: '4px' }}>
+                      <Lock size={12} opacity={0.7} />
+                      <span>Sent to {recipientNames}</span>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                      {item.data.map(t => <TransferProgress key={t.id} transfer={t} isSelf={true} />)}
-                    </div>
+                    {item.data.map(t => <TransferProgress key={t.id} transfer={t} isSelf={true} />)}
                   </div>
                 );
               }
