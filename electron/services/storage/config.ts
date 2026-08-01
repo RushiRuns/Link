@@ -6,6 +6,7 @@ export interface AppConfigSchema {
   deviceId: string;
   encryptedPrivateKey: string;
   publicKey: string;
+  downloadPath: string;
 }
 
 const store = new Store<AppConfigSchema>({
@@ -14,7 +15,8 @@ const store = new Store<AppConfigSchema>({
     displayName: '',
     deviceId: '',
     encryptedPrivateKey: '',
-    publicKey: ''
+    publicKey: '',
+    downloadPath: ''
   }
 });
 

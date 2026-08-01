@@ -27,6 +27,10 @@ export interface SystemInfo {
 }
 
 export interface LinkAPI {
+  config: {
+    getDownloadPath: () => Promise<string>;
+    setDownloadPath: (path: string) => Promise<boolean>;
+  };
   identity: {
     getIdentity: () => Promise<LinkIdentity>;
     setDisplayName: (name: string) => Promise<LinkIdentity>;

@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('electron', {
 });
 
 contextBridge.exposeInMainWorld('link', {
+  config: {
+    getDownloadPath: () => ipcRenderer.invoke('config:get-download-path'),
+    setDownloadPath: (path: string) => ipcRenderer.invoke('config:set-download-path', path)
+  },
   identity: {
     getIdentity: () => ipcRenderer.invoke('identity:get'),
     setDisplayName: (name: string) => ipcRenderer.invoke('identity:set-name', name)

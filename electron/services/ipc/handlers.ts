@@ -8,8 +8,19 @@ import { fileTransferService } from '../file-transfer/file-transfer-service.js';
 import { callSignalingService } from '../calls/call-signaling.js';
 import { connectionManager } from '../network/connection-manager.js';
 import { messageStore } from '../storage/message-store.js';
+import { configStore } from '../storage/config.js';
 
 export function registerIpcHandlers() {
+  // Config Handlers
+  ipcMain.handle('config:get-download-path', async () => {
+    return configStore.get('downloadPath');
+  });
+
+  ipcMain.handle('config:set-download-path', async (_, p: string) => {
+    configStore.set('downloadPath', p);
+    return true;
+  });
+
   // Identity Handlers
   ipcMain.handle('identity:get', async () => {
     const identity = getOrGenerateIdentity();

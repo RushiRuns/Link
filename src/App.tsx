@@ -8,6 +8,7 @@ import { FileTransferOffer } from './components/file-transfer/FileTransferOffer'
 import { IncomingCallModal } from './components/calls/IncomingCallModal';
 import { CallScreen } from './components/calls/CallScreen';
 import { SettingsPanel } from './components/settings/SettingsPanel';
+import { OnboardingModal } from './components/settings/OnboardingModal';
 import { PeerProfile } from './components/peers/PeerProfile';
 import { useAppStore } from './stores/app.store';
 import { usePeersStore } from './stores/peers.store';
@@ -29,9 +30,16 @@ export default function App() {
   const { initListeners: initFtListeners } = useFileTransferStore();
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [profilePeer, setProfilePeer] = useState<LinkPeer | null>(null);
 
   useEffect(() => {
+    window.link.config.getDownloadPath().then((path) => {
+      if (!path) {
+        setShowOnboarding(true);
+      }
+    });
+
     loadFromDisk();
     const cleanCalls = initCallListeners();
     const cleanConversations = initConversationsListeners();
@@ -129,6 +137,9 @@ export default function App() {
       {incomingCall && <IncomingCallModal />}
       {activeCall && <CallScreen />}
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showOnboarding && (
+        <OnboardingModal onComplete={() => setShowOnboarding(false)} />
+      )}
       {profilePeer && <PeerProfile peer={profilePeer} onClose={() => setProfilePeer(null)} />}
     </>
   );

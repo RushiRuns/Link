@@ -5,6 +5,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import tar from 'tar-fs';
 import { showAndFocusWindow } from '../../main.js';
+import { configStore } from '../storage/config.js';
 
 function getFolderSize(dirPath: string): number {
   let size = 0;
@@ -325,7 +326,8 @@ class FileTransferService {
     // Determine save path if not specified
     let savePath = customSavePath;
     if (!savePath) {
-      const downloadsDir = app.getPath('downloads');
+      const customConfigPath = configStore.get('downloadPath');
+      const downloadsDir = customConfigPath || app.getPath('downloads');
       savePath = path.join(downloadsDir, state.fileName);
     }
 

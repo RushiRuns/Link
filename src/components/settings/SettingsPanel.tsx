@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LinkIdentity } from '../../types/ipc';
 import { useAppStore } from '../../stores/app.store';
-import { X, User, Key, Shield, Sun, Moon, Info } from 'lucide-react';
+import { X, User, Key, Shield, Sun, Moon, Info, FolderHeart } from 'lucide-react';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -11,6 +11,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [identity, setIdentity] = useState<LinkIdentity | null>(null);
   const [displayName, setDisplayNameInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [downloadPath, setDownloadPath] = useState('');
   const { isDarkMode, setDarkMode } = useAppStore();
 
   useEffect(() => {
@@ -19,6 +20,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         setIdentity(id);
         setDisplayNameInput(id.displayName);
       }).catch(console.error);
+    }
+    
+    if (window.link?.config) {
+      window.link.config.getDownloadPath().then(setDownloadPath).catch(console.error);
     }
   }, []);
 
@@ -34,6 +39,18 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       console.error('[Settings] Error setting display name:', err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangeFolder = async () => {
+    try {
+      const result = await window.link.dialog.selectFolder();
+      if (result) {
+        await window.link.config.setDownloadPath(result);
+        setDownloadPath(result);
+      }
+    } catch (err) {
+      console.error('[Settings] Error selecting folder:', err);
     }
   };
 
@@ -238,6 +255,62 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             </div>
           </div>
 
+          {/* Download Directory Section */}
+          <div>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: 'var(--font-size-meta)',
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
+                marginBottom: 'var(--space-2)'
+              }}
+            >
+              <FolderHeart size={14} strokeWidth={1.5} /> DOWNLOAD FOLDER
+            </label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: 'var(--space-3)',
+                backgroundColor: 'var(--bg-app)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                gap: 'var(--space-3)'
+              }}
+            >
+              <span style={{ 
+                fontSize: 'var(--font-size-body)', 
+                color: 'var(--text-primary)',
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {downloadPath || 'Not set'}
+              </span>
+              <button
+                onClick={handleChangeFolder}
+                style={{
+                  padding: 'var(--space-1) var(--space-3)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  fontSize: 'var(--font-size-meta)',
+                  fontWeight: 500,
+                  transition: 'background-color var(--transition-fast)'
+                }}
+              >
+                Change
+              </button>
+            </div>
+          </div>
+
           {/* App Version Info */}
           <div
             style={{
@@ -251,7 +324,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             }}
           >
             <Info size={14} strokeWidth={1.5} />
-            <span>Link LAN Messenger v2.0.0 • Peer-to-Peer Encrypted Network</span>
+            <span>Link LAN Messenger v3.0.0 • Peer-to-Peer Encrypted Network</span>
           </div>
         </div>
       </div>
