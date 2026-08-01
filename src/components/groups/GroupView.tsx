@@ -34,6 +34,9 @@ export function GroupView({ group }: GroupViewProps) {
   const [selectedPeersForShare, setSelectedPeersForShare] = useState<string[]>([]);
   const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
   const [selectiveShareType, setSelectiveShareType] = useState<'all' | 'selective'>('all');
+  
+  const [replyingToMessageId, setReplyingToMessageId] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -95,8 +98,36 @@ export function GroupView({ group }: GroupViewProps) {
   }, [timelineItems.length]);
 
   const handleSend = (text: string) => {
-    sendGroupMessage(group.id, text);
+    if (editingMessageId) {
+      useGroupsStore.getState().editGroupMessageLocally(group.id, editingMessageId, text);
+      setEditingMessageId(null);
+    } else {
+      sendGroupMessage(group.id, text, replyingToMessageId || undefined);
+      if (replyingToMessageId) {
+        setReplyingToMessageId(null);
+      }
+    }
   };
+
+  const handleCopy = (content: string) => {
+    navigator.clipboard.writeText(content);
+  };
+
+  const handleDelete = (messageId: string) => {
+    useGroupsStore.getState().deleteGroupMessageLocally(group.id, messageId);
+  };
+
+  const latestSentMessageId = [...groupMessages]
+    .reverse()
+    .find(m => m.senderId === localIdentity?.deviceId)?.id;
+
+  const replyingToMessage = replyingToMessageId 
+    ? groupMessages.find((m) => m.id === replyingToMessageId) 
+    : null;
+    
+  const editingMessage = editingMessageId
+    ? groupMessages.find(m => m.id === editingMessageId)
+    : null;
 
   const getOnlinePeerIds = () => {
     return group.members
@@ -323,7 +354,19 @@ export function GroupView({ group }: GroupViewProps) {
                     key={item.id || `msg-${i}`}
                     message={item.data}
                     isSelf={item.data.senderId === localIdentity?.deviceId}
+                    isLatestMessage={item.data.id === latestSentMessageId}
+                    repliedMessage={item.data.replyToMessageId ? groupMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
                     showSenderLabel={true}
+                    onReply={() => {
+                      setReplyingToMessageId(item.data.id);
+                      setEditingMessageId(null); // Mutually exclusive
+                    }}
+                    onCopy={() => handleCopy(item.data.content)}
+                    onEdit={() => {
+                      setEditingMessageId(item.data.id);
+                      setReplyingToMessageId(null); // Mutually exclusive
+                    }}
+                    onDelete={() => handleDelete(item.data.id)}
                   />
                 );
               } else if (item.kind === 'transfer') {
@@ -426,6 +469,48 @@ export function GroupView({ group }: GroupViewProps) {
               </div>
             </div>
           )}
+
+          {/* Reply Preview Banner */}
+          {replyingToMessage && (
+            <div
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                backgroundColor: 'var(--bg-card)',
+                borderTop: '1px solid var(--border-color)',
+                borderLeft: '4px solid var(--accent-primary)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 'var(--space-3)'
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '2px' }}>
+                  Replying to {replyingToMessage.senderName}
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {replyingToMessage.content}
+                </div>
+              </div>
+              <button
+                onClick={() => setReplyingToMessageId(null)}
+                title="Cancel reply"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
           <MessageInput 
             onSend={handleSend} 
             placeholder={`Message #${group.name}...`}
@@ -434,6 +519,9 @@ export function GroupView({ group }: GroupViewProps) {
             onAttachSelective={() => setIsSelectiveShareOpen(!isSelectiveShareOpen)}
             onPasteFile={handlePasteFile}
             onPasteBuffer={handlePasteBuffer}
+            initialValue={editingMessage ? editingMessage.content : undefined}
+            isEditing={!!editingMessage}
+            onCancelEdit={() => setEditingMessageId(null)}
           />
         </div>
       </div>

@@ -42,6 +42,7 @@ class MessageService {
     const payload: any = {
       messageId,
       conversationId,
+      senderName: identity.displayName,
       content
     };
 

@@ -105,13 +105,13 @@ class GroupService {
     return groupInfo;
   }
 
-  public async sendGroupMessage(groupId: string, content: string) {
+  public async sendGroupMessage(groupId: string, content: string, replyToMessageId?: string) {
     const identity = getOrGenerateIdentity();
     const group = this.groupsMap.get(groupId);
     const messageId = uuidv4();
     const now = Date.now();
 
-    const linkMsg = {
+    const linkMsg: any = {
       id: messageId,
       groupId,
       senderId: identity.deviceId,
@@ -120,22 +120,32 @@ class GroupService {
       timestamp: now,
       deliveryStatus: 'sent' as const
     };
+    
+    if (replyToMessageId) {
+      linkMsg.replyToMessageId = replyToMessageId;
+    }
 
     if (group) {
       // Send directly to each member (except self) over peer-to-peer mesh
       for (const member of group.members) {
         if (member.deviceId !== identity.deviceId) {
-          connectionManager.send(member.deviceId, {
-            type: 'message.text',
-            id: messageId,
-            ts: now,
-            payload: {
+            const payload: any = {
               messageId,
               groupId,
               senderName: identity.displayName,
               content
+            };
+            
+            if (replyToMessageId) {
+              payload.replyToMessageId = replyToMessageId;
             }
-          });
+
+            connectionManager.send(member.deviceId, {
+              type: 'message.text',
+              id: messageId,
+              ts: now,
+              payload
+            });
         }
       }
     }
@@ -316,12 +326,9 @@ class GroupService {
 
   private handleGroupMessage(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
-    if (!payload || !payload.groupId || !payload.content) return;
+    if (!payload || !payload.content || !payload.groupId) return;
 
-    const group = this.groupsMap.get(payload.groupId);
-    if (!group || !group.members.some(m => m.deviceId === senderDeviceId)) return;
-
-    const incomingMsg = {
+    const incomingMsg: any = {
       id: payload.messageId || envelope.id,
       groupId: payload.groupId,
       senderId: senderDeviceId,
@@ -330,6 +337,10 @@ class GroupService {
       timestamp: envelope.ts || Date.now(),
       deliveryStatus: 'delivered' as const
     };
+    
+    if (payload.replyToMessageId) {
+      incomingMsg.replyToMessageId = payload.replyToMessageId;
+    }
 
     // Forward group message to renderer
     this.windowRef?.webContents?.send('group-message:received', incomingMsg);

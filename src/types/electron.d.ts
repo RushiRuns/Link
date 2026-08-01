@@ -52,7 +52,7 @@ export interface LinkAPI {
   };
   groups: {
     createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup>;
-    sendGroupMessage: (groupId: string, content: string) => Promise<LinkMessage>;
+    sendGroupMessage: (groupId: string, content: string, replyToMessageId?: string) => Promise<LinkMessage>;
     onGroupCreated: (callback: (group: LinkGroup) => void) => () => void;
     onGroupMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
     renameGroup: (groupId: string, newName: string) => Promise<void>;

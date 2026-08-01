@@ -7,7 +7,7 @@ interface GroupsState {
   groups: Map<string, LinkGroup>; // groupId -> LinkGroup
   unreadCounts: Map<string, number>; // groupId -> count
   createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup | undefined>;
-  sendGroupMessage: (groupId: string, content: string) => Promise<void>;
+  sendGroupMessage: (groupId: string, content: string, replyToMessageId?: string) => Promise<void>;
   addGroupMessage: (message: LinkMessage) => void;
   addGroup: (group: LinkGroup) => void;
   renameGroup: (groupId: string, newName: string) => Promise<void>;
@@ -15,6 +15,8 @@ interface GroupsState {
   addMembersToGroup: (groupId: string, memberPeerIds: string[]) => Promise<void>;
   removeMemberFromGroup: (groupId: string, peerIdToRemove: string) => Promise<void>;
   markGroupRead: (groupId: string) => void;
+  editGroupMessageLocally: (groupId: string, messageId: string, newContent: string) => void;
+  deleteGroupMessageLocally: (groupId: string, messageId: string) => void;
   initListeners: () => () => void;
 }
 
@@ -27,6 +29,36 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
       const nextUnreads = new Map(state.unreadCounts);
       nextUnreads.delete(groupId);
       return { unreadCounts: nextUnreads };
+    });
+  },
+
+  editGroupMessageLocally: (groupId, messageId, newContent) => {
+    set((state) => {
+      const group = state.groups.get(groupId);
+      if (!group || !group.messages) return state;
+
+      const msgIndex = group.messages.findIndex(m => m.id === messageId);
+      if (msgIndex === -1) return state;
+
+      const newMessages = [...group.messages];
+      newMessages[msgIndex] = { ...newMessages[msgIndex], content: newContent };
+
+      const nextGroups = new Map(state.groups);
+      nextGroups.set(groupId, { ...group, messages: newMessages });
+      return { groups: nextGroups };
+    });
+  },
+
+  deleteGroupMessageLocally: (groupId, messageId) => {
+    set((state) => {
+      const group = state.groups.get(groupId);
+      if (!group || !group.messages) return state;
+
+      const newMessages = group.messages.filter(m => m.id !== messageId);
+      
+      const nextGroups = new Map(state.groups);
+      nextGroups.set(groupId, { ...group, messages: newMessages });
+      return { groups: nextGroups };
     });
   },
 
@@ -101,11 +133,11 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
     }
   },
 
-  sendGroupMessage: async (groupId, content) => {
+  sendGroupMessage: async (groupId, content, replyToMessageId) => {
     if (window.link?.groups) {
       try {
-        const msg = await window.link.groups.sendGroupMessage(groupId, content);
-        get().addGroupMessage(msg);
+        const linkMsg = await window.link.groups.sendGroupMessage(groupId, content, replyToMessageId);
+        get().addGroupMessage(linkMsg);
       } catch (err) {
         console.error('[GroupsStore] Error sending group message:', err);
       }

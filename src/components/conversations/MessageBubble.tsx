@@ -1,6 +1,7 @@
 import { LinkMessage } from '../../types/ipc';
 import { Copy, Edit2, Trash2, CornerUpLeft } from 'lucide-react';
 import { useState } from 'react';
+import { usePeersStore } from '../../stores/peers.store';
 
 interface MessageBubbleProps {
   message: LinkMessage;
@@ -16,11 +17,19 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { peers } = usePeersStore();
 
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit'
   });
+
+  const getSenderName = (msg: LinkMessage | null | undefined) => {
+    if (!msg) return 'Unknown';
+    if (msg.senderName !== 'Teammate' && msg.senderName) return msg.senderName;
+    const peer = peers.get(msg.senderId);
+    return peer?.displayName || 'Teammate';
+  };
 
   const renderStatusTicks = () => {
     if (!isSelf) return null;
@@ -88,7 +97,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
             fontWeight: 500
           }}
         >
-          {message.senderName}
+          {getSenderName(message)}
         </span>
       )}
 
@@ -148,13 +157,15 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
                 <Edit2 size={12} strokeWidth={1.5} />
               </button>
             )}
-            <button
-              onClick={onDelete}
-              title="Delete"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--status-offline)', padding: '2px', display: 'flex', alignItems: 'center' }}
-            >
-              <Trash2 size={12} strokeWidth={1.5} />
-            </button>
+            {isSelf && (
+              <button
+                onClick={onDelete}
+                title="Delete"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--status-offline)', padding: '2px', display: 'flex', alignItems: 'center' }}
+              >
+                <Trash2 size={12} strokeWidth={1.5} />
+              </button>
+            )}
           </div>
         )}
         
@@ -175,7 +186,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
           >
             <div style={{ color: 'var(--accent-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CornerUpLeft size={12} strokeWidth={2} />
-              {repliedMessage ? repliedMessage.senderName : 'Unknown'}
+              {getSenderName(repliedMessage)}
             </div>
             <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {repliedMessage ? repliedMessage.content : <i>Message not found</i>}
