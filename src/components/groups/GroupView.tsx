@@ -6,6 +6,7 @@ import { useAppStore } from '../../stores/app.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { MessageBubble } from '../conversations/MessageBubble';
 import { TransferProgress } from '../file-transfer/TransferProgress';
+import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { MessageInput } from '../conversations/MessageInput';
 import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock } from 'lucide-react';
 
@@ -16,7 +17,7 @@ interface GroupViewProps {
 export function GroupView({ group }: GroupViewProps) {
   const { sendGroupMessage, renameGroup, deleteGroup, addMembersToGroup, removeMemberFromGroup, markGroupRead } = useGroupsStore();
   const { selectGroup } = useAppStore();
-  const { transfers, offerFileToGroup, offerFolderToGroup, offerPastedFileToGroup, offerPastedBufferToGroup } = useFileTransferStore();
+  const { transfers } = useFileTransferStore();
   const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,8 @@ export function GroupView({ group }: GroupViewProps) {
 
   const [isSelectiveShareOpen, setIsSelectiveShareOpen] = useState(false);
   const [selectedPeersForShare, setSelectedPeersForShare] = useState<string[]>([]);
+  const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
+  const [selectiveShareType, setSelectiveShareType] = useState<'all' | 'selective'>('all');
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -45,12 +48,12 @@ export function GroupView({ group }: GroupViewProps) {
   const groupMessages = group.messages || [];
   const groupTransfers = Array.from(transfers.values()).filter(t => t.groupId === group.id);
 
-  // Group outgoing transfers by transferBatchId
+  // Group incoming AND outgoing transfers by transferBatchId
   const batchedTransfers: Record<string, typeof groupTransfers> = {};
   const unbatchedTransfers: typeof groupTransfers = [];
   
   groupTransfers.forEach(t => {
-    if (t.direction === 'outgoing' && t.transferBatchId) {
+    if (t.transferBatchId) {
       if (!batchedTransfers[t.transferBatchId]) batchedTransfers[t.transferBatchId] = [];
       batchedTransfers[t.transferBatchId].push(t);
     } else {
@@ -105,28 +108,55 @@ export function GroupView({ group }: GroupViewProps) {
       .map(m => m.peerId);
   };
 
-  const handleAttachFile = () => {
+  const handleAttachFile = async () => {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
-    offerFileToGroup(peerIds, group.id);
+    if (window.link?.dialog) {
+      const paths = await window.link.dialog.selectFiles();
+      if (paths && paths.length > 0) {
+        const items = paths.map(p => {
+          const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
+          return { path: p, name, size: 0, isFolder: false };
+        });
+        setSelectiveShareType('all');
+        setPreviewItems(items);
+      }
+    }
   };
 
-  const handleAttachFolder = () => {
+  const handleAttachFolder = async () => {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
-    offerFolderToGroup(peerIds, group.id);
+    if (window.link?.dialog) {
+      const path = await window.link.dialog.selectFolder();
+      if (path) {
+        const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
+        setSelectiveShareType('all');
+        setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+      }
+    }
   };
 
   const handlePasteFile = (path: string) => {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
-    offerPastedFileToGroup(peerIds, path, group.id);
+    if (path) {
+      const name = path.split('\\').pop()?.split('/').pop() || 'Pasted File';
+      setSelectiveShareType('all');
+      setPreviewItems([{ path, name, size: 0, isFolder: false }]);
+    }
   };
 
-  const handlePasteBuffer = (buffer: ArrayBuffer, mimeType: string) => {
+  const handlePasteBuffer = async (buffer: ArrayBuffer, mimeType: string) => {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
-    offerPastedBufferToGroup(peerIds, buffer, mimeType, group.id);
+    if (window.link?.fileTransfer) {
+      const savedPath = await window.link.fileTransfer.saveBuffer(buffer, mimeType);
+      if (savedPath) {
+        setSelectiveShareType('all');
+        setPreviewItems([{ path: savedPath, name: 'Pasted Image', size: buffer.byteLength, isFolder: false }]);
+      }
+    }
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -151,11 +181,16 @@ export function GroupView({ group }: GroupViewProps) {
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const items: PreviewItem[] = [];
       for (const file of Array.from(e.dataTransfer.files)) {
         const path = (file as any).path;
         if (path) {
-          handlePasteFile(path);
+          items.push({ path, name: file.name, size: file.size, isFolder: false });
         }
+      }
+      if (items.length > 0) {
+        setSelectiveShareType('all');
+        setPreviewItems(items);
       }
     }
   };
@@ -164,13 +199,29 @@ export function GroupView({ group }: GroupViewProps) {
     if (selectedPeersForShare.length === 0) return;
     
     if (type === 'file') {
-      await offerFileToGroup(selectedPeersForShare, group.id);
+      if (window.link?.dialog) {
+        const paths = await window.link.dialog.selectFiles();
+        if (paths && paths.length > 0) {
+          const items = paths.map(p => {
+            const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
+            return { path: p, name, size: 0, isFolder: false };
+          });
+          setSelectiveShareType('selective');
+          setPreviewItems(items);
+        }
+      }
     } else {
-      await offerFolderToGroup(selectedPeersForShare, group.id);
+      if (window.link?.dialog) {
+        const path = await window.link.dialog.selectFolder();
+        if (path) {
+          const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
+          setSelectiveShareType('selective');
+          setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+        }
+      }
     }
     
     setIsSelectiveShareOpen(false);
-    setSelectedPeersForShare([]);
   };
 
   return (
@@ -276,20 +327,37 @@ export function GroupView({ group }: GroupViewProps) {
                   />
                 );
               } else if (item.kind === 'transfer') {
-                return <TransferProgress key={item.id} transfer={item.data} isSelf={item.data.direction === 'outgoing'} />;
+                return <TransferProgress key={item.id} transfer={item.data} isSelf={item.data.direction === 'outgoing'} showCaption={true} />;
               } else if (item.kind === 'transfer_batch') {
-                const recipientNames = item.data.map(t => {
-                  const p = peers.get(t.peerId);
-                  return p ? p.displayName : 'Unknown';
-                }).join(', ');
+                const isSelf = item.data[0].direction === 'outgoing';
+                const recipientNames = isSelf 
+                  ? item.data.map(t => {
+                      const p = peers.get(t.peerId);
+                      return p ? p.displayName : 'Unknown';
+                    }).join(', ')
+                  : undefined;
+                const senderName = !isSelf && peers.get(item.data[0].peerId)?.displayName;
 
                 return (
-                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', margin: 'var(--space-1) 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingRight: '4px' }}>
-                      <Lock size={12} opacity={0.7} />
-                      <span>Sent to {recipientNames}</span>
-                    </div>
-                    {item.data.map(t => <TransferProgress key={t.id} transfer={t} isSelf={true} />)}
+                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start', margin: 'var(--space-1) 0' }}>
+                    {isSelf ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingRight: '4px' }}>
+                        <Lock size={12} opacity={0.7} />
+                        <span>Sent to {recipientNames}</span>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingLeft: '4px' }}>
+                        <span>From {senderName || 'Unknown'}</span>
+                      </div>
+                    )}
+                    {item.data.map((t, index) => (
+                      <TransferProgress 
+                        key={t.id} 
+                        transfer={t} 
+                        isSelf={isSelf} 
+                        showCaption={index === item.data.length - 1} 
+                      />
+                    ))}
                   </div>
                 );
               }
@@ -369,6 +437,39 @@ export function GroupView({ group }: GroupViewProps) {
           />
         </div>
       </div>
+
+      {previewItems && (
+        <FilePreviewModal
+          items={previewItems}
+          recipientName={group.name}
+          onCancel={() => {
+            setPreviewItems(null);
+            if (selectiveShareType === 'selective') {
+              setSelectedPeersForShare([]);
+            }
+          }}
+          onSend={async (message) => {
+            if (previewItems.length > 0 && window.link?.fileTransfer) {
+              const peerIds = selectiveShareType === 'selective' ? selectedPeersForShare : getOnlinePeerIds();
+              if (peerIds.length > 0) {
+                const isFolder = previewItems[0].isFolder;
+                if (isFolder && previewItems[0].path) {
+                  await useFileTransferStore.getState().offerFolders(peerIds, [previewItems[0].path], group.id, message);
+                } else {
+                  const paths = previewItems.map(p => p.path).filter(Boolean) as string[];
+                  if (paths.length > 0) {
+                    await useFileTransferStore.getState().offerFiles(peerIds, paths, group.id, message);
+                  }
+                }
+              }
+            }
+            setPreviewItems(null);
+            if (selectiveShareType === 'selective') {
+              setSelectedPeersForShare([]);
+            }
+          }}
+        />
+      )}
 
       {/* Group Member Sidebar */}
       {isSidebarOpen && (

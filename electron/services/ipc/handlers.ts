@@ -97,36 +97,30 @@ export function registerIpcHandlers() {
     return groupService.removeMember(groupId, peerIdToRemove);
   });
 
+  // Dialog Handlers
+  ipcMain.handle('dialog:select-files', async () => {
+    return fileTransferService.selectFiles();
+  });
+
+  ipcMain.handle('dialog:select-folder', async () => {
+    return fileTransferService.selectFolder();
+  });
+
   // File Transfer Handlers
-  ipcMain.handle('file-transfer:offer', async (_, peerId: string, filePath: string) => {
-    if (!filePath) {
-      return fileTransferService.selectAndOfferFile(peerId);
-    }
-    return fileTransferService.offerFile(peerId, filePath);
+  ipcMain.handle('file-transfer:offer-files', async (_, peerIds: string[], filePaths: string[], groupId?: string, message?: string) => {
+    return fileTransferService.offerFiles(peerIds, filePaths, groupId, message);
   });
 
-  ipcMain.handle('file-transfer:offer-multiple', async (_, peerIds: string[], groupId?: string) => {
-    return fileTransferService.selectAndOfferFileToMultiple(peerIds, groupId);
-  });
-
-  ipcMain.handle('file-transfer:offer-folder', async (_, peerId: string, groupId?: string) => {
-    return fileTransferService.selectAndOfferFolder(peerId, groupId);
-  });
-
-  ipcMain.handle('file-transfer:offer-folder-multiple', async (_, peerIds: string[], groupId?: string) => {
-    return fileTransferService.selectAndOfferFolderToMultiple(peerIds, groupId);
+  ipcMain.handle('file-transfer:offer-folders', async (_, peerIds: string[], folderPaths: string[], groupId?: string, message?: string) => {
+    return fileTransferService.offerFolders(peerIds, folderPaths, groupId, message);
   });
 
   ipcMain.handle('file-transfer:save-buffer', async (_, buffer: ArrayBuffer, mimeType: string) => {
     return fileTransferService.savePastedBuffer(buffer, mimeType);
   });
 
-  ipcMain.handle('file-transfer:offer-pasted-multiple', async (_, peerIds: string[], filePath: string, groupId?: string) => {
-    return fileTransferService.offerPastedFileToMultiple(peerIds, filePath, groupId);
-  });
-
-  ipcMain.handle('file-transfer:offer-pasted-buffer-multiple', async (_, peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => {
-    return fileTransferService.saveAndOfferBufferToMultiple(peerIds, buffer, mimeType, groupId);
+  ipcMain.handle('file-transfer:offer-pasted-buffer', async (_, peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => {
+    return fileTransferService.offerPastedBufferToMultiple(peerIds, buffer, mimeType, groupId, message);
   });
 
   ipcMain.handle('file-transfer:respond', async (_, transferId: string, accepted: boolean, savePath?: string) => {
@@ -147,6 +141,10 @@ export function registerIpcHandlers() {
       return true;
     }
     return false;
+  });
+
+  ipcMain.handle('file-transfer:get-thumbnail', async (_, filePath: string) => {
+    return fileTransferService.getFileThumbnail(filePath);
   });
 
   // Call Handlers

@@ -90,6 +90,7 @@ export interface LinkFileTransfer {
   savePath?: string;
   startedAt?: number;
   completedAt?: number;
+  message?: string;
 }
 
 export type CallMediaType = 'voice' | 'video';

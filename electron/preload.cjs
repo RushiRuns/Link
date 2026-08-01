@@ -103,16 +103,23 @@ contextBridge.exposeInMainWorld("link", {
       return () => ipcRenderer.removeListener("group:member-removed", listener);
     }
   },
+  dialog: {
+    selectFiles: () => ipcRenderer.invoke("dialog:select-files"),
+    selectFolder: () => ipcRenderer.invoke("dialog:select-folder")
+  },
   fileTransfer: {
-    offerFile: (peerId, filePath) => ipcRenderer.invoke("file-transfer:offer", peerId, filePath),
-    offerFolder: (peerId, groupId) => ipcRenderer.invoke("file-transfer:offer-folder", peerId, groupId),
-    saveBuffer: (buffer, mimeType) => ipcRenderer.invoke("file-transfer:save-buffer", buffer, mimeType),
-    offerFileToMultiple: (peerIds, groupId) => ipcRenderer.invoke("file-transfer:offer-multiple", peerIds, groupId),
-    offerFolderToMultiple: (peerIds, groupId) => ipcRenderer.invoke("file-transfer:offer-folder-multiple", peerIds, groupId),
-    offerPastedFileToMultiple: (peerIds, filePath, groupId) => ipcRenderer.invoke("file-transfer:offer-pasted-multiple", peerIds, filePath, groupId),
-    offerPastedBufferToMultiple: (peerIds, buffer, mimeType, groupId) => ipcRenderer.invoke("file-transfer:offer-pasted-buffer-multiple", peerIds, buffer, mimeType, groupId),
-    respond: (transferId, accepted, savePath) => ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
+    offerFiles: (peerIds, filePaths, groupId, message) => 
+      ipcRenderer.invoke("file-transfer:offer-files", peerIds, filePaths, groupId, message),
+    offerFolders: (peerIds, folderPaths, groupId, message) => 
+      ipcRenderer.invoke("file-transfer:offer-folders", peerIds, folderPaths, groupId, message),
+    saveBuffer: (buffer, mimeType) => 
+      ipcRenderer.invoke("file-transfer:save-buffer", buffer, mimeType),
+    offerPastedBuffer: (peerIds, buffer, mimeType, groupId, message) => 
+      ipcRenderer.invoke("file-transfer:offer-pasted-buffer", peerIds, buffer, mimeType, groupId, message),
+    respond: (transferId, accepted, savePath) => 
+      ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
     openFolder: (transferId) => ipcRenderer.invoke("file-transfer:open-folder", transferId),
+    getThumbnail: (filePath) => ipcRenderer.invoke("file-transfer:get-thumbnail", filePath),
     onOfferReceived: (callback) => {
       const listener = (_, transfer) => callback(transfer);
       ipcRenderer.on("file-transfer:offer-received", listener);

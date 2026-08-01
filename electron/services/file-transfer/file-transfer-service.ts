@@ -1,5 +1,5 @@
 import { connectionManager } from '../network/connection-manager.js';
-import { app, dialog } from 'electron';
+import { app, dialog, nativeImage } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,11 +37,29 @@ export interface ActiveFileTransferState {
   tempPath?: string;
   writeStream?: any;
   isFolder?: boolean;
+  message?: string;
 }
 
 class FileTransferService {
   private windowRef: any = null;
   private transfers: Map<string, ActiveFileTransferState> = new Map();
+
+  public async getFileThumbnail(filePath: string): Promise<string | null> {
+    try {
+      if (!fs.existsSync(filePath)) return null;
+      // Only attempt on known image extensions
+      if (!/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(filePath)) return null;
+      
+      const image = await nativeImage.createThumbnailFromPath(filePath, { width: 500, height: 500 });
+      if (image && !image.isEmpty()) {
+        return image.toDataURL();
+      }
+      return null;
+    } catch (err) {
+      console.error('[FileTransfer] Failed to generate thumbnail:', err);
+      return null;
+    }
+  }
 
   public init(mainWindow: any) {
     this.windowRef = mainWindow;
@@ -84,58 +102,58 @@ class FileTransferService {
     return this.transfers.get(transferId);
   }
 
-  public async selectAndOfferFile(peerId: string, groupId?: string) {
+  public async selectFiles(): Promise<string[]> {
     const result = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
       title: 'Select File(s) to Send'
     });
 
     if (result.canceled || result.filePaths.length === 0) {
-      return null;
+      return [];
     }
-
-    const offers = [];
-    for (const filePath of result.filePaths) {
-      offers.push(await this.offerFile(peerId, filePath, groupId));
-    }
-    return offers;
+    return result.filePaths;
   }
 
-  public async selectAndOfferFileToMultiple(peerIds: string[], groupId?: string) {
+  public async selectFolder(): Promise<string | null> {
     const result = await dialog.showOpenDialog({
-      properties: ['openFile', 'multiSelections'],
-      title: 'Select File(s) to Send'
+      properties: ['openDirectory'],
+      title: 'Select Folder to Send'
     });
 
     if (result.canceled || result.filePaths.length === 0) {
       return null;
     }
+    return result.filePaths[0];
+  }
 
+  public async offerFiles(peerIds: string[], filePaths: string[], groupId?: string, message?: string) {
     const offers = [];
     const transferBatchId = uuidv4();
-    for (const filePath of result.filePaths) {
+    for (const filePath of filePaths) {
       for (const peerId of peerIds) {
-        offers.push(await this.offerFile(peerId, filePath, groupId, transferBatchId));
+        offers.push(await this.offerFile(peerId, filePath, groupId, transferBatchId, message));
       }
     }
     return offers;
   }
 
-  public async offerPastedFileToMultiple(peerIds: string[], filePath: string, groupId?: string) {
+  public async offerFolders(peerIds: string[], folderPaths: string[], groupId?: string, message?: string) {
     const offers = [];
     const transferBatchId = uuidv4();
-    for (const peerId of peerIds) {
-      offers.push(await this.offerFile(peerId, filePath, groupId, transferBatchId));
+    for (const folderPath of folderPaths) {
+      for (const peerId of peerIds) {
+        offers.push(await this.offerFolder(peerId, folderPath, groupId, transferBatchId, message));
+      }
     }
     return offers;
   }
 
-  public async saveAndOfferBufferToMultiple(peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) {
+  public async offerPastedBufferToMultiple(peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) {
     const tempPath = await this.savePastedBuffer(buffer, mimeType);
     const offers = [];
     const transferBatchId = uuidv4();
     for (const peerId of peerIds) {
-      offers.push(await this.offerFile(peerId, tempPath, groupId, transferBatchId));
+      offers.push(await this.offerFile(peerId, tempPath, groupId, transferBatchId, message));
     }
     return offers;
   }
@@ -158,7 +176,7 @@ class FileTransferService {
     return tempPath;
   }
 
-  public async offerFile(peerId: string, filePath: string, groupId?: string, transferBatchId?: string) {
+  public async offerFile(peerId: string, filePath: string, groupId?: string, transferBatchId?: string, message?: string) {
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }
@@ -182,7 +200,8 @@ class FileTransferService {
       mimeType: 'application/octet-stream',
       bytesTransferred: 0,
       status: 'pending_accept',
-      startedAt: now
+      startedAt: now,
+      message
     };
 
     this.transfers.set(transferId, state);
@@ -194,11 +213,13 @@ class FileTransferService {
       payload: {
         transferId,
         groupId,
+        transferBatchId,
         fileName,
         fileSizeBytes: stat.size,
         mimeType: state.mimeType,
         chunkSizeBytes: chunkSize,
-        totalChunks
+        totalChunks,
+        message
       }
     });
 
@@ -213,44 +234,13 @@ class FileTransferService {
       mimeType: state.mimeType,
       status: 'pending_accept' as const,
       bytesTransferred: 0,
-      startedAt: now
+      startedAt: now,
+      message
     };
   }
 
-  public async selectAndOfferFolder(peerId: string, groupId?: string) {
-    const result = await dialog.showOpenDialog({
-      properties: ['openDirectory'],
-      title: 'Select Folder to Send'
-    });
 
-    if (result.canceled || result.filePaths.length === 0) {
-      return null;
-    }
-
-    const folderPath = result.filePaths[0];
-    return this.offerFolder(peerId, folderPath, groupId);
-  }
-
-  public async selectAndOfferFolderToMultiple(peerIds: string[], groupId?: string) {
-    const result = await dialog.showOpenDialog({
-      properties: ['openDirectory'],
-      title: 'Select Folder to Send'
-    });
-
-    if (result.canceled || result.filePaths.length === 0) {
-      return null;
-    }
-
-    const folderPath = result.filePaths[0];
-    const offers = [];
-    const transferBatchId = uuidv4();
-    for (const peerId of peerIds) {
-      offers.push(await this.offerFolder(peerId, folderPath, groupId, transferBatchId));
-    }
-    return offers;
-  }
-
-  public async offerFolder(peerId: string, folderPath: string, groupId?: string, transferBatchId?: string) {
+  public async offerFolder(peerId: string, folderPath: string, groupId?: string, transferBatchId?: string, message?: string) {
     if (!fs.existsSync(folderPath)) {
       throw new Error(`Folder not found: ${folderPath}`);
     }
@@ -275,7 +265,8 @@ class FileTransferService {
       bytesTransferred: 0,
       status: 'pending_accept',
       startedAt: now,
-      isFolder: true
+      isFolder: true,
+      message
     };
 
     this.transfers.set(transferId, state);
@@ -287,12 +278,14 @@ class FileTransferService {
       payload: {
         transferId,
         groupId,
+        transferBatchId,
         fileName: folderName,
         fileSizeBytes: folderSize,
         mimeType: state.mimeType,
         chunkSizeBytes: chunkSize,
         totalChunks,
-        isFolder: true
+        isFolder: true,
+        message
       }
     });
 
@@ -308,7 +301,8 @@ class FileTransferService {
       status: 'pending_accept' as const,
       bytesTransferred: 0,
       startedAt: now,
-      isFolder: true
+      isFolder: true,
+      message
     };
   }
 
@@ -365,13 +359,15 @@ class FileTransferService {
       direction: 'incoming',
       peerId: senderDeviceId,
       groupId: p.groupId,
+      transferBatchId: p.transferBatchId,
       fileName: p.fileName,
       fileSizeBytes: p.fileSizeBytes,
       mimeType: p.mimeType || 'application/octet-stream',
       bytesTransferred: 0,
       status: 'pending_accept',
       startedAt: now,
-      isFolder: p.isFolder
+      isFolder: p.isFolder,
+      message: p.message
     };
 
     this.transfers.set(p.transferId, state);
@@ -382,13 +378,15 @@ class FileTransferService {
       direction: 'incoming',
       peerId: senderDeviceId,
       groupId: p.groupId,
+      transferBatchId: p.transferBatchId,
       fileName: p.fileName,
       fileSizeBytes: p.fileSizeBytes,
       mimeType: state.mimeType,
       status: 'pending_accept',
       bytesTransferred: 0,
       startedAt: now,
-      isFolder: state.isFolder
+      isFolder: state.isFolder,
+      message: state.message
     });
   }
 

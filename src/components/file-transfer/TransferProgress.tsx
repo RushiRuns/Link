@@ -4,6 +4,7 @@ import { FileText, CheckCircle2, AlertCircle, Folder } from 'lucide-react';
 interface TransferProgressProps {
   transfer: LinkFileTransfer;
   isSelf?: boolean;
+  showCaption?: boolean;
 }
 
 function formatBytes(bytes: number): string {
@@ -14,7 +15,7 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
+export function TransferProgress({ transfer, isSelf, showCaption = false }: TransferProgressProps) {
   const isOutgoing = isSelf ?? (transfer.direction === 'outgoing');
   const percent = transfer.fileSizeBytes > 0
     ? Math.min(100, Math.round((transfer.bytesTransferred / transfer.fileSizeBytes) * 100))
@@ -102,6 +103,21 @@ export function TransferProgress({ transfer, isSelf }: TransferProgressProps) {
               transition: 'width 0.2s ease'
             }}
           />
+        </div>
+      )}
+
+      {/* Attached Message (Caption) */}
+      {showCaption && transfer.message && (
+        <div style={{
+          marginTop: 'var(--space-2)',
+          paddingTop: 'var(--space-2)',
+          borderTop: '1px solid var(--border-color)',
+          fontSize: '0.9rem',
+          color: 'var(--text-primary)',
+          wordBreak: 'break-word',
+          whiteSpace: 'pre-wrap'
+        }}>
+          {transfer.message}
         </div>
       )}
     </div>

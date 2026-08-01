@@ -103,17 +103,23 @@ contextBridge.exposeInMainWorld('link', {
       return () => ipcRenderer.removeListener('group:member-removed', listener);
     }
   },
+  dialog: {
+    selectFiles: () => ipcRenderer.invoke('dialog:select-files'),
+    selectFolder: () => ipcRenderer.invoke('dialog:select-folder')
+  },
   fileTransfer: {
-    offerFile: (peerId: string, filePath: string) => ipcRenderer.invoke('file-transfer:offer', peerId, filePath),
-    offerFolder: (peerId: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-folder', peerId, groupId),
-    saveBuffer: (buffer: ArrayBuffer, mimeType: string) => ipcRenderer.invoke('file-transfer:save-buffer', buffer, mimeType),
-    offerFileToMultiple: (peerIds: string[], groupId?: string) => ipcRenderer.invoke('file-transfer:offer-multiple', peerIds, groupId),
-    offerFolderToMultiple: (peerIds: string[], groupId?: string) => ipcRenderer.invoke('file-transfer:offer-folder-multiple', peerIds, groupId),
-    offerPastedFileToMultiple: (peerIds: string[], filePath: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-pasted-multiple', peerIds, filePath, groupId),
-    offerPastedBufferToMultiple: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => ipcRenderer.invoke('file-transfer:offer-pasted-buffer-multiple', peerIds, buffer, mimeType, groupId),
+    offerFiles: (peerIds: string[], filePaths: string[], groupId?: string, message?: string) => 
+      ipcRenderer.invoke('file-transfer:offer-files', peerIds, filePaths, groupId, message),
+    offerFolders: (peerIds: string[], folderPaths: string[], groupId?: string, message?: string) => 
+      ipcRenderer.invoke('file-transfer:offer-folders', peerIds, folderPaths, groupId, message),
+    saveBuffer: (buffer: ArrayBuffer, mimeType: string) => 
+      ipcRenderer.invoke('file-transfer:save-buffer', buffer, mimeType),
+    offerPastedBuffer: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => 
+      ipcRenderer.invoke('file-transfer:offer-pasted-buffer', peerIds, buffer, mimeType, groupId, message),
     respond: (transferId: string, accepted: boolean, savePath?: string) => 
       ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
     openFolder: (transferId: string) => ipcRenderer.invoke('file-transfer:open-folder', transferId),
+    getThumbnail: (filePath: string) => ipcRenderer.invoke('file-transfer:get-thumbnail', filePath),
     onOfferReceived: (callback: EventCallback) => {
       const listener = (_: any, transfer: any) => callback(transfer);
       ipcRenderer.on('file-transfer:offer-received', listener);

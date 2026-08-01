@@ -64,16 +64,18 @@ export interface LinkAPI {
     onGroupMembersAdded: (callback: (data: { groupId: string, newMembers: any[] }) => void) => () => void;
     onGroupMemberRemoved: (callback: (data: { groupId: string, removedPeerId: string }) => void) => () => void;
   };
+  dialog: {
+    selectFiles: () => Promise<string[]>;
+    selectFolder: () => Promise<string | null>;
+  };
   fileTransfer: {
-    offerFile: (peerId: string, filePath: string) => Promise<LinkFileTransfer | LinkFileTransfer[]>;
-    offerFolder: (peerId: string, groupId?: string) => Promise<LinkFileTransfer>;
+    offerFiles: (peerIds: string[], filePaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;
+    offerFolders: (peerIds: string[], folderPaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;
     saveBuffer: (buffer: ArrayBuffer, mimeType: string) => Promise<string>;
-    offerFileToMultiple: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | null>;
-    offerFolderToMultiple: (peerIds: string[], groupId?: string) => Promise<LinkFileTransfer[] | null>;
-    offerPastedFileToMultiple: (peerIds: string[], filePath: string, groupId?: string) => Promise<LinkFileTransfer[]>;
-    offerPastedBufferToMultiple: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string) => Promise<LinkFileTransfer[]>;
+    offerPastedBuffer: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
     openFolder: (transferId: string) => Promise<boolean>;
+    getThumbnail: (filePath: string) => Promise<string | null>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;
     onProgress: (callback: (transferId: string, bytesTransferred: number) => void) => () => void;
     onCompleted: (callback: (transferId: string) => void) => () => void;

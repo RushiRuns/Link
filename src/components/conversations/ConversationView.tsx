@@ -6,6 +6,7 @@ import { useCallsStore } from '../../stores/calls.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
+import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { Shield, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
 
 interface ConversationViewProps {
@@ -25,11 +26,12 @@ export function ConversationView({ peer }: ConversationViewProps) {
     editMessageLocally,
     deleteMessageLocally
   } = useConversationsStore();
-  const { transfers, offerFile, offerFolder } = useFileTransferStore();
+  const { transfers } = useFileTransferStore();
   const { setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -87,8 +89,27 @@ export function ConversationView({ peer }: ConversationViewProps) {
     }
   };
 
-  const handleAttachFile = () => {
-    offerFile(peer.id);
+  const handleAttachFile = async () => {
+    if (window.link?.dialog) {
+      const paths = await window.link.dialog.selectFiles();
+      if (paths && paths.length > 0) {
+        const items = paths.map(p => {
+          const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
+          return { path: p, name, size: 0, isFolder: false };
+        });
+        setPreviewItems(items);
+      }
+    }
+  };
+
+  const handleAttachFolder = async () => {
+    if (window.link?.dialog) {
+      const path = await window.link.dialog.selectFolder();
+      if (path) {
+        const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
+        setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+      }
+    }
   };
 
   const handleStartCall = (mediaType: 'voice' | 'video') => {
@@ -132,27 +153,35 @@ export function ConversationView({ peer }: ConversationViewProps) {
     if (isOffline || isVersionMismatch) return;
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const items: PreviewItem[] = [];
       for (const file of Array.from(e.dataTransfer.files)) {
         const path = (file as any).path;
-        if (path && window.link?.fileTransfer) {
-          try {
-            const transfers = await window.link.fileTransfer.offerFile(peer.id, path);
-            if (transfers) {
-              const transferArray = Array.isArray(transfers) ? transfers : [transfers];
-              transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
-            }
-          } catch (err) {
-            console.error('Failed to send dropped file:', err);
-          }
+        if (path) {
+          items.push({ path, name: file.name, size: file.size, isFolder: false });
         }
+      }
+      if (items.length > 0) {
+        setPreviewItems(items);
       }
     }
   };
 
-  // Merge messages and file transfers into a single chronologically sorted timeline
+  const batchedTransfers: Record<string, typeof peerTransfers> = {};
+  const unbatchedTransfers: typeof peerTransfers = [];
+  
+  peerTransfers.forEach(t => {
+    if (t.transferBatchId) {
+      if (!batchedTransfers[t.transferBatchId]) batchedTransfers[t.transferBatchId] = [];
+      batchedTransfers[t.transferBatchId].push(t);
+    } else {
+      unbatchedTransfers.push(t);
+    }
+  });
+
   type ChatTimelineItem =
     | { kind: 'message'; id: string; timestamp: number; data: typeof conversationMessages[0] }
-    | { kind: 'transfer'; id: string; timestamp: number; data: typeof peerTransfers[0] };
+    | { kind: 'transfer'; id: string; timestamp: number; data: typeof peerTransfers[0] }
+    | { kind: 'transfer_batch'; id: string; timestamp: number; data: typeof peerTransfers };
 
   const timelineItems: ChatTimelineItem[] = [
     ...conversationMessages.map((msg) => ({
@@ -161,11 +190,17 @@ export function ConversationView({ peer }: ConversationViewProps) {
       timestamp: msg.timestamp,
       data: msg
     })),
-    ...peerTransfers.map((transfer) => ({
+    ...unbatchedTransfers.map((transfer) => ({
       kind: 'transfer' as const,
       id: transfer.id,
       timestamp: transfer.startedAt || 0,
       data: transfer
+    })),
+    ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
+      kind: 'transfer_batch' as const,
+      id: batchId,
+      timestamp: batchTransfers[0].startedAt || 0,
+      data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);
 
@@ -385,12 +420,27 @@ export function ConversationView({ peer }: ConversationViewProps) {
                 />
               );
             }
+            if (item.kind === 'transfer') {
+              return (
+                <TransferProgress
+                  key={item.id}
+                  transfer={item.data}
+                  isSelf={item.data.direction === 'outgoing'}
+                  showCaption={true}
+                />
+              );
+            }
             return (
-              <TransferProgress
-                key={item.id}
-                transfer={item.data}
-                isSelf={item.data.direction === 'outgoing'}
-              />
+              <div key={item.id} style={{ display: 'flex', flexDirection: 'column', margin: 'var(--space-1) 0' }}>
+                {item.data.map((t, index) => (
+                  <TransferProgress 
+                    key={t.id} 
+                    transfer={t} 
+                    isSelf={t.direction === 'outgoing'}
+                    showCaption={index === item.data.length - 1} 
+                  />
+                ))}
+              </div>
             );
           })
         )}
@@ -474,31 +524,46 @@ export function ConversationView({ peer }: ConversationViewProps) {
             }
           }}
           onAttachFile={handleAttachFile}
-          onAttachFolder={() => offerFolder(peer.id)}
+          onAttachFolder={handleAttachFolder}
           onPasteFile={async (path) => {
-            if (path && window.link?.fileTransfer) {
-              const transfers = await window.link.fileTransfer.offerFile(peer.id, path);
-              if (transfers) {
-                const transferArray = Array.isArray(transfers) ? transfers : [transfers];
-                transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
-              }
+            if (path) {
+              const name = path.split('\\').pop()?.split('/').pop() || 'Pasted File';
+              setPreviewItems([{ path, name, size: 0, isFolder: false }]);
             }
           }}
           onPasteBuffer={async (buffer, mimeType) => {
             if (window.link?.fileTransfer) {
               const savedPath = await window.link.fileTransfer.saveBuffer(buffer, mimeType);
               if (savedPath) {
-                const transfers = await window.link.fileTransfer.offerFile(peer.id, savedPath);
-                if (transfers) {
-                  const transferArray = Array.isArray(transfers) ? transfers : [transfers];
-                  transferArray.forEach(t => useFileTransferStore.getState().addTransfer(t));
-                }
+                setPreviewItems([{ path: savedPath, name: 'Pasted Image', size: buffer.byteLength, isFolder: false }]);
               }
             }
           }}
           disabled={isOffline || isVersionMismatch}
         />
       </div>
+
+      {previewItems && (
+        <FilePreviewModal
+          items={previewItems}
+          recipientName={peer.displayName}
+          onCancel={() => setPreviewItems(null)}
+          onSend={async (message) => {
+            if (previewItems.length > 0 && window.link?.fileTransfer) {
+              const isFolder = previewItems[0].isFolder;
+              if (isFolder && previewItems[0].path) {
+                await useFileTransferStore.getState().offerFolders([peer.id], [previewItems[0].path], undefined, message);
+              } else {
+                const paths = previewItems.map(p => p.path).filter(Boolean) as string[];
+                if (paths.length > 0) {
+                  await useFileTransferStore.getState().offerFiles([peer.id], paths, undefined, message);
+                }
+              }
+            }
+            setPreviewItems(null);
+          }}
+        />
+      )}
 
       {/* Clear Confirmation Modal */}
       {showClearConfirm && (
