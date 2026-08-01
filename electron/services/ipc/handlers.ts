@@ -77,8 +77,8 @@ export function registerIpcHandlers() {
     return groupService.createGroup(name, memberPeerIds);
   });
 
-  ipcMain.handle('groups:send-message', async (_, groupId: string, content: string) => {
-    return groupService.sendGroupMessage(groupId, content);
+  ipcMain.handle('groups:send-message', async (_, groupId: string, content: string, replyToMessageId?: string) => {
+    return groupService.sendGroupMessage(groupId, content, replyToMessageId);
   });
 
   ipcMain.handle('groups:rename', async (_, groupId: string, newName: string) => {
