@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu, Tray } from 'electron';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -21,6 +21,20 @@ const __dirname = path.dirname(__filename);
 const gotTheLock = app.requestSingleInstanceLock();
 
 let mainWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+export let isQuitting = false;
+
+export function showAndFocusWindow() {
+  if (mainWindow) {
+    if (!mainWindow.isVisible()) mainWindow.show();
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+}
+
+const iconPath = process.env['VITE_DEV_SERVER_URL'] 
+  ? path.join(__dirname, '../public/icon.ico') 
+  : path.join(__dirname, '../dist/icon.ico');
 
 function createWindow() {
   const preloadPath = fs.existsSync(path.join(__dirname, 'preload.cjs'))
@@ -30,10 +44,6 @@ function createWindow() {
     : path.join(__dirname, 'preload.js');
 
   const isMac = process.platform === 'darwin';
-
-  const iconPath = process.env['VITE_DEV_SERVER_URL'] 
-    ? path.join(__dirname, '../public/icon.ico') 
-    : path.join(__dirname, '../dist/icon.ico');
 
   mainWindow = new BrowserWindow({
     width: 1100,
@@ -108,6 +118,14 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+
+  // Hide to tray on close unless quitting
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow?.hide();
+    }
+  });
 }
 
 if (!gotTheLock) {
@@ -136,6 +154,26 @@ if (!gotTheLock) {
     }
 
     createWindow();
+
+    // Setup Auto-Start on System Boot
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true
+    });
+
+    // Setup System Tray
+    tray = new Tray(iconPath);
+    const contextMenu = Menu.buildFromTemplate([
+      { label: 'Open Link Desktop', click: () => showAndFocusWindow() },
+      { label: 'Exit', click: () => { 
+          isQuitting = true; 
+          app.quit(); 
+        } 
+      }
+    ]);
+    tray.setToolTip('Link Desktop');
+    tray.setContextMenu(contextMenu);
+    tray.on('click', () => showAndFocusWindow());
 
     // Forward network & discovery events to renderer
     discoveryManager.on('peer:online', (peer) => {

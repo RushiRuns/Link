@@ -1,6 +1,7 @@
 import { connectionManager } from '../network/connection-manager.js';
 import { getOrGenerateIdentity } from '../identity/identity.js';
 import { v4 as uuidv4 } from 'uuid';
+import { showAndFocusWindow } from '../../main.js';
 
 export interface SendMessageOptions {
   peerId: string;
@@ -127,6 +128,9 @@ class MessageService {
 
     // Forward received message to renderer
     this.windowRef?.webContents?.send('message:received', incomingMsg);
+    
+    // Auto-unhide and focus window
+    showAndFocusWindow();
 
     // Send MessageAck immediately on receipt
     connectionManager.send(senderDeviceId, {

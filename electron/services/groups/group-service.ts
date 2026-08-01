@@ -2,6 +2,7 @@ import { connectionManager } from '../network/connection-manager.js';
 import { getOrGenerateIdentity } from '../identity/identity.js';
 import { db } from '../storage/db.js';
 import { v4 as uuidv4 } from 'uuid';
+import { showAndFocusWindow } from '../../main.js';
 
 export interface GroupMemberInfo {
   deviceId: string;
@@ -344,6 +345,9 @@ class GroupService {
 
     // Forward group message to renderer
     this.windowRef?.webContents?.send('group-message:received', incomingMsg);
+    
+    // Auto-unhide and focus window
+    showAndFocusWindow();
   }
 
   private handleGroupRename(_senderDeviceId: string, envelope: any) {

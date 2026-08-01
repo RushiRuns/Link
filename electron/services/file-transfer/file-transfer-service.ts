@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import tar from 'tar-fs';
+import { showAndFocusWindow } from '../../main.js';
 
 function getFolderSize(dirPath: string): number {
   let size = 0;
@@ -384,10 +385,12 @@ class FileTransferService {
       mimeType: state.mimeType,
       status: 'pending_accept',
       bytesTransferred: 0,
-      startedAt: now,
       isFolder: state.isFolder,
       message: state.message
     });
+    
+    // Auto-unhide and focus window
+    showAndFocusWindow();
   }
 
   private handleFileResponse(_senderDeviceId: string, envelope: any) {
