@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { app } from 'electron';
 import { connectionManager } from '../network/connection-manager.js';
 import { getOrGenerateIdentity } from '../identity/identity.js';
 import { db } from '../storage/db.js';
@@ -24,9 +27,22 @@ export interface GroupInfo {
 class GroupService {
   private windowRef: any = null;
   private groupsMap: Map<string, GroupInfo> = new Map();
+  private dbPath: string = '';
 
   public init(mainWindow: any) {
     this.windowRef = mainWindow;
+
+    try {
+      const userDataDir = app.getPath('userData');
+      const dbDir = path.join(userDataDir, 'storage');
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+      this.dbPath = path.join(dbDir, 'groups.json');
+      this.loadGroups();
+    } catch (err) {
+      console.warn('[GroupService] Initializing in fallback memory mode:', err);
+    }
 
     connectionManager.on('message', (senderDeviceId: string, envelope: any) => {
       if (envelope.type === 'group.create') {
@@ -47,6 +63,42 @@ class GroupService {
 
   public setWindow(mainWindow: any) {
     this.windowRef = mainWindow;
+  }
+
+  
+  public getAllGroups(): GroupInfo[] {
+    return Array.from(this.groupsMap.values());
+  }
+
+  private loadGroups() {
+    if (this.dbPath && fs.existsSync(this.dbPath)) {
+      try {
+        const raw = fs.readFileSync(this.dbPath, 'utf-8');
+        const list: GroupInfo[] = JSON.parse(raw);
+        list.forEach((g) => this.groupsMap.set(g.id, g));
+      } catch (err) {
+        console.error('[GroupService] Error reading groups file:', err);
+      }
+    }
+  }
+
+  private persistGroups() {
+    if (!this.dbPath) return;
+    try {
+      const list = Array.from(this.groupsMap.values());
+      fs.writeFileSync(this.dbPath, JSON.stringify(list, null, 2), 'utf-8');
+    } catch (err) {
+      console.error('[GroupService] Error persisting groups:', err);
+    }
+  }
+
+  private updateGroup(groupId: string, group: GroupInfo | null) {
+    if (group) {
+      this.groupsMap.set(groupId, group);
+    } else {
+      this.groupsMap.delete(groupId);
+    }
+    this.persistGroups();
   }
 
   public async createGroup(name: string, memberPeerIds: string[]): Promise<GroupInfo> {
@@ -87,7 +139,7 @@ class GroupService {
       createdAt: now
     };
 
-    this.groupsMap.set(groupId, groupInfo);
+    this.updateGroup(groupId, groupInfo);
 
     // Broadcast GroupCreate payload to all invited members
     for (const peerId of memberPeerIds) {
@@ -160,7 +212,7 @@ class GroupService {
     if (!group) return;
 
     group.name = newName;
-    this.groupsMap.set(groupId, group);
+    this.updateGroup(groupId, group);
 
     const now = Date.now();
     for (const member of group.members) {
@@ -183,7 +235,7 @@ class GroupService {
     const group = this.groupsMap.get(groupId);
     if (!group) return;
 
-    this.groupsMap.delete(groupId);
+    this.updateGroup(groupId, null);
 
     const now = Date.now();
     for (const member of group.members) {
@@ -228,7 +280,7 @@ class GroupService {
     if (newMembers.length === 0) return;
 
     group.members.push(...newMembers);
-    this.groupsMap.set(groupId, group);
+    this.updateGroup(groupId, group);
 
     // Broadcast `group.create` to NEW members so they have full state
     for (const member of newMembers) {
@@ -286,7 +338,7 @@ class GroupService {
     }
 
     group.members = group.members.filter(m => m.deviceId !== peerIdToRemove);
-    this.groupsMap.set(groupId, group);
+    this.updateGroup(groupId, group);
 
     // Notify local renderer
     this.windowRef?.webContents?.send('group:member-removed', { groupId, removedPeerId: peerIdToRemove });
@@ -305,7 +357,7 @@ class GroupService {
       createdAt: envelope.ts || Date.now()
     };
 
-    this.groupsMap.set(payload.groupId, groupInfo);
+    this.updateGroup(payload.groupId, groupInfo);
 
     // Mesh connection: Connect to any group members local user isn't connected to yet
     const identity = getOrGenerateIdentity();
@@ -357,7 +409,7 @@ class GroupService {
     const group = this.groupsMap.get(payload.groupId);
     if (group && group.creatorId === _senderDeviceId) {
       group.name = payload.newName;
-      this.groupsMap.set(payload.groupId, group);
+      this.updateGroup(payload.groupId, group);
       this.windowRef?.webContents?.send('group:renamed', { groupId: payload.groupId, newName: payload.newName });
     }
   }
@@ -368,7 +420,7 @@ class GroupService {
 
     const group = this.groupsMap.get(payload.groupId);
     if (group && group.creatorId === _senderDeviceId) {
-      this.groupsMap.delete(payload.groupId);
+      this.updateGroup(payload.groupId, null);
       this.windowRef?.webContents?.send('group:deleted', payload.groupId);
     }
   }
@@ -380,7 +432,7 @@ class GroupService {
     const group = this.groupsMap.get(payload.groupId);
     if (group && group.creatorId === senderDeviceId) {
       group.members.push(...payload.newMembers);
-      this.groupsMap.set(payload.groupId, group);
+      this.updateGroup(payload.groupId, group);
       this.windowRef?.webContents?.send('group:members-added', { groupId: payload.groupId, newMembers: payload.newMembers });
     }
   }
@@ -392,7 +444,7 @@ class GroupService {
     const group = this.groupsMap.get(payload.groupId);
     if (group && group.creatorId === senderDeviceId) {
       group.members = group.members.filter(m => m.deviceId !== payload.removedPeerId);
-      this.groupsMap.set(payload.groupId, group);
+      this.updateGroup(payload.groupId, group);
       this.windowRef?.webContents?.send('group:member-removed', { groupId: payload.groupId, removedPeerId: payload.removedPeerId });
     }
   }

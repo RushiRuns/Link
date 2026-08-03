@@ -110,6 +110,10 @@ export function registerIpcHandlers() {
   });
 
   // Groups Handlers
+  ipcMain.handle('groups:get-all', async () => {
+    return groupService.getAllGroups();
+  });
+
   ipcMain.handle('groups:create', async (_, name: string, memberPeerIds: string[]) => {
     return groupService.createGroup(name, memberPeerIds);
   });

@@ -56,6 +56,7 @@ export interface LinkAPI {
     onMessageDeleted: (callback: (event: LinkMessageDeleteEvent & { senderDeviceId: string }) => void) => () => void;
   };
   groups: {
+    getAllGroups: () => Promise<LinkGroup[]>;
     createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup>;
     sendGroupMessage: (groupId: string, content: string, replyToMessageId?: string) => Promise<LinkMessage>;
     onGroupCreated: (callback: (group: LinkGroup) => void) => () => void;

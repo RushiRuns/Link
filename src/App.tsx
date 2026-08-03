@@ -26,7 +26,7 @@ export default function App() {
   const { incomingOffer } = useFileTransferStore();
   const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
   const { initListeners: initConversationsListeners, loadFromDisk } = useConversationsStore();
-  const { initListeners: initGroupsListeners } = useGroupsStore();
+  const { initListeners: initGroupsListeners, loadGroupsFromDisk } = useGroupsStore();
   const { initListeners: initFtListeners } = useFileTransferStore();
 
   const [showSettings, setShowSettings] = useState(false);
@@ -41,6 +41,7 @@ export default function App() {
     });
 
     loadFromDisk();
+    loadGroupsFromDisk();
     const cleanCalls = initCallListeners();
     const cleanConversations = initConversationsListeners();
     const cleanGroups = initGroupsListeners();

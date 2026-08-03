@@ -71,6 +71,7 @@ contextBridge.exposeInMainWorld('link', {
     }
   },
   groups: {
+    getAllGroups: () => ipcRenderer.invoke('groups:get-all'),
     createGroup: (name: string, memberPeerIds: string[]) => ipcRenderer.invoke('groups:create', name, memberPeerIds),
     sendGroupMessage: (groupId: string, content: string, replyToMessageId?: string) => ipcRenderer.invoke('groups:send-message', groupId, content, replyToMessageId),
     onGroupCreated: (callback: EventCallback) => {

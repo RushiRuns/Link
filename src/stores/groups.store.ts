@@ -17,12 +17,41 @@ interface GroupsState {
   markGroupRead: (groupId: string) => void;
   editGroupMessageLocally: (groupId: string, messageId: string, newContent: string) => void;
   deleteGroupMessageLocally: (groupId: string, messageId: string) => void;
+  loadGroupsFromDisk: () => Promise<void>;
   initListeners: () => () => void;
 }
 
 export const useGroupsStore = create<GroupsState>((set, get) => ({
   groups: new Map(),
   unreadCounts: new Map(),
+
+  loadGroupsFromDisk: async () => {
+    if (window.link?.groups?.getAllGroups) {
+      try {
+        const groupsList = await window.link.groups.getAllGroups();
+        if (groupsList && Array.isArray(groupsList)) {
+          set((state) => {
+            const nextMap = new Map(state.groups);
+            groupsList.forEach(g => {
+              // Ensure all members have peerId and status for frontend compat
+              const mappedGroup = {
+                ...g,
+                members: (g.members || []).map((m: any) => ({
+                  ...m,
+                  peerId: m.peerId || m.deviceId,
+                  status: m.status || 'offline',
+                }))
+              };
+              nextMap.set(mappedGroup.id, mappedGroup);
+            });
+            return { groups: nextMap };
+          });
+        }
+      } catch (err) {
+        console.error('[GroupsStore] Error loading groups from disk:', err);
+      }
+    }
+  },
 
   markGroupRead: (groupId) => {
     set((state) => {
