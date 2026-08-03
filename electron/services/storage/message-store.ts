@@ -9,6 +9,10 @@ class MessageStore {
     return path.join(app.getPath('userData'), 'messages.enc');
   }
 
+  private getGroupDbPath(): string {
+    return path.join(app.getPath('userData'), 'group_messages.enc');
+  }
+
   private getFallbackKey(): Buffer {
     const identity = getOrGenerateIdentity();
     // Derive a 32-byte AES-256 key from the identity secret key
@@ -70,6 +74,31 @@ class MessageStore {
         console.error('[MessageStore] Failed to load messages:', err);
       }
       return {}; // Return empty record if file doesn't exist or fails to decrypt
+    }
+  }
+
+  public async saveGroupMessages(data: Record<string, any[]>): Promise<void> {
+    try {
+      const jsonStr = JSON.stringify(data);
+      const encryptedBuffer = this.encryptData(jsonStr);
+      await fs.writeFile(this.getGroupDbPath(), encryptedBuffer);
+    } catch (err) {
+      console.error('[MessageStore] Failed to save group messages:', err);
+    }
+  }
+
+  public async loadGroupMessages(): Promise<Record<string, any[]>> {
+    try {
+      const dbPath = this.getGroupDbPath();
+      await fs.access(dbPath);
+      const encryptedBuffer = await fs.readFile(dbPath);
+      const jsonStr = this.decryptData(encryptedBuffer);
+      return JSON.parse(jsonStr);
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') {
+        console.error('[MessageStore] Failed to load group messages:', err);
+      }
+      return {}; 
     }
   }
 }

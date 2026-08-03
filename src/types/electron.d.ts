@@ -57,6 +57,8 @@ export interface LinkAPI {
   };
   groups: {
     getAllGroups: () => Promise<LinkGroup[]>;
+    loadMessages: () => Promise<Record<string, LinkMessage[]>>;
+    saveMessages: (data: Record<string, LinkMessage[]>) => Promise<void>;
     createGroup: (name: string, memberPeerIds: string[]) => Promise<LinkGroup>;
     sendGroupMessage: (groupId: string, content: string, replyToMessageId?: string) => Promise<LinkMessage>;
     onGroupCreated: (callback: (group: LinkGroup) => void) => () => void;

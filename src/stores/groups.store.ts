@@ -51,6 +51,24 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
         console.error('[GroupsStore] Error loading groups from disk:', err);
       }
     }
+
+    if (window.link?.groups?.loadMessages) {
+      try {
+        const msgsData = await window.link.groups.loadMessages();
+        set((state) => {
+          const nextMap = new Map(state.groups);
+          for (const [groupId, msgs] of Object.entries(msgsData)) {
+            const group = nextMap.get(groupId);
+            if (group) {
+              nextMap.set(groupId, { ...group, messages: msgs });
+            }
+          }
+          return { groups: nextMap };
+        });
+      } catch (err) {
+        console.error('[GroupsStore] Error loading group messages from disk:', err);
+      }
+    }
   },
 
   markGroupRead: (groupId) => {
@@ -311,3 +329,42 @@ export const useGroupsStore = create<GroupsState>((set, get) => ({
     };
   }
 }));
+
+let saveTimeout: any;
+let lastGroups: Map<string, LinkGroup> | null = null;
+
+useGroupsStore.subscribe((state) => {
+  if (state.groups !== lastGroups) {
+    lastGroups = state.groups;
+    
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      if (window.link?.groups?.saveMessages) {
+        const record: Record<string, LinkMessage[]> = {};
+        for (const [groupId, group] of state.groups.entries()) {
+          if (group.messages && group.messages.length > 0) {
+            record[groupId] = group.messages;
+          }
+        }
+        try {
+          await window.link.groups.saveMessages(record);
+        } catch (err) {
+          console.error('[GroupsStore] Error saving group messages to disk:', err);
+        }
+      }
+    }, 500); // 500ms debounce
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (saveTimeout && lastGroups && window.link?.groups?.saveMessages) {
+    clearTimeout(saveTimeout);
+    const record: Record<string, LinkMessage[]> = {};
+    for (const [groupId, group] of lastGroups.entries()) {
+      if (group.messages && group.messages.length > 0) {
+        record[groupId] = group.messages;
+      }
+    }
+    window.link.groups.saveMessages(record);
+  }
+});

@@ -114,6 +114,14 @@ export function registerIpcHandlers() {
     return groupService.getAllGroups();
   });
 
+  ipcMain.handle('groups:load-messages', async () => {
+    return messageStore.loadGroupMessages();
+  });
+
+  ipcMain.handle('groups:save-messages', async (_, data: Record<string, any[]>) => {
+    return messageStore.saveGroupMessages(data);
+  });
+
   ipcMain.handle('groups:create', async (_, name: string, memberPeerIds: string[]) => {
     return groupService.createGroup(name, memberPeerIds);
   });
