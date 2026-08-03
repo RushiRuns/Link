@@ -47,6 +47,13 @@ class DiscoveryManager extends EventEmitter {
     udpBroadcastDiscovery.stop();
   }
 
+  public announce() {
+    if (this.isRunning) {
+      mdnsDiscovery.announce();
+      udpBroadcastDiscovery.broadcast();
+    }
+  }
+
   private async handleDiscoveredPeer(peer: DiscoveredPeerAnnouncement) {
     if (!peer.deviceId || !peer.tcpPort) return;
     if (!peer.ipAddress) return;

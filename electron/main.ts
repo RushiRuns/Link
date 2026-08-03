@@ -91,7 +91,10 @@ function createWindow() {
 
   // Reveal window smoothly when DOM & CSS render completely
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    const loginSettings = app.getLoginItemSettings();
+    if (!loginSettings.wasOpenedAtLogin) {
+      mainWindow?.show();
+    }
   });
 
   // Clear flash frame when window gains focus
@@ -156,10 +159,17 @@ if (!gotTheLock) {
     createWindow();
 
     // Setup Auto-Start on System Boot
-    app.setLoginItemSettings({
-      openAtLogin: true,
-      openAsHidden: true
-    });
+    if (app.isPackaged) {
+      app.setLoginItemSettings({
+        openAtLogin: true,
+        openAsHidden: true
+      });
+    } else {
+      // Clean up any lingering dev startup entries
+      app.setLoginItemSettings({
+        openAtLogin: false
+      });
+    }
 
     // Setup System Tray
     tray = new Tray(iconPath);

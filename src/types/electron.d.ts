@@ -37,6 +37,7 @@ export interface LinkAPI {
   };
   peers: {
     getKnownPeers: () => Promise<LinkPeer[]>;
+    getActivePeers: () => Promise<LinkPeer[]>;
     onPeerConnected: (callback: (peer: LinkPeer) => void) => () => void;
     onPeerDisconnected: (callback: (peerId: string) => void) => () => void;
     onNoPeersFound: (callback: () => void) => () => void;

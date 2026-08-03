@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('link', {
   },
   peers: {
     getKnownPeers: () => ipcRenderer.invoke('peers:get-known'),
+    getActivePeers: () => ipcRenderer.invoke('peers:get-active'),
     onPeerConnected: (callback: EventCallback) => {
       const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('peer:connected', listener);

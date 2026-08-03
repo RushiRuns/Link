@@ -65,6 +65,11 @@ export const usePeersStore = create<PeersState>((set, get) => ({
   initListeners: () => {
     if (!window.link?.peers) return () => {};
 
+    // Hydrate active peers on mount (useful for Ctrl+R reloads)
+    window.link.peers.getActivePeers().then((activePeers) => {
+      activePeers.forEach((peer) => get().upsertPeer(peer));
+    }).catch((err) => console.error('[PeersStore] Error loading active peers:', err));
+
     const cleanConnect = window.link.peers.onPeerConnected((peer) => {
       get().upsertPeer(peer);
     });

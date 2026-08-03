@@ -14,6 +14,10 @@ export interface HandshakeAckPayload {
   reason?: 'version_mismatch' | 'unknown';
 }
 
+export interface ProfileUpdatePayload {
+  displayName: string;
+}
+
 function parseMajorMinor(versionStr: string): string {
   const parts = versionStr.split('.');
   if (parts.length >= 2) {
@@ -28,6 +32,8 @@ export function setupHandshakeHandler() {
       handleHandshakeHello(tempOrDeviceId, envelope.payload);
     } else if (envelope.type === 'handshake.ack') {
       handleHandshakeAck(tempOrDeviceId, envelope.payload);
+    } else if (envelope.type === 'profile.update') {
+      handleProfileUpdate(tempOrDeviceId, envelope.payload);
     }
   });
 }
@@ -94,6 +100,26 @@ function handleHandshakeAck(senderDeviceId: string, payload: HandshakeAckPayload
   }
 }
 
+function handleProfileUpdate(senderDeviceId: string, payload: ProfileUpdatePayload) {
+  const existingRecord = db.getPeer(senderDeviceId);
+  if (existingRecord) {
+    existingRecord.displayName = payload.displayName;
+    db.upsertPeer(existingRecord);
+    
+    // Notify frontend
+    const mainWindow = require('electron').BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+      const activeConn = connectionManager.getActiveConnection(senderDeviceId);
+      mainWindow.webContents.send('peer:connected', {
+        ...existingRecord,
+        status: 'online',
+        networkAddress: activeConn?.socket.remoteAddress,
+        listeningPort: activeConn?.socket.remotePort
+      });
+    }
+  }
+}
+
 export function sendHandshakeHello(conn: ActiveConnection) {
   const localIdentity = getOrGenerateIdentity();
   connectionManager.send(conn.deviceId, {
@@ -106,4 +132,16 @@ export function sendHandshakeHello(conn: ActiveConnection) {
       appVersion: localIdentity.appVersion
     }
   });
+}
+
+export function broadcastProfileUpdate(displayName: string) {
+  const connections = connectionManager.getAllConnections();
+  for (const conn of connections) {
+    connectionManager.send(conn.deviceId, {
+      type: 'profile.update',
+      id: 'profile_' + Date.now(),
+      ts: Date.now(),
+      payload: { displayName }
+    });
+  }
 }

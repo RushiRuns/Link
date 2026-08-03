@@ -9,6 +9,8 @@ import { callSignalingService } from '../calls/call-signaling.js';
 import { connectionManager } from '../network/connection-manager.js';
 import { messageStore } from '../storage/message-store.js';
 import { configStore } from '../storage/config.js';
+import { discoveryManager } from '../discovery/discovery-manager.js';
+import { broadcastProfileUpdate } from '../network/handshake.js';
 
 export function registerIpcHandlers() {
   // Config Handlers
@@ -35,6 +37,13 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('identity:set-name', async (_, name: string) => {
     const updated = setDisplayName(name);
+    
+    // Broadcast the name change to all connected peers
+    broadcastProfileUpdate(updated.displayName);
+    
+    // Re-announce on the LAN so new peers discover the updated name
+    discoveryManager.announce();
+
     return {
       deviceId: updated.deviceId,
       displayName: updated.displayName,
@@ -56,6 +65,23 @@ export function registerIpcHandlers() {
         listeningPort: activeConn?.socket.remotePort
       };
     });
+  });
+
+  ipcMain.handle('peers:get-active', async () => {
+    const conns = connectionManager.getAllConnections();
+    const activePeers = [];
+    for (const conn of conns) {
+      const peer = peersStore.getPeerById(conn.deviceId);
+      if (peer) {
+        activePeers.push({
+          ...peer,
+          status: 'online',
+          networkAddress: conn.socket.remoteAddress,
+          listeningPort: conn.socket.remotePort
+        });
+      }
+    }
+    return activePeers;
   });
 
   // Messaging Handlers
