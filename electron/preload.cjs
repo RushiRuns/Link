@@ -158,7 +158,7 @@ contextBridge.exposeInMainWorld("link", {
     offerCall: (callId, peerId, mediaType, sdp) => ipcRenderer.invoke("calls:offer", callId, peerId, mediaType, sdp),
     answerCall: (callId, accepted, sdp) => ipcRenderer.invoke("calls:answer", callId, accepted, sdp),
     sendIceCandidate: (callId, candidate) => ipcRenderer.invoke("calls:ice-candidate", callId, candidate),
-    endCall: (callId) => ipcRenderer.invoke("calls:end", callId),
+    endCall: (callId, reason) => ipcRenderer.invoke("calls:end", callId, reason),
     onOfferReceived: (callback) => {
       const listener = (_, call) => callback(call);
       ipcRenderer.on("calls:offer-received", listener);
@@ -175,7 +175,7 @@ contextBridge.exposeInMainWorld("link", {
       return () => ipcRenderer.removeListener("calls:ice-candidate", listener);
     },
     onCallEnded: (callback) => {
-      const listener = (_, callId) => callback(callId);
+      const listener = (_, data) => callback(data);
       ipcRenderer.on("calls:ended", listener);
       return () => ipcRenderer.removeListener("calls:ended", listener);
     }

@@ -186,7 +186,7 @@ class CallSignalingService {
     const p = envelope.payload;
     if (p && p.callId) {
       this.activeCalls.delete(p.callId);
-      this.windowRef?.webContents?.send('calls:ended', p.callId);
+      this.windowRef?.webContents?.send('calls:ended', { callId: p.callId, reason: p.reason });
     }
   }
 }

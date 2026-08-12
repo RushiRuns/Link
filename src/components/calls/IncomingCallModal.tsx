@@ -15,7 +15,7 @@ export function IncomingCallModal() {
   };
 
   const handleDecline = () => {
-    endCall();
+    endCall('declined');
   };
 
   const isVideo = incomingCall.mediaType === 'video';

@@ -103,7 +103,9 @@ export function CallScreen() {
               {activeCall.peerName || 'Teammate'}
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.7 }}>
-              {isConnected ? formatTime(duration) : 'Connecting P2P stream...'}
+              {activeCall.status === 'declined' ? 'Call Declined' :
+               activeCall.status === 'no_answer' ? 'No Answer' :
+               isConnected ? formatTime(duration) : 'Connecting P2P stream...'}
             </div>
           </div>
         </div>
@@ -183,7 +185,9 @@ export function CallScreen() {
               <User size={48} color="var(--accent-primary)" />
             </div>
             <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-              {isConnected ? 'Voice Call Connected' : 'Ringing...'}
+              {activeCall.status === 'declined' ? 'Call Declined' :
+               activeCall.status === 'no_answer' ? 'No Answer' :
+               isConnected ? 'Voice Call Connected' : 'Ringing...'}
             </div>
             {/* Hidden audio element for remote voice stream */}
             <audio ref={remoteAudioRef} autoPlay />

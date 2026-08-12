@@ -43,6 +43,15 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   useEffect(() => {
     let isMounted = true;
 
+    const ringTimeout = setTimeout(() => {
+      if (!isMounted) return;
+      if (pcRef.current?.connectionState !== 'connected') {
+        console.log('[WebRTC] Call timeout reached');
+        cleanup();
+        endCall('no_answer');
+      }
+    }, 30000);
+
     // WebRTC connection config: LAN only, no external STUN/TURN servers
     const pc = new RTCPeerConnection({ iceServers: [] });
     pcRef.current = pc;
@@ -171,6 +180,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
 
     return () => {
       isMounted = false;
+      clearTimeout(ringTimeout);
       cleanAnswer?.();
       cleanIce?.();
       cleanup();

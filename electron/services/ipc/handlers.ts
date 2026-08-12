@@ -209,7 +209,7 @@ export function registerIpcHandlers() {
     return callSignalingService.sendIceCandidate(callId, candidate);
   });
 
-  ipcMain.handle('calls:end', async (_, callId: string) => {
-    return callSignalingService.endCall(callId);
+  ipcMain.handle('calls:end', async (_, callId: string, reason?: string) => {
+    return callSignalingService.endCall(callId, reason);
   });
 }
