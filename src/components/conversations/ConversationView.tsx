@@ -8,6 +8,7 @@ import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { Shield, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -114,7 +115,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const handleStartCall = (mediaType: 'voice' | 'video') => {
     setActiveCall({
-      callId: 'call_' + Date.now(),
+      callId: 'call_' + uuidv4(),
       peerId: peer.id,
       peerName: peer.displayName,
       mediaType,

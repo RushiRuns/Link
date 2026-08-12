@@ -75,6 +75,8 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       }
     };
 
+    const iceQueue: RTCIceCandidateInit[] = [];
+
     // Acquire local media stream (microphone / camera)
     navigator.mediaDevices
       .getUserMedia({
@@ -135,7 +137,6 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     // Listen for incoming WebRTC signals
     let cleanAnswer: (() => void) | undefined;
     let cleanIce: (() => void) | undefined;
-    const iceQueue: RTCIceCandidateInit[] = [];
 
     if (window.link?.calls) {
       cleanAnswer = window.link.calls.onAnswerReceived(async ({ sdp }) => {
