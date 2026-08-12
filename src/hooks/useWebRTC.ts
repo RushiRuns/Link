@@ -36,6 +36,8 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       setRemoteStream(null);
     }
     setIsConnected(false);
+    setIsAudioMuted(false);
+    setIsVideoMuted(false);
   }, []);
 
   useEffect(() => {
@@ -125,6 +127,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       .catch((err) => {
         if (!isMounted) return;
         console.error('[WebRTC] Error acquiring media devices:', err);
+        window.alert(`Could not access camera/microphone: ${err.message || 'Permission denied'}`);
         cleanup();
         endCall();
       });
