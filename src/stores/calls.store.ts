@@ -6,7 +6,7 @@ export interface ActiveCallInfo {
   peerId: string;
   peerName?: string;
   mediaType: 'voice' | 'video';
-  status: 'ringing' | 'connecting' | 'connected' | 'declined' | 'ended' | 'no_answer';
+  status: 'ringing' | 'connecting' | 'connected' | 'declined' | 'ended' | 'no_answer' | 'busy';
   isIncoming: boolean;
   sdpOffer?: string;
 }
@@ -38,12 +38,18 @@ export const useCallsStore = create<CallsState>((set, get) => ({
   },
 
   endCall: async (reason?: string) => {
-    const current = get().activeCall || get().incomingCall;
-    if (current && window.link?.calls) {
-      try {
-        await window.link.calls.endCall(current.callId, reason);
-      } catch (err) {
-        console.error('[CallsStore] Error ending call:', err);
+    const { activeCall, incomingCall } = get();
+    const callsToEnd = [];
+    if (activeCall) callsToEnd.push(activeCall);
+    if (incomingCall) callsToEnd.push(incomingCall);
+
+    if (window.link?.calls) {
+      for (const call of callsToEnd) {
+        try {
+          await window.link.calls.endCall(call.callId, reason);
+        } catch (err) {
+          console.error('[CallsStore] Error ending call:', err);
+        }
       }
     }
     set({ activeCall: null, incomingCall: null });
@@ -78,7 +84,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
 
     const cleanEnded = window.link.calls.onCallEnded((data: any) => {
       const reason = typeof data === 'string' ? undefined : data?.reason;
-      if (reason === 'declined' || reason === 'no_answer') {
+      if (reason === 'declined' || reason === 'no_answer' || reason === 'busy') {
         get().updateCallStatus(reason);
         setTimeout(() => set({ activeCall: null, incomingCall: null }), 2000);
       } else {

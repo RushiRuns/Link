@@ -134,6 +134,16 @@ class CallSignalingService {
     const p = envelope.payload;
     if (!p || !p.callId) return;
 
+    if (this.activeCalls.size > 0) {
+      connectionManager.send(senderDeviceId, {
+        type: 'call.end',
+        id: 'end_' + uuidv4(),
+        ts: Date.now(),
+        payload: { callId: p.callId, reason: 'busy' }
+      });
+      return;
+    }
+
     const identity = getOrGenerateIdentity();
     const state: ActiveCallState = {
       callId: p.callId,

@@ -105,6 +105,7 @@ export function CallScreen() {
             <div style={{ fontSize: '0.78rem', opacity: 0.7 }}>
               {activeCall.status === 'declined' ? 'Call Declined' :
                activeCall.status === 'no_answer' ? 'No Answer' :
+               activeCall.status === 'busy' ? 'User Busy' :
                isConnected ? formatTime(duration) : 'Connecting P2P stream...'}
             </div>
           </div>
@@ -187,6 +188,7 @@ export function CallScreen() {
             <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
               {activeCall.status === 'declined' ? 'Call Declined' :
                activeCall.status === 'no_answer' ? 'No Answer' :
+               activeCall.status === 'busy' ? 'User Busy' :
                isConnected ? 'Voice Call Connected' : 'Ringing...'}
             </div>
             {/* Hidden audio element for remote voice stream */}
