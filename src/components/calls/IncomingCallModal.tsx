@@ -9,7 +9,7 @@ export function IncomingCallModal() {
   const handleAccept = () => {
     setActiveCall({
       ...incomingCall,
-      status: 'connected'
+      status: 'connecting'
     });
     setIncomingCall(null);
   };

@@ -75,7 +75,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
 
     const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted }) => {
       if (accepted) {
-        get().updateCallStatus('connected');
+        get().updateCallStatus('connecting');
       } else {
         get().updateCallStatus('declined');
         setTimeout(() => set({ activeCall: null }), 2000);

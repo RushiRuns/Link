@@ -22,7 +22,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  const { endCall } = useCallsStore();
+  const { endCall, updateCallStatus } = useCallsStore();
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -78,6 +78,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'connected') {
         setIsConnected(true);
+        updateCallStatus('connected');
       } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
         cleanup();
         endCall();
@@ -85,6 +86,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     };
 
     const iceQueue: RTCIceCandidateInit[] = [];
+    let pendingAnswerSdp: string | null = null;
 
     // Acquire local media stream (microphone / camera)
     navigator.mediaDevices
@@ -112,6 +114,19 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
           await pc.setLocalDescription(offer);
           if (window.link?.calls) {
             await window.link.calls.offerCall(callId, peerId, mediaType, offer.sdp || '');
+          }
+          if (pendingAnswerSdp) {
+            await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: pendingAnswerSdp }));
+            pendingAnswerSdp = null;
+            // Process ICE queue now that remote description is set
+            for (const c of iceQueue) {
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(c));
+              } catch (err) {
+                console.warn('[WebRTC] Error adding queued ICE candidate:', err);
+              }
+            }
+            iceQueue.length = 0;
           }
         } else if (initialSdpOffer) {
           // Incoming call: set remote description from SDP offer, then create SDP answer
@@ -149,17 +164,21 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
 
     if (window.link?.calls) {
       cleanAnswer = window.link.calls.onAnswerReceived(async ({ sdp }) => {
-        if (sdp && pcRef.current && pcRef.current.signalingState === 'have-local-offer') {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
-          // Process ICE queue
-          for (const c of iceQueue) {
-            try {
-              await pcRef.current.addIceCandidate(new RTCIceCandidate(c));
-            } catch (err) {
-              console.warn('[WebRTC] Error adding queued ICE candidate:', err);
+        if (sdp && pcRef.current) {
+          if (pcRef.current.signalingState === 'have-local-offer') {
+            await pcRef.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
+            // Process ICE queue
+            for (const c of iceQueue) {
+              try {
+                await pcRef.current.addIceCandidate(new RTCIceCandidate(c));
+              } catch (err) {
+                console.warn('[WebRTC] Error adding queued ICE candidate:', err);
+              }
             }
+            iceQueue.length = 0;
+          } else {
+            pendingAnswerSdp = sdp;
           }
-          iceQueue.length = 0;
         }
       });
 
