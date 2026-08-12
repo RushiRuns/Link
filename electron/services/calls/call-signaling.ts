@@ -49,8 +49,7 @@ class CallSignalingService {
     this.windowRef = mainWindow;
   }
 
-  public async sendOffer(peerId: string, mediaType: 'voice' | 'video', sdp: string) {
-    const callId = uuidv4();
+  public async sendOffer(callId: string, peerId: string, mediaType: 'voice' | 'video', sdp: string) {
     const state: ActiveCallState = {
       callId,
       peerId,
@@ -68,7 +67,8 @@ class CallSignalingService {
       payload: {
         callId,
         mediaType,
-        sdp
+        sdp,
+        callerName: getOrGenerateIdentity().displayName
       }
     });
 
@@ -149,6 +149,7 @@ class CallSignalingService {
       id: p.callId,
       initiatorId: senderDeviceId,
       peerId: identity.deviceId,
+      peerName: p.callerName,
       mediaType: p.mediaType || 'voice',
       status: 'ringing',
       sdp: p.sdp,

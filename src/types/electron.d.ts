@@ -91,7 +91,7 @@ export interface LinkAPI {
     onFailed: (callback: (transferId: string) => void) => () => void;
   };
   calls: {
-    offerCall: (peerId: string, mediaType: 'voice' | 'video', sdp: string) => Promise<LinkCall>;
+    offerCall: (callId: string, peerId: string, mediaType: 'voice' | 'video', sdp: string) => Promise<LinkCall>;
     answerCall: (callId: string, accepted: boolean, sdp?: string) => Promise<void>;
     sendIceCandidate: (callId: string, candidate: any) => Promise<void>;
     endCall: (callId: string) => Promise<void>;

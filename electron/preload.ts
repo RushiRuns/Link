@@ -155,7 +155,7 @@ contextBridge.exposeInMainWorld('link', {
     }
   },
   calls: {
-    offerCall: (peerId: string, mediaType: 'voice' | 'video', sdp: string) => ipcRenderer.invoke('calls:offer', peerId, mediaType, sdp),
+    offerCall: (callId: string, peerId: string, mediaType: 'voice' | 'video', sdp: string) => ipcRenderer.invoke('calls:offer', callId, peerId, mediaType, sdp),
     answerCall: (callId: string, accepted: boolean, sdp?: string) => ipcRenderer.invoke('calls:answer', callId, accepted, sdp),
     sendIceCandidate: (callId: string, candidate: any) => ipcRenderer.invoke('calls:ice-candidate', callId, candidate),
     endCall: (callId: string) => ipcRenderer.invoke('calls:end', callId),

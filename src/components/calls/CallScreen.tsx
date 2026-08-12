@@ -9,6 +9,7 @@ export function CallScreen() {
   const [duration, setDuration] = useState(0);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
 
   const {
     remoteStream,
@@ -20,6 +21,7 @@ export function CallScreen() {
     toggleVideo
   } = useWebRTC({
     callId: activeCall?.callId || '',
+    peerId: activeCall?.peerId || '',
     mediaType: activeCall?.mediaType || 'voice',
     isIncoming: activeCall?.isIncoming || false,
     initialSdpOffer: activeCall?.sdpOffer
@@ -41,10 +43,15 @@ export function CallScreen() {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
     }
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
+    
+    if (remoteStream) {
+      if (activeCall?.mediaType === 'video' && remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      } else if (activeCall?.mediaType === 'voice' && remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = remoteStream;
+      }
     }
-  }, [localStream, remoteStream]);
+  }, [localStream, remoteStream, activeCall?.mediaType]);
 
   if (!activeCall) return null;
 
@@ -179,7 +186,7 @@ export function CallScreen() {
               {isConnected ? 'Voice Call Connected' : 'Ringing...'}
             </div>
             {/* Hidden audio element for remote voice stream */}
-            <audio ref={remoteVideoRef as any} autoPlay />
+            <audio ref={remoteAudioRef} autoPlay />
           </div>
         )}
       </div>

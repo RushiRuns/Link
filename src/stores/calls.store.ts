@@ -56,6 +56,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       const incoming: ActiveCallInfo = {
         callId: call.id,
         peerId: call.initiatorId,
+        peerName: (call as any).peerName,
         mediaType: call.mediaType,
         status: 'ringing',
         isIncoming: true,

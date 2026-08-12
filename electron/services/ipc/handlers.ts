@@ -197,8 +197,8 @@ export function registerIpcHandlers() {
   });
 
   // Call Handlers
-  ipcMain.handle('calls:offer', async (_, peerId: string, mediaType: 'voice' | 'video', sdp: string) => {
-    return callSignalingService.sendOffer(peerId, mediaType, sdp);
+  ipcMain.handle('calls:offer', async (_, callId: string, peerId: string, mediaType: 'voice' | 'video', sdp: string) => {
+    return callSignalingService.sendOffer(callId, peerId, mediaType, sdp);
   });
 
   ipcMain.handle('calls:answer', async (_, callId: string, accepted: boolean, sdp?: string) => {
