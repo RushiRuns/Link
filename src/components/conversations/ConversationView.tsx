@@ -28,7 +28,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
     deleteMessageLocally
   } = useConversationsStore();
   const { transfers } = useFileTransferStore();
-  const { setActiveCall } = useCallsStore();
+  const { activeCall, incomingCall, setActiveCall } = useCallsStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +114,14 @@ export function ConversationView({ peer }: ConversationViewProps) {
   };
 
   const handleStartCall = (mediaType: 'voice' | 'video') => {
+    if (peer.status === 'offline') {
+      window.alert('Cannot call an offline teammate.');
+      return;
+    }
+    if (activeCall || incomingCall) {
+      window.alert('You are already in a call.');
+      return;
+    }
     setActiveCall({
       callId: 'call_' + uuidv4(),
       peerId: peer.id,
@@ -127,6 +135,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const isOffline = peer.status === 'offline';
   const isVersionMismatch = peer.status === 'version_mismatch';
   const isTyping = typingPeers.has(conversationId);
+  const isCallActive = activeCall !== null || incomingCall !== null;
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -268,7 +277,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           {/* Call Initiation Buttons & Clear Button */}
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            {!isOffline && !isVersionMismatch && (
+            {!isOffline && !isVersionMismatch && !isCallActive && (
               <>
                 <button
                   onClick={() => handleStartCall('voice')}
