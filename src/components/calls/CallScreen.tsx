@@ -265,7 +265,7 @@ export function CallScreen() {
           
           <button 
             onClick={() => {
-              useAppStore.getState().setSelectedPeer(activeCall.peerId);
+              useAppStore.getState().selectPeer(activeCall.peerId);
               setIsMinimized(true);
             }}
             style={{ background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px 12px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600, transition: 'background 0.2s' }}
