@@ -14,6 +14,8 @@ export interface ActiveCallInfo {
 interface CallsState {
   activeCall: ActiveCallInfo | null;
   incomingCall: ActiveCallInfo | null;
+  mediaError: string | null;
+  setMediaError: (error: string | null) => void;
   setIncomingCall: (call: ActiveCallInfo | null) => void;
   setActiveCall: (call: ActiveCallInfo | null) => void;
   updateCallStatus: (status: ActiveCallInfo['status']) => void;
@@ -24,7 +26,9 @@ interface CallsState {
 export const useCallsStore = create<CallsState>((set, get) => ({
   activeCall: null,
   incomingCall: null,
+  mediaError: null,
 
+  setMediaError: (error) => set({ mediaError: error }),
   setIncomingCall: (call) => set({ incomingCall: call }),
   setActiveCall: (call) => set({ activeCall: call }),
 
@@ -43,6 +47,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
     if (activeCall) callsToEnd.set(activeCall.callId, activeCall);
     if (incomingCall) callsToEnd.set(incomingCall.callId, incomingCall);
 
+    import('../utils/audio').then(m => m.stopNotificationSound());
     set({ activeCall: null, incomingCall: null });
 
     if (window.link?.calls) {
@@ -75,6 +80,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
     });
 
     const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted, callId }) => {
+      import('../utils/audio').then(m => m.stopNotificationSound());
       if (accepted) {
         get().updateCallStatus('connecting');
       } else {
@@ -87,6 +93,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
     });
 
     const cleanEnded = window.link.calls.onCallEnded((data: any) => {
+      import('../utils/audio').then(m => m.stopNotificationSound());
       const reason = data?.reason;
       const callId = data?.callId;
       if (reason === 'declined' || reason === 'no_answer' || reason === 'busy') {

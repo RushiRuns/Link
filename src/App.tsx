@@ -24,7 +24,7 @@ export default function App() {
   const { peers, initListeners: initPeersListeners } = usePeersStore();
   const { groups } = useGroupsStore();
   const { incomingOffer } = useFileTransferStore();
-  const { activeCall, incomingCall, initListeners: initCallListeners } = useCallsStore();
+  const { activeCall, incomingCall, mediaError, setMediaError, initListeners: initCallListeners } = useCallsStore();
   const { initListeners: initConversationsListeners, loadFromDisk } = useConversationsStore();
   const { initListeners: initGroupsListeners, loadGroupsFromDisk } = useGroupsStore();
   const { initListeners: initFtListeners } = useFileTransferStore();
@@ -53,9 +53,17 @@ export default function App() {
       cleanConversations();
       cleanGroups();
       cleanFt();
+      cleanFt();
       cleanPeers();
     };
   }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, loadFromDisk]);
+
+  useEffect(() => {
+    if (mediaError) {
+      const timer = setTimeout(() => setMediaError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [mediaError, setMediaError]);
 
   const selectedPeer = selectedPeerId ? peers.get(selectedPeerId) : null;
   const selectedGroup = selectedGroupId ? groups.get(selectedGroupId) : null;
@@ -137,6 +145,44 @@ export default function App() {
       {incomingOffer && <FileTransferOffer offer={incomingOffer} />}
       {incomingCall && <IncomingCallModal />}
       {activeCall && <CallScreen />}
+      
+      {mediaError && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'var(--status-error)',
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: 'var(--radius-md)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            boxShadow: 'var(--shadow-lg)'
+          }}
+        >
+          <span>{mediaError}</span>
+          <button
+            onClick={() => setMediaError(null)}
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.8rem'
+            }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />

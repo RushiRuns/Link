@@ -40,17 +40,27 @@ export function CallScreen() {
 
   // Attach local and remote streams to video elements
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
+    const localVideo = localVideoRef.current;
+    const remoteVideo = remoteVideoRef.current;
+    const remoteAudio = remoteAudioRef.current;
+
+    if (localVideo && localStream) {
+      localVideo.srcObject = localStream;
     }
     
     if (remoteStream) {
-      if (activeCall?.mediaType === 'video' && remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-      } else if (activeCall?.mediaType === 'voice' && remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = remoteStream;
+      if (activeCall?.mediaType === 'video' && remoteVideo) {
+        remoteVideo.srcObject = remoteStream;
+      } else if (activeCall?.mediaType === 'voice' && remoteAudio) {
+        remoteAudio.srcObject = remoteStream;
       }
     }
+
+    return () => {
+      if (localVideo) localVideo.srcObject = null;
+      if (remoteVideo) remoteVideo.srcObject = null;
+      if (remoteAudio) remoteAudio.srcObject = null;
+    };
   }, [localStream, remoteStream, activeCall?.mediaType]);
 
   if (!activeCall) return null;
@@ -205,6 +215,7 @@ export function CallScreen() {
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onEndCall={endCall}
+        isMediaReady={!!localStream}
       />
     </div>
   );

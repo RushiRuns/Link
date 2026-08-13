@@ -22,7 +22,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  const { endCall, updateCallStatus } = useCallsStore();
+  const { endCall, updateCallStatus, setMediaError } = useCallsStore();
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -60,12 +60,12 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     pcRef.current = pc;
 
     pc.onicecandidate = (event) => {
-      // Use toJSON() to convert the native RTCIceCandidate to a plain object.
-      // RTCIceCandidate is a native WebRTC class whose properties (sdpMid,
-      // sdpMLineIndex) are NOT preserved by Electron's structured-clone IPC
-      // serialization unless converted to a plain object first.
       if (event.candidate && window.link?.calls) {
-        window.link.calls.sendIceCandidate(callId, event.candidate.toJSON());
+        window.link.calls.sendIceCandidate(callId, {
+          candidate: event.candidate.candidate,
+          sdpMid: event.candidate.sdpMid,
+          sdpMLineIndex: event.candidate.sdpMLineIndex
+        });
       }
     };
 
@@ -197,7 +197,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       .catch((err) => {
         if (!isMounted) return;
         console.error('[WebRTC] Error acquiring media devices:', err);
-        window.alert(`Could not access camera/microphone: ${err.message || 'Permission denied'}`);
+        setMediaError(`Could not access camera/microphone: ${err.message || 'Permission denied'}`);
         cleanup();
         endCall();
       });

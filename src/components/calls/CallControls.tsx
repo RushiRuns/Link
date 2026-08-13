@@ -7,6 +7,7 @@ interface CallControlsProps {
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onEndCall: () => void;
+  isMediaReady?: boolean;
 }
 
 export function CallControls({
@@ -15,7 +16,8 @@ export function CallControls({
   isVideoMuted,
   onToggleAudio,
   onToggleVideo,
-  onEndCall
+  onEndCall,
+  isMediaReady = true
 }: CallControlsProps) {
   return (
     <div
@@ -33,6 +35,7 @@ export function CallControls({
     >
       <button
         onClick={onToggleAudio}
+        disabled={!isMediaReady}
         title={isAudioMuted ? 'Unmute Microphone' : 'Mute Microphone'}
         style={{
           width: 44,
@@ -41,7 +44,8 @@ export function CallControls({
           border: 'none',
           backgroundColor: isAudioMuted ? 'var(--status-error)' : 'rgba(255, 255, 255, 0.15)',
           color: '#ffffff',
-          cursor: 'pointer',
+          cursor: isMediaReady ? 'pointer' : 'not-allowed',
+          opacity: isMediaReady ? 1 : 0.5,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -54,6 +58,7 @@ export function CallControls({
       {mediaType === 'video' && (
         <button
           onClick={onToggleVideo}
+          disabled={!isMediaReady}
           title={isVideoMuted ? 'Turn Camera On' : 'Turn Camera Off'}
           style={{
             width: 44,
@@ -62,7 +67,8 @@ export function CallControls({
             border: 'none',
             backgroundColor: isVideoMuted ? 'var(--status-error)' : 'rgba(255, 255, 255, 0.15)',
             color: '#ffffff',
-            cursor: 'pointer',
+            cursor: isMediaReady ? 'pointer' : 'not-allowed',
+            opacity: isMediaReady ? 1 : 0.5,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
