@@ -23,3 +23,10 @@ export const playNotificationSound = () => {
     console.warn('[Audio] Error initializing audio:', err);
   }
 };
+
+export const stopNotificationSound = () => {
+  if (notificationAudio) {
+    notificationAudio.pause();
+    notificationAudio.currentTime = 0;
+  }
+};

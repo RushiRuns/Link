@@ -136,6 +136,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const isVersionMismatch = peer.status === 'version_mismatch';
   const isTyping = typingPeers.has(conversationId);
   const isCallActive = activeCall !== null || incomingCall !== null;
+  const isSelf = peer.id === localIdentity?.deviceId;
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -277,7 +278,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           {/* Call Initiation Buttons & Clear Button */}
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            {!isOffline && !isVersionMismatch && !isCallActive && (
+            {!isOffline && !isVersionMismatch && !isCallActive && !isSelf && (
               <>
                 <button
                   onClick={() => handleStartCall('voice')}

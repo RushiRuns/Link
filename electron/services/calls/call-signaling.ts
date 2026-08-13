@@ -29,6 +29,9 @@ class CallSignalingService {
         case 'call.ice':
           this.handleIceCandidate(senderDeviceId, envelope);
           break;
+        case 'call.mute':
+          this.handleMuteStatus(senderDeviceId, envelope);
+          break;
         case 'call.end':
           this.handleCallEnd(senderDeviceId, envelope);
           break;
@@ -138,6 +141,18 @@ class CallSignalingService {
     }
   }
 
+  public async sendMuteStatus(callId: string, audioMuted: boolean, videoMuted: boolean) {
+    const state = this.activeCalls.get(callId);
+    if (!state) return;
+
+    connectionManager.send(state.peerId, {
+      type: 'call.mute',
+      id: 'mute_' + uuidv4(),
+      ts: Date.now(),
+      payload: { callId, audioMuted, videoMuted }
+    });
+  }
+
   private handleCallOffer(senderDeviceId: string, envelope: any) {
     const p = envelope.payload;
     if (!p || !p.callId) return;
@@ -207,6 +222,16 @@ class CallSignalingService {
         candidate: p.candidate
       });
     }
+  }
+
+  private handleMuteStatus(_senderDeviceId: string, envelope: any) {
+    const p = envelope.payload;
+    if (!p) return;
+    this.windowRef?.webContents?.send('calls:muted', {
+      callId: p.callId,
+      audioMuted: p.audioMuted,
+      videoMuted: p.videoMuted
+    });
   }
 
   private handleCallEnd(_senderDeviceId: string, envelope: any) {

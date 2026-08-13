@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
-import { User, Shield } from 'lucide-react';
+import { User, Shield, MicOff, VideoOff } from 'lucide-react';
 
 export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
@@ -121,9 +121,9 @@ export function CallScreen() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--status-online)' }}>
-          <Shield size={14} color="var(--status-online)" />
-          <span>Encrypted WebRTC Stream</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
+          <Shield size={14} color={isConnected ? "var(--status-online)" : "var(--text-secondary)"} />
+          <span>{isConnected ? "Encrypted WebRTC Stream" : "Establishing Encrypted Stream..."}</span>
         </div>
       </div>
 
@@ -153,6 +153,20 @@ export function CallScreen() {
               playsInline
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
+
+            {activeCall.isRemoteVideoMuted && (
+              <div style={{ position: 'absolute', top: 20, left: 20, padding: '8px 12px', background: 'rgba(0,0,0,0.6)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontSize: '0.85rem' }}>
+                <VideoOff size={16} />
+                <span>Peer Muted Video</span>
+              </div>
+            )}
+
+            {activeCall.isRemoteAudioMuted && (
+              <div style={{ position: 'absolute', top: 20, right: 20, padding: '8px 12px', background: 'rgba(0,0,0,0.6)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontSize: '0.85rem' }}>
+                <MicOff size={16} />
+                <span>Peer Muted Audio</span>
+              </div>
+            )}
 
             {/* Local Video Stream Picture-in-Picture */}
             <div
@@ -190,10 +204,16 @@ export function CallScreen() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 40px rgba(255, 255, 255, 0.08)'
+                boxShadow: '0 0 40px rgba(255, 255, 255, 0.08)',
+                position: 'relative'
               }}
             >
               <User size={48} color="var(--accent-primary)" />
+              {activeCall.isRemoteAudioMuted && (
+                <div style={{ position: 'absolute', bottom: -12, right: -12, padding: '6px', background: 'var(--status-offline)', borderRadius: '50%', color: '#fff', display: 'flex' }}>
+                  <MicOff size={16} />
+                </div>
+              )}
             </div>
             <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
               {activeCall.status === 'declined' ? 'Call Declined' :

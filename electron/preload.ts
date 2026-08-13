@@ -158,6 +158,7 @@ contextBridge.exposeInMainWorld('link', {
     offerCall: (callId: string, peerId: string, mediaType: 'voice' | 'video', sdp: string) => ipcRenderer.invoke('calls:offer', callId, peerId, mediaType, sdp),
     answerCall: (callId: string, accepted: boolean, sdp?: string) => ipcRenderer.invoke('calls:answer', callId, accepted, sdp),
     sendIceCandidate: (callId: string, candidate: any) => ipcRenderer.invoke('calls:ice-candidate', callId, candidate),
+    sendMuteStatus: (callId: string, audioMuted: boolean, videoMuted: boolean) => ipcRenderer.invoke('calls:mute-status', callId, audioMuted, videoMuted),
     endCall: (callId: string, reason?: string) => ipcRenderer.invoke('calls:end', callId, reason),
     onOfferReceived: (callback: EventCallback) => {
       const listener = (_: any, call: any) => callback(call);
@@ -178,6 +179,11 @@ contextBridge.exposeInMainWorld('link', {
       const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('calls:ended', listener);
       return () => ipcRenderer.removeListener('calls:ended', listener);
+    },
+    onMuteReceived: (callback: EventCallback<any>) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('calls:muted', listener);
+      return () => ipcRenderer.removeListener('calls:muted', listener);
     }
   },
   theme: {

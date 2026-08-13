@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { playNotificationSound } from '../utils/audio';
+import { playNotificationSound, stopNotificationSound } from '../utils/audio';
 
 export interface ActiveCallInfo {
   callId: string;
@@ -9,6 +9,8 @@ export interface ActiveCallInfo {
   status: 'ringing' | 'connecting' | 'connected' | 'declined' | 'ended' | 'no_answer' | 'busy';
   isIncoming: boolean;
   sdpOffer?: string;
+  isRemoteAudioMuted?: boolean;
+  isRemoteVideoMuted?: boolean;
 }
 
 interface CallsState {
@@ -19,6 +21,7 @@ interface CallsState {
   setIncomingCall: (call: ActiveCallInfo | null) => void;
   setActiveCall: (call: ActiveCallInfo | null) => void;
   updateCallStatus: (status: ActiveCallInfo['status']) => void;
+  updateRemoteMuteStatus: (audioMuted: boolean, videoMuted: boolean) => void;
   endCall: (reason?: string) => Promise<void>;
   initListeners: () => () => void;
 }
@@ -41,13 +44,22 @@ export const useCallsStore = create<CallsState>((set, get) => ({
     });
   },
 
+  updateRemoteMuteStatus: (audioMuted, videoMuted) => {
+    set((state) => {
+      if (state.activeCall) {
+        return { activeCall: { ...state.activeCall, isRemoteAudioMuted: audioMuted, isRemoteVideoMuted: videoMuted } };
+      }
+      return state;
+    });
+  },
+
   endCall: async (reason?: string) => {
     const { activeCall, incomingCall } = get();
     const callsToEnd = new Map<string, any>();
     if (activeCall) callsToEnd.set(activeCall.callId, activeCall);
     if (incomingCall) callsToEnd.set(incomingCall.callId, incomingCall);
 
-    import('../utils/audio').then(m => m.stopNotificationSound());
+    stopNotificationSound();
     set({ activeCall: null, incomingCall: null });
 
     if (window.link?.calls) {
@@ -68,7 +80,7 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       const incoming: ActiveCallInfo = {
         callId: call.id,
         peerId: call.initiatorId,
-        peerName: (call as any).peerName,
+        peerName: call.peerName,
         mediaType: call.mediaType,
         status: 'ringing',
         isIncoming: true,
@@ -79,8 +91,8 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       playNotificationSound();
     });
 
-    const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted, callId }) => {
-      import('../utils/audio').then(m => m.stopNotificationSound());
+    const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted }) => {
+      stopNotificationSound();
       if (accepted) {
         get().updateCallStatus('connecting');
       } else {
@@ -92,8 +104,8 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       }
     });
 
-    const cleanEnded = window.link.calls.onCallEnded((data: any) => {
-      import('../utils/audio').then(m => m.stopNotificationSound());
+    const cleanEnded = window.link.calls.onCallEnded((data: { callId: string; reason?: string }) => {
+      stopNotificationSound();
       const reason = data?.reason;
       const callId = data?.callId;
       if (reason === 'declined' || reason === 'no_answer' || reason === 'busy') {
@@ -111,10 +123,17 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       }
     });
 
+    const cleanMute = window.link.calls.onMuteReceived(({ callId, audioMuted, videoMuted }) => {
+      if (get().activeCall?.callId === callId) {
+        get().updateRemoteMuteStatus(audioMuted, videoMuted);
+      }
+    });
+
     return () => {
       cleanOffer();
       cleanAnswer();
       cleanEnded();
+      cleanMute();
     };
   }
 }));

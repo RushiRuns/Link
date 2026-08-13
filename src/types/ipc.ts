@@ -100,6 +100,7 @@ export interface LinkCall {
   id: string;
   initiatorId: string;
   peerId: string;
+  peerName?: string;
   mediaType: CallMediaType;
   status: CallStatus;
   startedAt?: number;

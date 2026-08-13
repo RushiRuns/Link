@@ -144,7 +144,7 @@ export default function App() {
 
       {incomingOffer && <FileTransferOffer offer={incomingOffer} />}
       {incomingCall && <IncomingCallModal />}
-      {activeCall && <CallScreen />}
+      {activeCall && <CallScreen key={activeCall.callId} />}
       
       {mediaError && (
         <div

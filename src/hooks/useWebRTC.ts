@@ -22,7 +22,9 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
 
-  const { endCall, updateCallStatus, setMediaError } = useCallsStore();
+  const endCall = useCallsStore((s) => s.endCall);
+  const updateCallStatus = useCallsStore((s) => s.updateCallStatus);
+  const setMediaError = useCallsStore((s) => s.setMediaError);
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -74,7 +76,6 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       // manages and is the reliable way to get the remote media stream.
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
-        setIsConnected(true);
       }
     };
 
@@ -89,8 +90,22 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       }
     };
 
-    const iceQueue: RTCIceCandidateInit[] = [];
     let pendingAnswerSdp: string | null = null;
+    const iceQueue: RTCIceCandidateInit[] = [];
+
+    pc.onsignalingstatechange = () => {
+      if (pc.signalingState === 'have-local-offer' && pendingAnswerSdp) {
+        pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: pendingAnswerSdp }))
+          .then(() => {
+            pendingAnswerSdp = null;
+            for (const c of iceQueue) {
+              pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn(e));
+            }
+            iceQueue.length = 0;
+          })
+          .catch(err => console.error('[WebRTC] Error setting pending remote description:', err));
+      }
+    };
 
     // Listen for incoming WebRTC signals BEFORE acquiring media to prevent race conditions
     let cleanAnswer: (() => void) | undefined;
@@ -218,6 +233,9 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsAudioMuted(!audioTrack.enabled);
+        if (window.link?.calls) {
+          window.link.calls.sendMuteStatus(callId, !audioTrack.enabled, isVideoMuted);
+        }
       }
     }
   };
@@ -228,6 +246,9 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoMuted(!videoTrack.enabled);
+        if (window.link?.calls) {
+          window.link.calls.sendMuteStatus(callId, isAudioMuted, !videoTrack.enabled);
+        }
       }
     }
   };
