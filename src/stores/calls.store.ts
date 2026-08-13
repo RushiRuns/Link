@@ -39,12 +39,14 @@ export const useCallsStore = create<CallsState>((set, get) => ({
 
   endCall: async (reason?: string) => {
     const { activeCall, incomingCall } = get();
-    const callsToEnd = [];
-    if (activeCall) callsToEnd.push(activeCall);
-    if (incomingCall) callsToEnd.push(incomingCall);
+    const callsToEnd = new Map<string, any>();
+    if (activeCall) callsToEnd.set(activeCall.callId, activeCall);
+    if (incomingCall) callsToEnd.set(incomingCall.callId, incomingCall);
+
+    set({ activeCall: null, incomingCall: null });
 
     if (window.link?.calls) {
-      for (const call of callsToEnd) {
+      for (const call of callsToEnd.values()) {
         try {
           await window.link.calls.endCall(call.callId, reason);
         } catch (err) {
@@ -52,7 +54,6 @@ export const useCallsStore = create<CallsState>((set, get) => ({
         }
       }
     }
-    set({ activeCall: null, incomingCall: null });
   },
 
   initListeners: () => {
@@ -73,22 +74,33 @@ export const useCallsStore = create<CallsState>((set, get) => ({
       playNotificationSound();
     });
 
-    const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted }) => {
+    const cleanAnswer = window.link.calls.onAnswerReceived(({ accepted, callId }) => {
       if (accepted) {
         get().updateCallStatus('connecting');
       } else {
         get().updateCallStatus('declined');
-        setTimeout(() => set({ activeCall: null }), 2000);
+        const currentCallId = get().activeCall?.callId;
+        setTimeout(() => {
+          set((state) => (state.activeCall?.callId === currentCallId ? { activeCall: null } : state));
+        }, 2000);
       }
     });
 
     const cleanEnded = window.link.calls.onCallEnded((data: any) => {
-      const reason = typeof data === 'string' ? undefined : data?.reason;
+      const reason = data?.reason;
+      const callId = data?.callId;
       if (reason === 'declined' || reason === 'no_answer' || reason === 'busy') {
         get().updateCallStatus(reason);
-        setTimeout(() => set({ activeCall: null, incomingCall: null }), 2000);
+        const currentCallId = get().activeCall?.callId;
+        setTimeout(() => {
+          set((state) => (state.activeCall?.callId === currentCallId ? { activeCall: null, incomingCall: null } : state));
+        }, 2000);
       } else {
-        set({ activeCall: null, incomingCall: null });
+        set((state) => (
+          state.activeCall?.callId === callId || state.incomingCall?.callId === callId 
+            ? { activeCall: null, incomingCall: null } 
+            : state
+        ));
       }
     });
 

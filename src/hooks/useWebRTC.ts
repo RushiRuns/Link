@@ -31,6 +31,9 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       setLocalStream(null);
     }
     if (pcRef.current) {
+      pcRef.current.onconnectionstatechange = null;
+      pcRef.current.onicecandidate = null;
+      pcRef.current.ontrack = null;
       pcRef.current.close();
       pcRef.current = null;
       setRemoteStream(null);
@@ -80,13 +83,53 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
         setIsConnected(true);
         updateCallStatus('connected');
       } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        const wasActive = !!pcRef.current;
         cleanup();
-        endCall();
+        if (wasActive) endCall();
       }
     };
 
     const iceQueue: RTCIceCandidateInit[] = [];
     let pendingAnswerSdp: string | null = null;
+
+    // Listen for incoming WebRTC signals BEFORE acquiring media to prevent race conditions
+    let cleanAnswer: (() => void) | undefined;
+    let cleanIce: (() => void) | undefined;
+
+    if (window.link?.calls) {
+      cleanAnswer = window.link.calls.onAnswerReceived(async ({ sdp }) => {
+        if (sdp && pcRef.current) {
+          if (pcRef.current.signalingState === 'have-local-offer') {
+            await pcRef.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
+            // Process ICE queue
+            for (const c of iceQueue) {
+              try {
+                await pcRef.current.addIceCandidate(new RTCIceCandidate(c));
+              } catch (err) {
+                console.warn('[WebRTC] Error adding queued ICE candidate:', err);
+              }
+            }
+            iceQueue.length = 0;
+          } else {
+            pendingAnswerSdp = sdp;
+          }
+        }
+      });
+
+      cleanIce = window.link.calls.onIceCandidateReceived(async ({ candidate }) => {
+        if (candidate && pcRef.current) {
+          if (pcRef.current.remoteDescription) {
+            try {
+              await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+              console.warn('[WebRTC] Error adding ICE candidate:', err);
+            }
+          } else {
+            iceQueue.push(candidate);
+          }
+        }
+      });
+    }
 
     // Acquire local media stream (microphone / camera)
     navigator.mediaDevices
@@ -112,6 +155,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
           const offer = await pc.createOffer();
           if (!isMounted) return;
           await pc.setLocalDescription(offer);
+          if (!isMounted) return;
           if (window.link?.calls) {
             await window.link.calls.offerCall(callId, peerId, mediaType, offer.sdp || '');
           }
@@ -158,50 +202,12 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
         endCall();
       });
 
-    // Listen for incoming WebRTC signals
-    let cleanAnswer: (() => void) | undefined;
-    let cleanIce: (() => void) | undefined;
-
-    if (window.link?.calls) {
-      cleanAnswer = window.link.calls.onAnswerReceived(async ({ sdp }) => {
-        if (sdp && pcRef.current) {
-          if (pcRef.current.signalingState === 'have-local-offer') {
-            await pcRef.current.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
-            // Process ICE queue
-            for (const c of iceQueue) {
-              try {
-                await pcRef.current.addIceCandidate(new RTCIceCandidate(c));
-              } catch (err) {
-                console.warn('[WebRTC] Error adding queued ICE candidate:', err);
-              }
-            }
-            iceQueue.length = 0;
-          } else {
-            pendingAnswerSdp = sdp;
-          }
-        }
-      });
-
-      cleanIce = window.link.calls.onIceCandidateReceived(async ({ candidate }) => {
-        if (candidate && pcRef.current) {
-          if (pcRef.current.remoteDescription) {
-            try {
-              await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (err) {
-              console.warn('[WebRTC] Error adding ICE candidate:', err);
-            }
-          } else {
-            iceQueue.push(candidate);
-          }
-        }
-      });
-    }
-
     return () => {
       isMounted = false;
       clearTimeout(ringTimeout);
       cleanAnswer?.();
       cleanIce?.();
+      iceQueue.length = 0;
       cleanup();
     };
   }, [callId, mediaType, isIncoming, initialSdpOffer, cleanup, endCall]);

@@ -39,7 +39,7 @@ class CallSignalingService {
       for (const [callId, state] of this.activeCalls.entries()) {
         if (state.peerId === peerId) {
           this.activeCalls.delete(callId);
-          this.windowRef?.webContents?.send('calls:ended', callId);
+          this.windowRef?.webContents?.send('calls:ended', { callId, reason: 'connection_lost' });
         }
       }
     });
@@ -71,6 +71,14 @@ class CallSignalingService {
         callerName: getOrGenerateIdentity().displayName
       }
     });
+
+    setTimeout(() => {
+      const current = this.activeCalls.get(callId);
+      if (current && current.status === 'ringing') {
+        this.activeCalls.delete(callId);
+        this.windowRef?.webContents?.send('calls:ended', { callId, reason: 'no_answer' });
+      }
+    }, 45000);
 
     return {
       id: callId,
@@ -155,6 +163,14 @@ class CallSignalingService {
 
     this.activeCalls.set(p.callId, state);
 
+    setTimeout(() => {
+      const current = this.activeCalls.get(p.callId);
+      if (current && current.status === 'ringing') {
+        this.activeCalls.delete(p.callId);
+        this.windowRef?.webContents?.send('calls:ended', { callId: p.callId, reason: 'no_answer' });
+      }
+    }, 45000);
+
     this.windowRef?.webContents?.send('calls:offer-received', {
       id: p.callId,
       initiatorId: senderDeviceId,
@@ -185,6 +201,7 @@ class CallSignalingService {
   private handleIceCandidate(_senderDeviceId: string, envelope: any) {
     const p = envelope.payload;
     if (p && p.callId && p.candidate) {
+      if (!this.activeCalls.has(p.callId)) return;
       this.windowRef?.webContents?.send('calls:ice-candidate', {
         callId: p.callId,
         candidate: p.candidate
