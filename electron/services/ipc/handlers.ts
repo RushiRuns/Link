@@ -209,6 +209,10 @@ export function registerIpcHandlers() {
     return callSignalingService.sendIceCandidate(callId, candidate);
   });
 
+  ipcMain.handle('calls:mute-status', async (_, callId: string, audioMuted: boolean, videoMuted: boolean) => {
+    return callSignalingService.sendMuteStatus(callId, audioMuted, videoMuted);
+  });
+
   ipcMain.handle('calls:end', async (_, callId: string, reason?: string) => {
     return callSignalingService.endCall(callId, reason);
   });

@@ -88,7 +88,7 @@ export function CallControls({
 
       <button
         className="call-btn"
-        onClick={onEndCall}
+        onClick={() => onEndCall()}
         title="End Call"
         style={{
           width: 48,
