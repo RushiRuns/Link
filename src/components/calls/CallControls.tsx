@@ -33,7 +33,13 @@ export function CallControls({
         border: '1px solid rgba(255, 255, 255, 0.1)'
       }}
     >
+      <style>{`
+        .call-btn { transition: transform 0.15s ease, background-color 0.15s ease; }
+        .call-btn:hover:not(:disabled) { transform: scale(1.08); }
+        .call-btn:active:not(:disabled) { transform: scale(0.95); }
+      `}</style>
       <button
+        className="call-btn"
         onClick={onToggleAudio}
         disabled={!isMediaReady}
         title={isAudioMuted ? 'Unmute Microphone' : 'Mute Microphone'}
@@ -57,6 +63,7 @@ export function CallControls({
 
       {mediaType === 'video' && (
         <button
+          className="call-btn"
           onClick={onToggleVideo}
           disabled={!isMediaReady}
           title={isVideoMuted ? 'Turn Camera On' : 'Turn Camera Off'}
@@ -80,6 +87,7 @@ export function CallControls({
       )}
 
       <button
+        className="call-btn"
         onClick={onEndCall}
         title="End Call"
         style={{

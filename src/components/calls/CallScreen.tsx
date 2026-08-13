@@ -3,6 +3,7 @@ import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
 import { User, Shield, MicOff, VideoOff, Loader2 } from 'lucide-react';
+import { playRingbackTone, stopRingbackTone } from '../../utils/audio';
 
 export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
@@ -10,6 +11,11 @@ export function CallScreen() {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  
+  const [pipPos, setPipPos] = useState({ x: 0, y: 0 });
+  const [pipCorner, setPipCorner] = useState<'tr' | 'tl' | 'br' | 'bl'>('br');
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
 
   const {
     remoteStream,
@@ -37,6 +43,16 @@ export function CallScreen() {
     }
     return () => clearInterval(timer);
   }, [isConnected]);
+
+  // Outgoing ringback tone
+  useEffect(() => {
+    if (activeCall?.status === 'ringing' && !activeCall.isIncoming) {
+      playRingbackTone();
+    } else {
+      stopRingbackTone();
+    }
+    return stopRingbackTone;
+  }, [activeCall?.status, activeCall?.isIncoming]);
 
   // Attach local and remote streams to video elements
   useEffect(() => {
@@ -68,10 +84,70 @@ export function CallScreen() {
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
+    if (m >= 60) {
+      const h = Math.floor(m / 60);
+      const rm = m % 60;
+      return `${h.toString().padStart(2, '0')}:${rm.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const getInitials = (name?: string) => {
+    if (!name) return '?';
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getColor = (name?: string) => {
+    if (!name) return 'var(--accent-primary)';
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#D4A5A5', '#9B59B6', '#3498DB'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
   const isVideo = activeCall.mediaType === 'video';
+  const avatarColor = getColor(activeCall.peerName);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { startX: e.clientX, startY: e.clientY, initialX: pipPos.x, initialY: pipPos.y };
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || !dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    setPipPos({ x: dragRef.current.initialX + dx, y: dragRef.current.initialY + dy }); 
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    setIsDragging(false);
+    const isTop = e.clientY < window.innerHeight / 2;
+    const isLeft = e.clientX < window.innerWidth / 2;
+    if (isTop && isLeft) setPipCorner('tl');
+    if (isTop && !isLeft) setPipCorner('tr');
+    if (!isTop && isLeft) setPipCorner('bl');
+    if (!isTop && !isLeft) setPipCorner('br');
+    setPipPos({ x: 0, y: 0 });
+  };
+
+  const getPipStyle = (): React.CSSProperties => {
+    const base: React.CSSProperties = {
+      position: 'absolute', width: 180, height: 120, borderRadius: 'var(--radius-md)',
+      overflow: 'hidden', border: '2px solid rgba(255, 255, 255, 0.3)',
+      boxShadow: 'var(--shadow-lg)', backgroundColor: '#000000',
+      cursor: isDragging ? 'grabbing' : 'grab', zIndex: 10,
+      transform: `translate(${pipPos.x}px, ${pipPos.y}px)`,
+      transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+    };
+    if (pipCorner === 'tl') return { ...base, top: 20, left: 20 };
+    if (pipCorner === 'tr') return { ...base, top: 20, right: 20 };
+    if (pipCorner === 'bl') return { ...base, bottom: 20, left: 20 };
+    return { ...base, bottom: 20, right: 20 };
+  };
 
   return (
     <div
@@ -170,18 +246,11 @@ export function CallScreen() {
 
             {/* Local Video Stream Picture-in-Picture */}
             <div
-              style={{
-                position: 'absolute',
-                bottom: 20,
-                right: 20,
-                width: 180,
-                height: 120,
-                borderRadius: 'var(--radius-md)',
-                overflow: 'hidden',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: 'var(--shadow-lg)',
-                backgroundColor: '#000000'
-              }}
+              style={getPipStyle()}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             >
               {!localStream && (
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#222', zIndex: 2 }}>
@@ -207,15 +276,17 @@ export function CallScreen() {
                 width: 100,
                 height: 100,
                 borderRadius: '50%',
-                backgroundColor: 'var(--accent-light)',
+                backgroundColor: avatarColor + '20', // 20 hex is 12% opacity
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 40px rgba(255, 255, 255, 0.08)',
+                boxShadow: `0 0 40px ${avatarColor}15`,
                 position: 'relative'
               }}
             >
-              <User size={48} color="var(--accent-primary)" />
+              <span style={{ fontSize: 40, fontWeight: 700, color: avatarColor }}>
+                {getInitials(activeCall.peerName)}
+              </span>
               {activeCall.isRemoteAudioMuted && (
                 <div style={{ position: 'absolute', bottom: -12, right: -12, padding: '6px', background: 'var(--status-offline)', borderRadius: '50%', color: '#fff', display: 'flex' }}>
                   <MicOff size={16} />
