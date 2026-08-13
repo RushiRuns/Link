@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MonitorUp, MonitorOff } from 'lucide-react';
 
 interface CallControlsProps {
   mediaType: 'voice' | 'video';
@@ -8,6 +8,8 @@ interface CallControlsProps {
   onToggleVideo: () => void;
   onEndCall: () => void;
   isMediaReady?: boolean;
+  isScreenSharing?: boolean;
+  onToggleScreenShare?: () => void;
 }
 
 export function CallControls({
@@ -17,7 +19,9 @@ export function CallControls({
   onToggleAudio,
   onToggleVideo,
   onEndCall,
-  isMediaReady = true
+  isMediaReady = true,
+  isScreenSharing = false,
+  onToggleScreenShare
 }: CallControlsProps) {
   return (
     <div
@@ -83,6 +87,31 @@ export function CallControls({
           }}
         >
           {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
+        </button>
+      )}
+
+      {mediaType === 'video' && onToggleScreenShare && (
+        <button
+          className="call-btn"
+          onClick={onToggleScreenShare}
+          disabled={!isMediaReady}
+          title={isScreenSharing ? 'Stop Sharing Screen' : 'Share Screen'}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: isScreenSharing ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.15)',
+            color: '#ffffff',
+            cursor: isMediaReady ? 'pointer' : 'not-allowed',
+            opacity: isMediaReady ? 1 : 0.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background-color 0.15s ease'
+          }}
+        >
+          {isScreenSharing ? <MonitorOff size={20} /> : <MonitorUp size={20} />}
         </button>
       )}
 

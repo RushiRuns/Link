@@ -105,6 +105,9 @@ export interface LinkAPI {
   theme: {
     onThemeChanged: (callback: (isDark: boolean) => void) => () => void;
   };
+  desktopCapturer: {
+    getSources: () => Promise<{ id: string; name: string; thumbnail: string }[]>;
+  };
 }
 
 declare global {

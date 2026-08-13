@@ -1,4 +1,4 @@
-import { ipcMain, shell } from 'electron';
+import { ipcMain, shell, desktopCapturer } from 'electron';
 import fs from 'fs';
 import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
@@ -215,5 +215,17 @@ export function registerIpcHandlers() {
 
   ipcMain.handle('calls:end', async (_, callId: string, reason?: string) => {
     return callSignalingService.endCall(callId, reason);
+  });
+
+  ipcMain.handle('desktop-capturer:get-sources', async () => {
+    const sources = await desktopCapturer.getSources({ 
+      types: ['screen'], 
+      thumbnailSize: { width: 320, height: 180 } 
+    });
+    return sources.map(source => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL()
+    }));
   });
 }

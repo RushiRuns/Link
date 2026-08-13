@@ -22,6 +22,8 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [bitrate, setBitrate] = useState<number>(0);
   const [isConnected, setIsConnected] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const screenStreamRef = useRef<MediaStream | null>(null);
 
   const endCall = useCallsStore((s) => s.endCall);
   const updateCallStatus = useCallsStore((s) => s.updateCallStatus);
@@ -56,6 +58,10 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
   }, [isConnected]);
 
   const cleanup = useCallback(() => {
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current = null;
+    }
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((t) => t.stop());
       localStreamRef.current = null;
@@ -271,7 +277,62 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     }
   };
 
+  const stopScreenShare = async () => {
+    if (!isScreenSharing) return;
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach(t => t.stop());
+      screenStreamRef.current = null;
+    }
+
+    if (pcRef.current && localStreamRef.current) {
+      const videoSender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+      const webcamTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoSender && webcamTrack) {
+        await videoSender.replaceTrack(webcamTrack);
+      }
+    }
+
+    setIsScreenSharing(false);
+  };
+
+  const startScreenShare = async (sourceId: string) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: sourceId
+          }
+        } as any
+      });
+
+      screenStreamRef.current = stream;
+      const screenTrack = stream.getVideoTracks()[0];
+
+      if (pcRef.current) {
+        const videoSender = pcRef.current.getSenders().find(s => s.track?.kind === 'video');
+        if (videoSender) {
+          await videoSender.replaceTrack(screenTrack);
+        }
+      }
+
+      screenTrack.onended = () => {
+        stopScreenShare();
+      };
+
+      setIsScreenSharing(true);
+    } catch (err) {
+      console.error('[WebRTC] Failed to start screen share', err);
+    }
+  };
+
   const toggleVideo = () => {
+    if (isScreenSharing) {
+      stopScreenShare();
+      return;
+    }
     if (localStreamRef.current) {
       const videoTrack = localStreamRef.current.getVideoTracks()[0];
       if (videoTrack) {
@@ -291,6 +352,9 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     isAudioMuted,
     isVideoMuted,
     bitrate,
+    isScreenSharing,
+    startScreenShare,
+    stopScreenShare,
     toggleAudio,
     toggleVideo,
     cleanup

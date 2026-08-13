@@ -192,5 +192,8 @@ contextBridge.exposeInMainWorld("link", {
       ipcRenderer.on("theme:changed", listener);
       return () => ipcRenderer.removeListener("theme:changed", listener);
     }
+  },
+  desktopCapturer: {
+    getSources: () => ipcRenderer.invoke('desktop-capturer:get-sources')
   }
 });

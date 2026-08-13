@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
+import { ScreenPickerModal } from './ScreenPickerModal';
 import { User, Shield, MicOff, VideoOff, Loader2, Minimize2, Maximize2, PhoneOff, MessageSquare, Activity } from 'lucide-react';
 import { playRingbackTone, stopRingbackTone } from '../../utils/audio';
 import { useAppStore } from '../../stores/app.store';
@@ -10,6 +11,7 @@ export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
   const [duration, setDuration] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showScreenPicker, setShowScreenPicker] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
@@ -26,6 +28,9 @@ export function CallScreen() {
     isAudioMuted,
     isVideoMuted,
     bitrate,
+    isScreenSharing,
+    startScreenShare,
+    stopScreenShare,
     toggleAudio,
     toggleVideo
   } = useWebRTC({
@@ -389,17 +394,31 @@ export function CallScreen() {
       </div>
 
       <div style={{ width: '100%', maxWidth: 900, display: 'flex', justifyContent: 'center' }}>
-          <CallControls
-            mediaType={activeCall.mediaType}
-            isAudioMuted={isAudioMuted}
-            isVideoMuted={isVideoMuted}
-            onToggleAudio={toggleAudio}
-            onToggleVideo={toggleVideo}
-            onEndCall={endCall}
-            isMediaReady={isConnected || !!localStream}
-          />
-        </div>
+        <CallControls
+          mediaType={activeCall?.mediaType || 'voice'}
+          isAudioMuted={isAudioMuted}
+          isVideoMuted={isVideoMuted}
+          onToggleAudio={toggleAudio}
+          onToggleVideo={toggleVideo}
+          onEndCall={() => endCall()}
+          isMediaReady={isConnected}
+          isScreenSharing={isScreenSharing}
+          onToggleScreenShare={() => {
+            if (isScreenSharing) stopScreenShare();
+            else setShowScreenPicker(true);
+          }}
+        />
       </div>
+    </div>
+      {showScreenPicker && (
+        <ScreenPickerModal
+          onSelect={(sourceId) => {
+            startScreenShare(sourceId);
+            setShowScreenPicker(false);
+          }}
+          onCancel={() => setShowScreenPicker(false)}
+        />
+      )}
     </div>
   );
 }
