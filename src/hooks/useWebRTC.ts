@@ -20,11 +20,40 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
 
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
+  const [bitrate, setBitrate] = useState<number>(0);
   const [isConnected, setIsConnected] = useState(false);
 
   const endCall = useCallsStore((s) => s.endCall);
   const updateCallStatus = useCallsStore((s) => s.updateCallStatus);
   const setMediaError = useCallsStore((s) => s.setMediaError);
+
+  // Monitor Bitrate
+  useEffect(() => {
+    if (!isConnected) return;
+    let lastBytes = 0;
+    let lastTime = 0;
+    const interval = setInterval(async () => {
+      if (!pcRef.current) return;
+      try {
+        const stats = await pcRef.current.getStats();
+        stats.forEach(report => {
+          if (report.type === 'inbound-rtp' && (report.mediaType === 'video' || report.mediaType === 'audio')) {
+             if (report.bytesReceived) {
+                const now = report.timestamp;
+                const bytes = report.bytesReceived;
+                if (lastTime && lastBytes) {
+                   const br = (8 * (bytes - lastBytes)) / (now - lastTime); // kbps
+                   if (br > 0) setBitrate(Math.round(br));
+                }
+                lastBytes = bytes;
+                lastTime = now;
+             }
+          }
+        });
+      } catch (e) {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isConnected]);
 
   const cleanup = useCallback(() => {
     if (localStreamRef.current) {
@@ -261,6 +290,7 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
     isConnected,
     isAudioMuted,
     isVideoMuted,
+    bitrate,
     toggleAudio,
     toggleVideo,
     cleanup

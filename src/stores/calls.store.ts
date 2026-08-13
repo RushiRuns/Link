@@ -11,6 +11,7 @@ export interface ActiveCallInfo {
   sdpOffer?: string;
   isRemoteAudioMuted?: boolean;
   isRemoteVideoMuted?: boolean;
+  connectedAt?: number;
 }
 
 interface CallsState {
@@ -46,7 +47,11 @@ export const useCallsStore = create<CallsState>((set, get) => ({
   updateCallStatus: (status) => {
     set((state) => {
       if (state.activeCall) {
-        return { activeCall: { ...state.activeCall, status } };
+        const update: Partial<ActiveCallInfo> = { status };
+        if (status === 'connected' && state.activeCall.status !== 'connected') {
+          update.connectedAt = Date.now();
+        }
+        return { activeCall: { ...state.activeCall, ...update } };
       }
       return state;
     });
@@ -64,8 +69,51 @@ export const useCallsStore = create<CallsState>((set, get) => ({
   endCall: async (reason?: string) => {
     const { activeCall, incomingCall } = get();
     const callsToEnd = new Map<string, any>();
-    if (activeCall) callsToEnd.set(activeCall.callId, activeCall);
-    if (incomingCall) callsToEnd.set(incomingCall.callId, incomingCall);
+    
+    const logCall = (call: ActiveCallInfo, endReason: string) => {
+      const formatTime = (secs: number) => {
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        if (m >= 60) {
+          const h = Math.floor(m / 60);
+          const rm = m % 60;
+          return `${h.toString().padStart(2, '0')}:${rm.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      };
+      
+      let msgContent = `${call.mediaType === 'video' ? 'Video' : 'Voice'} call ended`;
+      if (endReason === 'declined') msgContent = call.isIncoming ? 'You declined the call' : 'Peer declined the call';
+      if (endReason === 'no_answer') msgContent = 'Missed call';
+      if (endReason === 'busy') msgContent = 'User busy';
+      
+      if (call.connectedAt && (endReason === 'ended' || !endReason)) {
+        const durationSecs = Math.floor((Date.now() - call.connectedAt) / 1000);
+        msgContent += ` • ${formatTime(durationSecs)}`;
+      }
+      
+      // Dynamic import to avoid circular dependency
+      import('./conversations.store').then(({ useConversationsStore }) => {
+        useConversationsStore.getState().addMessage({
+          id: 'sys_' + Math.random().toString(36).substring(7),
+          conversationId: call.peerId,
+          senderId: 'system',
+          senderName: 'System',
+          content: msgContent,
+          timestamp: Date.now(),
+          deliveryStatus: 'delivered'
+        });
+      });
+    };
+
+    if (activeCall) {
+      callsToEnd.set(activeCall.callId, activeCall);
+      logCall(activeCall, reason || 'ended');
+    }
+    if (incomingCall) {
+      callsToEnd.set(incomingCall.callId, incomingCall);
+      if (!activeCall) logCall(incomingCall, reason || 'no_answer');
+    }
 
     stopNotificationSound();
     set({ activeCall: null, incomingCall: null });

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
-import { User, Shield, MicOff, VideoOff, Loader2, Minimize2, Maximize2, PhoneOff } from 'lucide-react';
+import { User, Shield, MicOff, VideoOff, Loader2, Minimize2, Maximize2, PhoneOff, MessageSquare, Activity } from 'lucide-react';
 import { playRingbackTone, stopRingbackTone } from '../../utils/audio';
+import { useAppStore } from '../../stores/app.store';
 
 export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
@@ -24,6 +25,7 @@ export function CallScreen() {
     isConnected,
     isAudioMuted,
     isVideoMuted,
+    bitrate,
     toggleAudio,
     toggleVideo
   } = useWebRTC({
@@ -248,10 +250,30 @@ export function CallScreen() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
-            <Shield size={14} color={isConnected ? "var(--status-online)" : "var(--text-secondary)"} />
-            <span>{isConnected ? "Encrypted WebRTC Stream" : "Establishing Encrypted Stream..."}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
+              <Shield size={14} color={isConnected ? "var(--status-online)" : "var(--text-secondary)"} />
+              <span>{isConnected ? "Encrypted WebRTC Stream" : "Establishing Encrypted Stream..."}</span>
+            </div>
+            {isConnected && bitrate > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                <Activity size={12} />
+                <span>{bitrate} kbps</span>
+              </div>
+            )}
           </div>
+          
+          <button 
+            onClick={() => {
+              useAppStore.getState().setSelectedPeer(activeCall.peerId);
+              setIsMinimized(true);
+            }}
+            style={{ background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px 12px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 600, transition: 'background 0.2s' }}
+            title="Go to Chat"
+          >
+            <MessageSquare size={14} /> Go to Chat
+          </button>
+
           <button 
             onClick={() => setIsMinimized(true)}
             style={{ background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
