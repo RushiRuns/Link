@@ -1,8 +1,18 @@
+import { useEffect } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { Phone, Video, PhoneOff } from 'lucide-react';
 
 export function IncomingCallModal() {
   const { incomingCall, setActiveCall, setIncomingCall, endCall } = useCallsStore();
+
+  useEffect(() => {
+    if (incomingCall) {
+      const timer = setTimeout(() => {
+        endCall('no_answer');
+      }, 30000);
+      return () => clearTimeout(timer);
+    }
+  }, [incomingCall, endCall]);
 
   if (!incomingCall) return null;
 

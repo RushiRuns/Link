@@ -33,7 +33,15 @@ export const useCallsStore = create<CallsState>((set, get) => ({
 
   setMediaError: (error) => set({ mediaError: error }),
   setIncomingCall: (call) => set({ incomingCall: call }),
-  setActiveCall: (call) => set({ activeCall: call }),
+  setActiveCall: (call) => {
+    set({ activeCall: call });
+    if (call && !call.isIncoming && !window.link?.calls) {
+      setTimeout(() => {
+        get().setMediaError('Calls require Electron IPC (Preview Mode)');
+        get().endCall('failed');
+      }, 500);
+    }
+  },
 
   updateCallStatus: (status) => {
     set((state) => {
@@ -74,9 +82,18 @@ export const useCallsStore = create<CallsState>((set, get) => ({
   },
 
   initListeners: () => {
-    if (!window.link?.calls) return () => {};
+    if (!window.link?.calls) {
+      console.warn('[CallsStore] window.link.calls is missing. Calls will not function in browser preview mode.');
+      return () => {};
+    }
 
     const cleanOffer = window.link.calls.onOfferReceived((call) => {
+      if (get().activeCall || get().incomingCall) {
+        console.warn(`[CallsStore] Call collision detected: automatically rejecting offer ${call.id} as 'busy'.`);
+        window.link.calls.endCall(call.id, 'busy');
+        return;
+      }
+
       const incoming: ActiveCallInfo = {
         callId: call.id,
         peerId: call.initiatorId,

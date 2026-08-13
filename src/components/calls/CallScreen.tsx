@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
-import { User, Shield, MicOff, VideoOff } from 'lucide-react';
+import { User, Shield, MicOff, VideoOff, Loader2 } from 'lucide-react';
 
 export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
@@ -183,6 +183,13 @@ export function CallScreen() {
                 backgroundColor: '#000000'
               }}
             >
+              {!localStream && (
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#222', zIndex: 2 }}>
+                  <Loader2 size={24} className="spin-animation" color="var(--accent-primary)" />
+                  <span style={{ fontSize: '0.7rem', color: '#aaa', marginTop: 4 }}>Initializing...</span>
+                  <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .spin-animation { animation: spin 1s linear infinite; }`}</style>
+                </div>
+              )}
               <video
                 ref={localVideoRef}
                 autoPlay
@@ -216,10 +223,12 @@ export function CallScreen() {
               )}
             </div>
             <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>
-              {activeCall.status === 'declined' ? 'Call Declined' :
-               activeCall.status === 'no_answer' ? 'No Answer' :
+              {activeCall.status === 'declined' ? (activeCall.isIncoming ? 'You Declined' : 'Peer Declined') :
+               activeCall.status === 'no_answer' ? (activeCall.isIncoming ? 'Missed Call' : 'No Answer') :
+               activeCall.status === 'ringing' ? 'Ringing...' :
+               activeCall.status === 'connecting' ? 'Connecting...' :
                activeCall.status === 'busy' ? 'User Busy' :
-               isConnected ? 'Voice Call Connected' : 'Ringing...'}
+               activeCall.status === 'ended' ? 'Call Ended' : 'Connecting...'}
             </div>
             {/* Hidden audio element for remote voice stream */}
             <audio ref={remoteAudioRef} autoPlay />

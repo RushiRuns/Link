@@ -146,12 +146,14 @@ export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOff
       });
     }
 
+    const constraints: MediaStreamConstraints = {
+      audio: true,
+      ...(mediaType === 'video' ? { video: true } : {})
+    };
+
     // Acquire local media stream (microphone / camera)
     navigator.mediaDevices
-      .getUserMedia({
-        audio: true,
-        video: mediaType === 'video'
-      })
+      .getUserMedia(constraints)
       .then(async (stream) => {
         // If the effect was cleaned up while getUserMedia was pending, stop tracks and bail out
         if (!isMounted) {
