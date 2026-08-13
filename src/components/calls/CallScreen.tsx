@@ -207,7 +207,7 @@ export function CallScreen() {
               <button onClick={() => setIsMinimized(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 4 }} title="Expand">
                 <Maximize2 size={18} />
               </button>
-              <button onClick={endCall} style={{ background: 'var(--status-error)', border: 'none', color: '#fff', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="End Call">
+              <button onClick={() => endCall()} style={{ background: 'var(--status-error)', border: 'none', color: '#fff', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="End Call">
                 <PhoneOff size={16} />
               </button>
            </div>
