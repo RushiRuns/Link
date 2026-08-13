@@ -13,7 +13,7 @@ interface UseWebRTCOptions {
 export function useWebRTC({ callId, peerId, mediaType, isIncoming, initialSdpOffer }: UseWebRTCOptions) {
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
-  const remoteStreamRef = useRef<MediaStream | null>(null);
+
 
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);

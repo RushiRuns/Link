@@ -158,6 +158,7 @@ contextBridge.exposeInMainWorld("link", {
     offerCall: (callId, peerId, mediaType, sdp) => ipcRenderer.invoke("calls:offer", callId, peerId, mediaType, sdp),
     answerCall: (callId, accepted, sdp) => ipcRenderer.invoke("calls:answer", callId, accepted, sdp),
     sendIceCandidate: (callId, candidate) => ipcRenderer.invoke("calls:ice-candidate", callId, candidate),
+    sendMuteStatus: (callId, audioMuted, videoMuted) => ipcRenderer.invoke("calls:mute-status", callId, audioMuted, videoMuted),
     endCall: (callId, reason) => ipcRenderer.invoke("calls:end", callId, reason),
     onOfferReceived: (callback) => {
       const listener = (_, call) => callback(call);
@@ -178,6 +179,11 @@ contextBridge.exposeInMainWorld("link", {
       const listener = (_, data) => callback(data);
       ipcRenderer.on("calls:ended", listener);
       return () => ipcRenderer.removeListener("calls:ended", listener);
+    },
+    onMuteReceived: (callback) => {
+      const listener = (_, data) => callback(data);
+      ipcRenderer.on("calls:muted", listener);
+      return () => ipcRenderer.removeListener("calls:muted", listener);
     }
   },
   theme: {
