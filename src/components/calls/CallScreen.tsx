@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useCallsStore } from '../../stores/calls.store';
 import { useWebRTC } from '../../hooks/useWebRTC';
 import { CallControls } from './CallControls';
-import { User, Shield, MicOff, VideoOff, Loader2 } from 'lucide-react';
+import { User, Shield, MicOff, VideoOff, Loader2, Minimize2, Maximize2, PhoneOff } from 'lucide-react';
 import { playRingbackTone, stopRingbackTone } from '../../utils/audio';
 
 export function CallScreen() {
   const { activeCall, endCall } = useCallsStore();
   const [duration, setDuration] = useState(0);
+  const [isMinimized, setIsMinimized] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
@@ -151,22 +152,71 @@ export function CallScreen() {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#0d0e12',
-        zIndex: 1200,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 'var(--space-6)',
-        color: '#ffffff'
-      }}
+      style={
+        isMinimized
+          ? {
+              position: 'fixed',
+              top: 16,
+              right: 16,
+              width: 320,
+              backgroundColor: 'var(--bg-card)',
+              zIndex: 1200,
+              display: 'flex',
+              flexDirection: 'column',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-lg)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
+              overflow: 'hidden',
+              transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+            }
+          : {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#0d0e12',
+              zIndex: 1200,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 'var(--space-6)',
+              color: '#ffffff',
+              transition: 'all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+            }
+      }
     >
+      {/* Minimized Floating Bar */}
+      {isMinimized && (
+        <div style={{ display: 'flex', padding: '12px 16px', alignItems: 'center', justifyContent: 'space-between' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: avatarColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                {getInitials(activeCall.peerName)}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{activeCall.peerName || 'Teammate'}</span>
+                <span style={{ fontSize: '0.75rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
+                   {isConnected ? formatTime(duration) : 'Connecting...'}
+                </span>
+              </div>
+           </div>
+           
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button onClick={() => setIsMinimized(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 4 }} title="Expand">
+                <Maximize2 size={18} />
+              </button>
+              <button onClick={endCall} style={{ background: 'var(--status-error)', border: 'none', color: '#fff', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="End Call">
+                <PhoneOff size={16} />
+              </button>
+           </div>
+        </div>
+      )}
+
+      {/* Full-Screen Content Wrapper */}
+      <div style={{ display: isMinimized ? 'none' : 'flex', flexDirection: 'column', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+        
       {/* Call Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: 900 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -197,9 +247,18 @@ export function CallScreen() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
-          <Shield size={14} color={isConnected ? "var(--status-online)" : "var(--text-secondary)"} />
-          <span>{isConnected ? "Encrypted WebRTC Stream" : "Establishing Encrypted Stream..."}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: isConnected ? 'var(--status-online)' : 'var(--text-secondary)' }}>
+            <Shield size={14} color={isConnected ? "var(--status-online)" : "var(--text-secondary)"} />
+            <span>{isConnected ? "Encrypted WebRTC Stream" : "Establishing Encrypted Stream..."}</span>
+          </div>
+          <button 
+            onClick={() => setIsMinimized(true)}
+            style={{ background: 'rgba(255, 255, 255, 0.1)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="Minimize Call"
+          >
+            <Minimize2 size={16} />
+          </button>
         </div>
       </div>
 
@@ -307,16 +366,18 @@ export function CallScreen() {
         )}
       </div>
 
-      {/* Control Bar */}
-      <CallControls
-        mediaType={activeCall.mediaType}
-        isAudioMuted={isAudioMuted}
-        isVideoMuted={isVideoMuted}
-        onToggleAudio={toggleAudio}
-        onToggleVideo={toggleVideo}
-        onEndCall={endCall}
-        isMediaReady={!!localStream}
-      />
+      <div style={{ width: '100%', maxWidth: 900, display: 'flex', justifyContent: 'center' }}>
+          <CallControls
+            mediaType={activeCall.mediaType}
+            isAudioMuted={isAudioMuted}
+            isVideoMuted={isVideoMuted}
+            onToggleAudio={toggleAudio}
+            onToggleVideo={toggleVideo}
+            onEndCall={endCall}
+            isMediaReady={isConnected || !!localStream}
+          />
+        </div>
+      </div>
     </div>
   );
 }
