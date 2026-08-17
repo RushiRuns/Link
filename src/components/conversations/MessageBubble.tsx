@@ -1,5 +1,5 @@
 import { LinkMessage } from '../../types/ipc';
-import { Copy, Edit2, Trash2, CornerUpLeft, Check, CheckCheck, Clock, AlertTriangle } from 'lucide-react';
+import { Copy, Edit2, Trash2, CornerUpLeft, Check, CheckCheck, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { usePeersStore } from '../../stores/peers.store';
 
@@ -223,7 +223,12 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
               {getSenderName(repliedMessage)}
             </div>
             <div style={{ whiteSpace: isReplyExpanded ? 'pre-wrap' : 'nowrap', overflow: isReplyExpanded ? 'visible' : 'hidden', textOverflow: isReplyExpanded ? 'clip' : 'ellipsis' }}>
-              {repliedMessage ? repliedMessage.content : <i>Message not found</i>}
+              {repliedMessage ? repliedMessage.content : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.8 }} title="The original message was deleted or cleared locally.">
+                  <AlertCircle size={12} strokeWidth={1.5} />
+                  <i>Original message unavailable</i>
+                </div>
+              )}
             </div>
           </div>
         )}

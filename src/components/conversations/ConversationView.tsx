@@ -3,6 +3,7 @@ import { LinkPeer, LinkIdentity } from '../../types/ipc';
 import { useConversationsStore } from '../../stores/conversations.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { useCallsStore } from '../../stores/calls.store';
+import { usePeersStore } from '../../stores/peers.store';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
@@ -30,6 +31,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   } = useConversationsStore();
   const { transfers } = useFileTransferStore();
   const { activeCall, incomingCall, setActiveCall } = useCallsStore();
+  const { peers } = usePeersStore();
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -184,8 +186,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
     });
   };
 
-  const isOffline = peer.status === 'offline';
-  const isVersionMismatch = peer.status === 'version_mismatch';
+  const livePeer = peers.get(peer.id) || peer;
+  const isOffline = livePeer.status === 'offline';
+  const isVersionMismatch = livePeer.status === 'version_mismatch';
   const isTyping = conversationId ? typingPeers.has(conversationId) : false;
   const isCallActive = activeCall !== null || incomingCall !== null;
   const isSelf = peer.id === localIdentity?.deviceId;
