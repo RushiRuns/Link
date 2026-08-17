@@ -55,12 +55,30 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const conversationMessages = conversationId ? (messages.get(conversationId) || []) : [];
   const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id && !t.groupId);
 
+  const [hasInitialScrolled, setHasInitialScrolled] = useState(false);
+
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const { scrollHeight, scrollTop, clientHeight } = scrollRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+      
+      if (isNearBottom || !hasInitialScrolled) {
+        scrollRef.current.scrollTop = scrollHeight;
+        if (!hasInitialScrolled) {
+          setHasInitialScrolled(true);
+        }
+      }
     }
-  }, [conversationMessages.length, peerTransfers.length]);
+  }, [conversationMessages.length, peerTransfers.length, hasInitialScrolled]);
+
+  const prevConversationId = useRef(conversationId);
+  useEffect(() => {
+    if (prevConversationId.current !== conversationId) {
+      prevConversationId.current = conversationId;
+      setHasInitialScrolled(false);
+    }
+  }, [conversationId]);
 
   const latestSentMessageId = [...conversationMessages].reverse().find(m => m.senderId === localIdentity?.deviceId)?.id;
   const editingMessageContent = conversationMessages.find(m => m.id === editingMessageId)?.content;

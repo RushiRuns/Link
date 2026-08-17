@@ -7,16 +7,16 @@ interface ConversationsState {
   messages: Map<string, LinkMessage[]>; // conversationId -> LinkMessage[]
   unreadCounts: Map<string, number>; // conversationId -> count
   typingPeers: Map<string, number>; // conversationId -> timestamp
-  editingMessageId: string | null;
-  replyingToMessageId: string | null;
+  editingMessageIds: Record<string, string | null>;
+  replyingToMessageIds: Record<string, string | null>;
   addMessage: (message: LinkMessage) => void;
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
   clearConversation: (conversationId: string) => void;
   setTyping: (conversationId: string) => void;
   clearExpiredTyping: () => void;
-  setEditingMessageId: (id: string | null) => void;
-  setReplyingToMessageId: (id: string | null) => void;
+  setEditingMessageId: (conversationId: string, id: string | null) => void;
+  setReplyingToMessageId: (conversationId: string, id: string | null) => void;
   editMessageLocally: (conversationId: string, messageId: string, newContent: string) => void;
   deleteMessageLocally: (conversationId: string, messageId: string) => void;
   sendMessage: (peerId: string, content: string, replyToMessageId?: string) => Promise<void>;
@@ -28,8 +28,8 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
   messages: new Map(),
   unreadCounts: new Map(),
   typingPeers: new Map(),
-  editingMessageId: null,
-  replyingToMessageId: null,
+  editingMessageIds: {},
+  replyingToMessageIds: {},
 
   addMessage: (message) => {
     const convId = message.conversationId || 'default';
@@ -119,8 +119,8 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
   },
 
-  setEditingMessageId: (id) => set({ editingMessageId: id }),
-  setReplyingToMessageId: (id) => set({ replyingToMessageId: id }),
+  setEditingMessageId: (conversationId, id) => set((state) => ({ editingMessageIds: { ...state.editingMessageIds, [conversationId]: id } })),
+  setReplyingToMessageId: (conversationId, id) => set((state) => ({ replyingToMessageIds: { ...state.replyingToMessageIds, [conversationId]: id } })),
 
   editMessageLocally: (conversationId, messageId, newContent) => {
     set((state) => {
