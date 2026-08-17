@@ -7,7 +7,7 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
-import { Shield, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
+import { Shield, UploadCloud, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { getConversationId } from '../../utils/conversation';
 
@@ -33,6 +33,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const [localIdentity, setLocalIdentity] = useState<LinkIdentity | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
   const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -187,25 +188,31 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!isOffline && !isVersionMismatch) {
-      setIsDragging(true);
+    e.stopPropagation();
+    if (!isOffline && !isVersionMismatch && !isSelf) {
+      dragCounter.current++;
+      if (dragCounter.current === 1) setIsDragging(true);
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    // Must prevent default to allow dropping
+    e.stopPropagation();
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragging(false);
+    e.stopPropagation();
+    if (!isOffline && !isVersionMismatch && !isSelf) {
+      dragCounter.current--;
+      if (dragCounter.current === 0) setIsDragging(false);
     }
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
     setIsDragging(false);
     
     if (isOffline || isVersionMismatch) return;
@@ -296,7 +303,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
             <div style={{ padding: 'var(--space-4)', backgroundColor: 'var(--accent-primary)', borderRadius: '50%', color: 'white' }}>
-              <Shield size={40} />
+              <UploadCloud size={40} />
             </div>
             <h2 style={{ margin: 0 }}>Drop files to send to {peer.displayName}</h2>
           </div>
@@ -464,7 +471,12 @@ export function ConversationView({ peer }: ConversationViewProps) {
           >
             <Shield size={32} strokeWidth={1.5} color="var(--text-secondary)" style={{ opacity: 0.5 }} />
             <div>Encrypted 1-to-1 conversation with {peer.displayName}</div>
-            <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>Send a message or start a call to begin</div>
+            <div style={{ fontSize: 'var(--font-size-meta)', opacity: 0.8 }}>
+              {isOffline ? 'Peer is offline. Messaging and calls are disabled.' 
+                : isVersionMismatch ? 'Peer version mismatch. Messaging and calls are disabled.'
+                : isSelf ? 'You cannot message yourself.'
+                : 'Send a message or start a call to begin'}
+            </div>
           </div>
         ) : (
           timelineItems.map((item) => {
@@ -618,7 +630,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
               }
             }
           }}
-          disabled={isOffline || isVersionMismatch}
+          disabled={isOffline || isVersionMismatch || isSelf}
+          disabledReason={isSelf ? 'You cannot message yourself' : isVersionMismatch ? 'Peer version mismatch — messaging unavailable' : 'Peer is offline — messaging unavailable'}
         />
       </div>
 
