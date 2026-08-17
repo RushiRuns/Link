@@ -80,6 +80,16 @@ export function ConversationView({ peer }: ConversationViewProps) {
     }
   }, [conversationId]);
 
+  const clearModalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (showClearConfirm && clearModalRef.current) {
+      const focusableElements = clearModalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      }
+    }
+  }, [showClearConfirm]);
+
   const latestSentMessageId = [...conversationMessages].reverse().find(m => m.senderId === localIdentity?.deviceId)?.id;
   const editingMessageId = conversationId ? (editingMessageIds[conversationId] ?? null) : null;
   const replyingToMessageId = conversationId ? (replyingToMessageIds[conversationId] ?? null) : null;
@@ -637,6 +647,35 @@ export function ConversationView({ peer }: ConversationViewProps) {
           }}
         >
           <div
+            ref={clearModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clear-modal-title"
+            tabIndex={-1}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setShowClearConfirm(false);
+                e.stopPropagation();
+              }
+              if (e.key === 'Tab') {
+                const focusableElements = e.currentTarget.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusableElements.length > 0) {
+                  const firstElement = focusableElements[0] as HTMLElement;
+                  const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+                  if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                      lastElement.focus();
+                      e.preventDefault();
+                    }
+                  } else {
+                    if (document.activeElement === lastElement) {
+                      firstElement.focus();
+                      e.preventDefault();
+                    }
+                  }
+                }
+              }
+            }}
             style={{
               width: 360,
               backgroundColor: 'var(--bg-card)',
@@ -647,7 +686,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              textAlign: 'center'
+              textAlign: 'center',
+              outline: 'none'
             }}
           >
             <div
@@ -661,7 +701,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
               <Trash2 size={26} color="var(--status-offline)" />
             </div>
             
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
+            <h3 id="clear-modal-title" style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
               Clear Conversation?
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-5)', lineHeight: 1.5 }}>

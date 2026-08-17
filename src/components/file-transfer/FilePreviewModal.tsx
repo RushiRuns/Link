@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, File as FileIcon, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface PreviewItem {
@@ -23,6 +23,22 @@ export function FilePreviewModal({ items, recipientName, onSend, onCancel }: Fil
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
 
   const currentItem = items[currentIndex];
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusableElements.length > 0) {
+        const textarea = modalRef.current.querySelector('textarea');
+        if (textarea) {
+          textarea.focus();
+        } else {
+          (focusableElements[0] as HTMLElement).focus();
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Generate previews for images via IPC to avoid local file restrictions
@@ -78,7 +94,36 @@ export function FilePreviewModal({ items, recipientName, onSend, onCancel }: Fil
   };
 
   return (
-    <div style={{
+    <div 
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+          e.stopPropagation();
+        }
+        if (e.key === 'Tab') {
+          const focusableElements = e.currentTarget.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          if (focusableElements.length > 0) {
+            const firstElement = focusableElements[0] as HTMLElement;
+            const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+            if (e.shiftKey) {
+              if (document.activeElement === firstElement) {
+                lastElement.focus();
+                e.preventDefault();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                firstElement.focus();
+                e.preventDefault();
+              }
+            }
+          }
+        }
+      }}
+      style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -88,7 +133,8 @@ export function FilePreviewModal({ items, recipientName, onSend, onCancel }: Fil
       zIndex: 10000,
       display: 'flex',
       flexDirection: 'column',
-      animation: 'fadeIn 0.2s ease-out'
+      animation: 'fadeIn 0.2s ease-out',
+      outline: 'none'
     }}>
       {/* Header */}
       <div style={{
