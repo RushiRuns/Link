@@ -9,6 +9,7 @@ import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { Shield, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { getConversationId } from '../../utils/conversation';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -42,7 +43,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   }, []);
 
   const conversationId = localIdentity
-    ? [localIdentity.deviceId, peer.id].sort().join('_')
+    ? getConversationId(localIdentity.deviceId, peer.id)
     : null;
 
   useEffect(() => {

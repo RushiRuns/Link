@@ -221,6 +221,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
             color: 'var(--text-secondary)'
           }}
         >
+          {message.isEdited && <span style={{ fontStyle: 'italic', marginRight: '2px' }} title="Edited">(edited)</span>}
           <span>{formattedTime}</span>
           {renderStatusTicks()}
         </div>

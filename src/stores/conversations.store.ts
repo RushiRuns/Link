@@ -130,7 +130,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
         const index = list.findIndex(m => m.id === messageId);
         if (index !== -1) {
           const newList = [...list];
-          newList[index] = { ...newList[index], content: newContent };
+          newList[index] = { ...newList[index], content: newContent, isEdited: true };
           nextMessages.set(conversationId, newList);
           return { messages: nextMessages };
         }
@@ -233,7 +233,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
           const idx = list.findIndex(m => m.id === event.messageId);
           if (idx !== -1 && list[idx].senderId === event.senderDeviceId) {
             const newList = [...list];
-            newList[idx] = { ...newList[idx], content: event.newContent };
+            newList[idx] = { ...newList[idx], content: event.newContent, isEdited: true };
             nextMessages.set(convId, newList);
             changed = true;
             break;

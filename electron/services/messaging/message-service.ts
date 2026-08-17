@@ -3,6 +3,7 @@ import { getOrGenerateIdentity } from '../identity/identity.js';
 import { v4 as uuidv4 } from 'uuid';
 import { messageStore } from '../storage/message-store.js';
 import { Notification } from 'electron';
+import { getConversationId } from '../../../src/utils/conversation.js';
 
 export interface SendMessageOptions {
   peerId: string;
@@ -50,7 +51,7 @@ class MessageService {
     const messageId = uuidv4();
     const now = Date.now();
 
-    const conversationId = [identity.deviceId, peerId].sort().join('_');
+    const conversationId = getConversationId(identity.deviceId, peerId);
 
     const payload: any = {
       messageId,
@@ -137,7 +138,7 @@ class MessageService {
     if (!payload || !payload.content) return;
 
     const identity = getOrGenerateIdentity();
-    const conversationId = [identity.deviceId, senderDeviceId].sort().join('_');
+    const conversationId = getConversationId(identity.deviceId, senderDeviceId);
 
     const incomingMsg = {
       id: payload.messageId || envelope.id,

@@ -48,6 +48,7 @@ export interface LinkMessage {
   replyToMessageId?: string;
   timestamp: number;
   deliveryStatus: DeliveryStatus;
+  isEdited?: boolean;
 }
 
 export interface GroupMember {

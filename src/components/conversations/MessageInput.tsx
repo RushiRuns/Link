@@ -65,10 +65,18 @@ export function MessageInput({
     }
   };
 
+  const handleCancelEdit = () => {
+    setContent('');
+    if (onCancelEdit) onCancelEdit();
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    } else if (e.key === 'Escape' && isEditing) {
+      e.preventDefault();
+      handleCancelEdit();
     }
   };
 
@@ -224,7 +232,7 @@ export function MessageInput({
         </button>
         {isEditing && (
           <button
-            onClick={onCancelEdit}
+            onClick={handleCancelEdit}
             title="Cancel edit"
             style={{
               display: 'flex',
