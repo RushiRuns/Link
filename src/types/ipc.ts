@@ -33,6 +33,7 @@ export interface LinkTypingEvent {
 export interface LinkMessageEditEvent {
   messageId: string;
   newContent: string;
+  editTimestamp?: number;
 }
 
 export interface LinkMessageDeleteEvent {
@@ -50,6 +51,7 @@ export interface LinkMessage {
   timestamp: number;
   deliveryStatus: DeliveryStatus;
   isEdited?: boolean;
+  lastEditTimestamp?: number;
 }
 
 export interface GroupMember {

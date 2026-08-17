@@ -110,7 +110,7 @@ class MessageService {
       type: 'message.edit',
       id: uuidv4(),
       ts: Date.now(),
-      payload: { messageId, newContent }
+      payload: { messageId, newContent, editTimestamp: Date.now() }
     });
   }
 
@@ -197,7 +197,8 @@ class MessageService {
       this.windowRef?.webContents?.send('message:edited', {
         senderDeviceId,
         messageId: payload.messageId,
-        newContent: payload.newContent
+        newContent: payload.newContent,
+        editTimestamp: payload.editTimestamp || envelope.ts || Date.now()
       });
     }
   }

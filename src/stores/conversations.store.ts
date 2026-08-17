@@ -134,7 +134,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
         const index = list.findIndex(m => m.id === messageId);
         if (index !== -1) {
           const newList = [...list];
-          newList[index] = { ...newList[index], content: newContent, isEdited: true };
+          newList[index] = { ...newList[index], content: newContent, isEdited: true, lastEditTimestamp: Date.now() };
           nextMessages.set(conversationId, newList);
           return { messages: nextMessages };
         }
@@ -241,10 +241,19 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
         for (const [convId, list] of nextMessages.entries()) {
           const idx = list.findIndex(m => m.id === event.messageId);
           if (idx !== -1 && list[idx].senderId === event.senderDeviceId) {
-            const newList = [...list];
-            newList[idx] = { ...newList[idx], content: event.newContent, isEdited: true };
-            nextMessages.set(convId, newList);
-            changed = true;
+            const currentLastEdit = list[idx].lastEditTimestamp || 0;
+            const newEditTime = event.editTimestamp || 0;
+            if (newEditTime >= currentLastEdit) {
+              const newList = [...list];
+              newList[idx] = { 
+                ...newList[idx], 
+                content: event.newContent, 
+                isEdited: true,
+                lastEditTimestamp: newEditTime
+              };
+              nextMessages.set(convId, newList);
+              changed = true;
+            }
             break;
           }
         }

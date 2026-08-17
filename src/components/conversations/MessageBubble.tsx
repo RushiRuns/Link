@@ -51,7 +51,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
   const renderContentWithLinks = (text: string) => {
     // Basic regex to match http:// and https:// URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urlRegex = /(https?:\/\/[^\s]*[^\s.,!?"'])/g;
     const parts = text.split(urlRegex);
 
     return parts.map((part, i) => {

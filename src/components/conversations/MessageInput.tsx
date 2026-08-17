@@ -65,10 +65,12 @@ export function MessageInput({
     }
   };
 
+  const isContentEmpty = !content.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+
   const handleSend = () => {
     const now = Date.now();
     if (now - lastSendTime.current < 500) return; // Prevent rapid double-sends
-    const trimmed = content.trim();
+    const trimmed = content.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
     if (!trimmed || disabled) return;
     
     lastSendTime.current = now;
@@ -233,7 +235,7 @@ export function MessageInput({
 
         <button
           onClick={handleSend}
-          disabled={disabled || !content.trim()}
+          disabled={disabled || isContentEmpty}
           title={isEditing ? 'Update message' : 'Send message'}
           style={{
             display: 'flex',
@@ -242,10 +244,10 @@ export function MessageInput({
             width: 30,
             height: 30,
             borderRadius: 'var(--radius-sm)',
-            backgroundColor: disabled || !content.trim() ? 'var(--bg-card)' : 'var(--accent-primary)',
-            color: disabled || !content.trim() ? 'var(--text-muted)' : '#ffffff',
+            backgroundColor: disabled || isContentEmpty ? 'var(--bg-card)' : 'var(--accent-primary)',
+            color: disabled || isContentEmpty ? 'var(--text-muted)' : '#ffffff',
             border: 'none',
-            cursor: disabled || !content.trim() ? 'default' : 'pointer',
+            cursor: disabled || isContentEmpty ? 'default' : 'pointer',
             transition: 'background-color var(--transition-fast)',
             flexShrink: 0
           }}
