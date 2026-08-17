@@ -66,6 +66,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const replyingToMessage = conversationMessages.find(m => m.id === replyingToMessageId);
 
   const handleSend = (text: string) => {
+    if (!conversationId) return;
     if (editingMessageId) {
       if (window.link?.messaging) {
         window.link.messaging.sendEditMessage(peer.id, editingMessageId, text);
@@ -83,6 +84,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   };
 
   const handleDelete = (messageId: string) => {
+    if (!conversationId) return;
     if (window.link?.messaging) {
       window.link.messaging.sendDeleteMessage(peer.id, messageId);
       deleteMessageLocally(conversationId, messageId);
@@ -136,7 +138,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const isOffline = peer.status === 'offline';
   const isVersionMismatch = peer.status === 'version_mismatch';
-  const isTyping = typingPeers.has(conversationId);
+  const isTyping = conversationId ? typingPeers.has(conversationId) : false;
   const isCallActive = activeCall !== null || incomingCall !== null;
   const isSelf = peer.id === localIdentity?.deviceId;
 
@@ -644,7 +646,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
               <button
                 onClick={() => {
-                  useConversationsStore.getState().clearConversation(conversationId);
+                  useConversationsStore.getState().clearConversation(conversationId!);
                   useFileTransferStore.getState().clearPeerTransfers(peer.id);
                   setShowClearConfirm(false);
                 }}
