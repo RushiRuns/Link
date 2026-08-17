@@ -49,7 +49,7 @@ export interface LinkAPI {
     ackMessageReceipt: (peerId: string, messageId: string) => Promise<void>;
     onMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
     onMessageDelivered: (callback: (messageId: string) => void) => () => void;
-    sendTypingSignal: (peerId: string, groupId?: string) => Promise<void>;
+    sendTypingSignal: (peerId: string, isTyping: boolean, groupId?: string) => Promise<void>;
     onTypingReceived: (callback: (event: LinkTypingEvent) => void) => () => void;
     sendEditMessage: (peerId: string, messageId: string, newContent: string) => Promise<void>;
     sendDeleteMessage: (peerId: string, messageId: string) => Promise<void>;

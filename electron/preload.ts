@@ -53,7 +53,7 @@ contextBridge.exposeInMainWorld('link', {
       ipcRenderer.on('message:delivered', listener);
       return () => ipcRenderer.removeListener('message:delivered', listener);
     },
-    sendTypingSignal: (peerId: string, groupId?: string) => ipcRenderer.invoke('messaging:send-typing', peerId, groupId),
+    sendTypingSignal: (peerId: string, isTyping: boolean, groupId?: string) => ipcRenderer.invoke('messaging:send-typing', peerId, isTyping, groupId),
     onTypingReceived: (callback: EventCallback) => {
       const listener = (_: any, event: any) => callback(event);
       ipcRenderer.on('message:typing', listener);

@@ -13,7 +13,7 @@ interface ConversationsState {
   updateDeliveryStatus: (messageId: string, status: LinkMessage['deliveryStatus']) => void;
   markConversationRead: (conversationId: string) => void;
   clearConversation: (conversationId: string) => void;
-  setTyping: (conversationId: string) => void;
+  setTyping: (conversationId: string, isTyping?: boolean) => void;
   clearExpiredTyping: () => void;
   setEditingMessageId: (conversationId: string, id: string | null) => void;
   setReplyingToMessageId: (conversationId: string, id: string | null) => void;
@@ -96,10 +96,14 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     });
   },
 
-  setTyping: (conversationId) => {
+  setTyping: (conversationId, isTyping = true) => {
     set((state) => {
       const nextTyping = new Map(state.typingPeers);
-      nextTyping.set(conversationId, Date.now());
+      if (isTyping) {
+        nextTyping.set(conversationId, Date.now());
+      } else {
+        nextTyping.delete(conversationId);
+      }
       return { typingPeers: nextTyping };
     });
   },
@@ -110,7 +114,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       let changed = false;
       const nextTyping = new Map(state.typingPeers);
       for (const [convId, timestamp] of nextTyping.entries()) {
-        if (now - timestamp > 3000) { // 3 seconds timeout
+        if (now - timestamp > 5000) { // 5 seconds timeout
           nextTyping.delete(convId);
           changed = true;
         }
@@ -221,7 +225,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
     const cleanTyping = window.link.messaging.onTypingReceived((event) => {
       if (event.conversationId) {
-        get().setTyping(event.conversationId);
+        get().setTyping(event.conversationId, event.isTyping);
       }
     });
 

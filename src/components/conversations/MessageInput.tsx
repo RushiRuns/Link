@@ -8,7 +8,7 @@ interface MessageInputProps {
   onAttachSelective?: () => void;
   onPasteFile?: (path: string) => void;
   onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
-  onTyping?: () => void;
+  onTyping?: (isTyping: boolean) => void;
   initialValue?: string;
   isEditing?: boolean;
   onCancelEdit?: () => void;
@@ -45,13 +45,19 @@ export function MessageInput({
   }, [initialValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+    const newContent = e.target.value;
+    setContent(newContent);
     
     if (onTyping) {
-      const now = Date.now();
-      if (now - lastTypingTime.current > 2000) {
-        lastTypingTime.current = now;
-        onTyping();
+      if (newContent === '') {
+        onTyping(false);
+        lastTypingTime.current = 0;
+      } else {
+        const now = Date.now();
+        if (now - lastTypingTime.current > 2000) {
+          lastTypingTime.current = now;
+          onTyping(true);
+        }
       }
     }
   };
@@ -62,11 +68,15 @@ export function MessageInput({
     onSend(trimmed);
     if (!isEditing) {
       setContent('');
+      if (onTyping) onTyping(false);
+      lastTypingTime.current = 0;
     }
   };
 
   const handleCancelEdit = () => {
     setContent('');
+    if (onTyping) onTyping(false);
+    lastTypingTime.current = 0;
     if (onCancelEdit) onCancelEdit();
   };
 
@@ -98,7 +108,7 @@ export function MessageInput({
     }
   };
 
-  const charCount = content.length;
+  const charCount = content.trim().length;
   const isNearLimit = charCount > MAX_CHAR_LIMIT * 0.8;
 
   return (

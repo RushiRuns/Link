@@ -81,6 +81,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
   }, [conversationId]);
 
   const latestSentMessageId = [...conversationMessages].reverse().find(m => m.senderId === localIdentity?.deviceId)?.id;
+  const editingMessageId = conversationId ? (editingMessageIds[conversationId] ?? null) : null;
+  const replyingToMessageId = conversationId ? (replyingToMessageIds[conversationId] ?? null) : null;
   const editingMessageContent = conversationMessages.find(m => m.id === editingMessageId)?.content;
   const replyingToMessage = conversationMessages.find(m => m.id === replyingToMessageId);
 
@@ -576,9 +578,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
           isEditing={!!editingMessageId}
           onCancelEdit={() => { if (conversationId) setEditingMessageId(conversationId, null); }}
           onSend={handleSend}
-          onTyping={() => {
+          onTyping={(isTyping) => {
             if (window.link?.messaging) {
-              window.link.messaging.sendTypingSignal(peer.id);
+              window.link.messaging.sendTypingSignal(peer.id, isTyping);
             }
           }}
           onAttachFile={handleAttachFile}

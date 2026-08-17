@@ -87,10 +87,10 @@ class MessageService {
     return linkMsg;
   }
 
-  public sendTypingSignal(peerId: string, groupId?: string) {
+  public sendTypingSignal(peerId: string, isTyping: boolean, groupId?: string) {
     const identity = getOrGenerateIdentity();
     
-    let payload: any = {};
+    let payload: any = { isTyping };
     if (groupId) {
       payload.groupId = groupId;
     } else {

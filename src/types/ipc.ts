@@ -27,6 +27,7 @@ export interface LinkTypingEvent {
   peerId: string;
   conversationId?: string;
   groupId?: string;
+  isTyping?: boolean;
 }
 
 export interface LinkMessageEditEvent {

@@ -97,8 +97,8 @@ export function registerIpcHandlers() {
     return messageService.sendMessage(peerId, content, replyToMessageId);
   });
 
-  ipcMain.handle('messaging:send-typing', async (_, peerId: string, groupId?: string) => {
-    return messageService.sendTypingSignal(peerId, groupId);
+  ipcMain.handle('messaging:send-typing', async (_, peerId: string, isTyping: boolean, groupId?: string) => {
+    return messageService.sendTypingSignal(peerId, isTyping, groupId);
   });
 
   ipcMain.handle('messaging:edit-message', async (_, peerId: string, messageId: string, newContent: string) => {
