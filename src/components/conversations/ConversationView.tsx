@@ -372,11 +372,12 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
           {/* Call Initiation Buttons & Clear Button */}
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            {!isOffline && !isVersionMismatch && !isCallActive && !isSelf && (
+            {!isOffline && !isVersionMismatch && !isSelf && (
               <>
                 <button
                   onClick={() => handleStartCall('voice')}
-                  title="Start Voice Call"
+                  disabled={isCallActive}
+                  title={isCallActive ? "You are already in a call" : "Start Voice Call"}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -386,8 +387,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-card)',
-                    color: 'var(--text-primary)',
-                    cursor: 'pointer',
+                    color: isCallActive ? 'var(--text-muted)' : 'var(--text-primary)',
+                    cursor: isCallActive ? 'not-allowed' : 'pointer',
+                    opacity: isCallActive ? 0.5 : 1,
                     transition: 'background-color var(--transition-fast)'
                   }}
                 >
@@ -396,7 +398,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
                 <button
                   onClick={() => handleStartCall('video')}
-                  title="Start Video Call"
+                  disabled={isCallActive}
+                  title={isCallActive ? "You are already in a call" : "Start Video Call"}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -406,8 +409,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-card)',
-                    color: 'var(--accent-primary)',
-                    cursor: 'pointer',
+                    color: isCallActive ? 'var(--text-muted)' : 'var(--accent-primary)',
+                    cursor: isCallActive ? 'not-allowed' : 'pointer',
+                    opacity: isCallActive ? 0.5 : 1,
                     transition: 'background-color var(--transition-fast)'
                   }}
                 >

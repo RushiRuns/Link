@@ -18,6 +18,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete, onRetry }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isReplyExpanded, setIsReplyExpanded] = useState(false);
   const { peers } = usePeersStore();
 
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
@@ -94,11 +95,13 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
   return (
     <div
+      id={`msg-${message.id}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: isSelf ? 'flex-end' : 'flex-start',
-        marginBottom: 'var(--space-2)'
+        marginBottom: 'var(--space-2)',
+        transition: 'background-color 0.5s ease'
       }}
     >
       {showSenderLabel && !isSelf && (
@@ -192,6 +195,15 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
         
         {message.replyToMessageId && (
           <div
+            onClick={() => {
+              setIsReplyExpanded(prev => !prev);
+              const el = document.getElementById(`msg-${message.replyToMessageId}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.style.backgroundColor = 'var(--bg-hover)';
+                setTimeout(() => el.style.backgroundColor = 'transparent', 2000);
+              }
+            }}
             style={{
               backgroundColor: 'rgba(0,0,0,0.1)',
               borderLeft: '3px solid var(--accent-primary)',
@@ -202,14 +214,15 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
               opacity: 0.9,
               display: 'flex',
               flexDirection: 'column',
-              gap: '2px'
+              gap: '2px',
+              cursor: 'pointer'
             }}
           >
             <div style={{ color: 'var(--accent-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CornerUpLeft size={12} strokeWidth={2} />
               {getSenderName(repliedMessage)}
             </div>
-            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ whiteSpace: isReplyExpanded ? 'pre-wrap' : 'nowrap', overflow: isReplyExpanded ? 'visible' : 'hidden', textOverflow: isReplyExpanded ? 'clip' : 'ellipsis' }}>
               {repliedMessage ? repliedMessage.content : <i>Message not found</i>}
             </div>
           </div>
