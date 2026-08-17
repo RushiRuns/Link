@@ -138,12 +138,14 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const handleAttachFile = async () => {
     if (window.link?.dialog) {
-      const paths = await window.link.dialog.selectFiles();
-      if (paths && paths.length > 0) {
-        const items = paths.map(p => {
-          const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
-          return { path: p, name, size: 0, isFolder: false };
-        });
+      const files = await window.link.dialog.selectFiles();
+      if (files && files.length > 0) {
+        const items = files.map(f => ({
+          path: f.path,
+          name: f.name,
+          size: f.size,
+          isFolder: false
+        }));
         setPreviewItems(items);
       }
     }
@@ -151,10 +153,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const handleAttachFolder = async () => {
     if (window.link?.dialog) {
-      const path = await window.link.dialog.selectFolder();
-      if (path) {
-        const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
-        setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+      const folder = await window.link.dialog.selectFolder();
+      if (folder) {
+        setPreviewItems([{ path: folder.path, name: folder.name, size: 0, isFolder: true }]);
       }
     }
   };
@@ -595,10 +596,15 @@ export function ConversationView({ peer }: ConversationViewProps) {
           }}
           onAttachFile={handleAttachFile}
           onAttachFolder={handleAttachFolder}
-          onPasteFile={async (path) => {
-            if (path) {
-              const name = path.split('\\').pop()?.split('/').pop() || 'Pasted File';
-              setPreviewItems([{ path, name, size: 0, isFolder: false }]);
+          onPasteFile={async (pastedFiles) => {
+            if (pastedFiles && pastedFiles.length > 0) {
+              const items = pastedFiles.map(f => ({
+                path: f.path,
+                name: f.name,
+                size: f.size,
+                isFolder: false
+              }));
+              setPreviewItems(items);
             }
           }}
           onPasteBuffer={async (buffer, mimeType) => {

@@ -74,8 +74,8 @@ export interface LinkAPI {
     onGroupMemberRemoved: (callback: (data: { groupId: string, removedPeerId: string }) => void) => () => void;
   };
   dialog: {
-    selectFiles: () => Promise<string[]>;
-    selectFolder: () => Promise<string | null>;
+    selectFiles: () => Promise<Array<{ path: string; name: string; size: number }>>;
+    selectFolder: () => Promise<{ path: string; name: string } | null>;
   };
   fileTransfer: {
     offerFiles: (peerIds: string[], filePaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;

@@ -6,7 +6,7 @@ interface MessageInputProps {
   onAttachFile?: () => void;
   onAttachFolder?: () => void;
   onAttachSelective?: () => void;
-  onPasteFile?: (path: string) => void;
+  onPasteFile?: (files: Array<{ path: string; name: string; size: number }>) => void;
   onPasteBuffer?: (buffer: ArrayBuffer, mimeType: string) => void;
   onTyping?: (isTyping: boolean) => void;
   initialValue?: string;
@@ -99,16 +99,21 @@ export function MessageInput({
     if (e.clipboardData.files && e.clipboardData.files.length > 0) {
       e.preventDefault();
       const files = Array.from(e.clipboardData.files);
+      const pastedFiles: Array<{ path: string; name: string; size: number }> = [];
       
       for (const file of files) {
         // @ts-ignore - path exists in Electron's File object implementation
         const path = file.path;
-        if (path && onPasteFile) {
-          onPasteFile(path);
+        if (path) {
+          pastedFiles.push({ path, name: file.name, size: file.size });
         } else if (onPasteBuffer) {
           const buffer = await file.arrayBuffer();
           onPasteBuffer(buffer, file.type);
         }
+      }
+      
+      if (pastedFiles.length > 0 && onPasteFile) {
+        onPasteFile(pastedFiles);
       }
     }
   };

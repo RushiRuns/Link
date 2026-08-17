@@ -104,7 +104,7 @@ class FileTransferService {
     return this.transfers.get(transferId);
   }
 
-  public async selectFiles(): Promise<string[]> {
+  public async selectFiles(): Promise<Array<{ path: string; name: string; size: number }>> {
     const result = await dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
       title: 'Select File(s) to Send'
@@ -113,10 +113,24 @@ class FileTransferService {
     if (result.canceled || result.filePaths.length === 0) {
       return [];
     }
-    return result.filePaths;
+    
+    const files = [];
+    for (const filePath of result.filePaths) {
+      try {
+        const stats = await fs.promises.stat(filePath);
+        files.push({
+          path: filePath,
+          name: path.basename(filePath),
+          size: stats.size
+        });
+      } catch (err) {
+        console.error('[FileTransfer] Failed to stat file', filePath, err);
+      }
+    }
+    return files;
   }
 
-  public async selectFolder(): Promise<string | null> {
+  public async selectFolder(): Promise<{ path: string; name: string } | null> {
     const result = await dialog.showOpenDialog({
       properties: ['openDirectory'],
       title: 'Select Folder to Send'
@@ -125,7 +139,11 @@ class FileTransferService {
     if (result.canceled || result.filePaths.length === 0) {
       return null;
     }
-    return result.filePaths[0];
+    const folderPath = result.filePaths[0];
+    return {
+      path: folderPath,
+      name: path.basename(folderPath)
+    };
   }
 
   public async offerFiles(peerIds: string[], filePaths: string[], groupId?: string, message?: string) {

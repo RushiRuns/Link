@@ -203,6 +203,7 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
 
   initListeners: () => {
     if (!window.link?.messaging) return () => {};
+    let lastNotificationTime = 0;
 
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
       get().addMessage(message);
@@ -214,8 +215,12 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       const { selectedPeerId } = useAppStore.getState();
       // Flash and play sound if we are not actively viewing this peer's chat, OR if the app is in the background
       if (selectedPeerId !== message.senderId || !document.hasFocus()) {
-        window.electron?.flashFrame(true);
-        playNotificationSound();
+        const now = Date.now();
+        if (now - lastNotificationTime > 1000) {
+          window.electron?.flashFrame(true);
+          playNotificationSound();
+          lastNotificationTime = now;
+        }
       }
     });
 
