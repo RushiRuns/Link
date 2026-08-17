@@ -159,6 +159,26 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
         get().addMessage(msg);
       } catch (err) {
         console.error('[ConversationsStore] Error sending message:', err);
+        try {
+          const id = await window.link.identity?.getIdentity();
+          if (id) {
+            const conversationId = [id.deviceId, peerId].sort().join('_');
+            const failedMsg: LinkMessage = {
+              id: 'failed_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+              conversationId,
+              senderId: id.deviceId,
+              recipientDeviceId: peerId,
+              content,
+              timestamp: Date.now(),
+              type: 'text',
+              deliveryStatus: 'failed',
+              replyToMessageId
+            };
+            get().addMessage(failedMsg);
+          }
+        } catch (e) {
+          console.error('Failed to add optimistic failed message', e);
+        }
       }
     }
   },

@@ -83,6 +83,12 @@ export function ConversationView({ peer }: ConversationViewProps) {
     navigator.clipboard.writeText(content).catch(console.error);
   };
 
+  const handleRetry = (msg: typeof conversationMessages[0]) => {
+    if (!conversationId) return;
+    deleteMessageLocally(conversationId, msg.id);
+    sendMessage(peer.id, msg.content, msg.replyToMessageId);
+  };
+
   const handleDelete = (messageId: string) => {
     if (!conversationId) return;
     if (window.link?.messaging) {
@@ -440,6 +446,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
                     setReplyingToMessageId(null); // Mutually exclusive
                   }}
                   onDelete={() => handleDelete(item.data.id)}
+                  onRetry={item.data.deliveryStatus === 'failed' ? () => handleRetry(item.data) : undefined}
                 />
               );
             }

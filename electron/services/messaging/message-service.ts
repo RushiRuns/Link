@@ -1,8 +1,8 @@
 import { connectionManager } from '../network/connection-manager.js';
 import { getOrGenerateIdentity } from '../identity/identity.js';
 import { v4 as uuidv4 } from 'uuid';
-import { showAndFocusWindow } from '../../main.js';
 import { messageStore } from '../storage/message-store.js';
+import { Notification } from 'electron';
 
 export interface SendMessageOptions {
   peerId: string;
@@ -154,8 +154,15 @@ class MessageService {
     // Forward received message to renderer
     this.windowRef?.webContents?.send('message:received', incomingMsg);
     
-    // Auto-unhide and focus window
-    showAndFocusWindow();
+    if (this.windowRef && !this.windowRef.isFocused()) {
+      this.windowRef.flashFrame(true);
+      if (Notification.isSupported()) {
+        new Notification({
+          title: `New message from ${incomingMsg.senderName}`,
+          body: incomingMsg.content
+        }).show();
+      }
+    }
   }
 
   private handleMessageAck(_senderDeviceId: string, envelope: any) {

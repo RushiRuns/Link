@@ -13,9 +13,10 @@ interface MessageBubbleProps {
   onCopy?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onRetry?: () => void;
 }
 
-export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete }: MessageBubbleProps) {
+export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete, onRetry }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const { peers } = usePeersStore();
 
@@ -42,7 +43,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
       case 'delivered':
         return <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 600 }} title="Delivered">✓✓</span>;
       case 'failed':
-        return <span style={{ color: 'var(--status-error)', fontSize: '11px' }} title="Failed to deliver">⚠️</span>;
+        return <span onClick={onRetry} style={{ color: 'var(--status-error)', fontSize: '11px', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry.">⚠️</span>;
       default:
         return null;
     }
