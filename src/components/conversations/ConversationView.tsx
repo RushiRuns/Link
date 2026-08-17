@@ -35,6 +35,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
   const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -215,7 +216,21 @@ export function ConversationView({ peer }: ConversationViewProps) {
     dragCounter.current = 0;
     setIsDragging(false);
     
-    if (isOffline || isVersionMismatch) return;
+    if (isOffline) {
+      setToastMessage('Cannot send files to an offline teammate.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    if (isVersionMismatch) {
+      setToastMessage('Cannot send files due to a version mismatch.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    if (isSelf) {
+      setToastMessage('Cannot send files to yourself.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const items: PreviewItem[] = [];
@@ -634,6 +649,29 @@ export function ConversationView({ peer }: ConversationViewProps) {
           disabledReason={isSelf ? 'You cannot message yourself' : isVersionMismatch ? 'Peer version mismatch — messaging unavailable' : 'Peer is offline — messaging unavailable'}
         />
       </div>
+
+      {toastMessage && (
+        <div style={{
+          position: 'absolute',
+          bottom: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'var(--bg-card)',
+          color: 'var(--text-primary)',
+          padding: 'var(--space-2) var(--space-4)',
+          borderRadius: 'var(--radius-full)',
+          boxShadow: 'var(--shadow-md)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+          fontSize: 'var(--font-size-meta)',
+          border: '1px solid var(--border-color)'
+        }}>
+          <AlertCircle size={14} />
+          {toastMessage}
+        </div>
+      )}
 
       {previewItems && (
         <FilePreviewModal

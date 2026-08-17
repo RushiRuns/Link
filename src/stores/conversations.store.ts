@@ -46,7 +46,8 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       if (message.deliveryStatus === 'delivered') {
         const { selectedPeerId } = useAppStore.getState();
         // Only increment unread count if we are not actively viewing this peer's chat
-        if (selectedPeerId !== message.senderId) {
+        const isActiveConversation = selectedPeerId && convId.split('_').includes(selectedPeerId);
+        if (!isActiveConversation) {
           const count = nextUnreads.get(convId) || 0;
           nextUnreads.set(convId, count + 1);
         }
