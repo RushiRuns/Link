@@ -13,6 +13,7 @@ interface MessageInputProps {
   isEditing?: boolean;
   onCancelEdit?: () => void;
   disabled?: boolean;
+  disabledReason?: string;
   placeholder?: string;
 }
 
@@ -32,7 +33,8 @@ export function MessageInput({
   initialValue,
   isEditing,
   onCancelEdit,
-  disabled, 
+  disabled,
+  disabledReason,
   placeholder 
 }: MessageInputProps) {
   const [content, setContent] = useState('');
@@ -211,7 +213,7 @@ export function MessageInput({
           value={content}
           maxLength={MAX_CHAR_LIMIT}
           disabled={disabled}
-          placeholder={disabled ? 'Peer is offline — messaging unavailable' : placeholder || 'Type a message...'}
+          placeholder={disabled ? (disabledReason || 'Peer is offline — messaging unavailable') : placeholder || 'Type a message...'}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}

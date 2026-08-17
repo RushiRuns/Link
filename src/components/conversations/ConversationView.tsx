@@ -313,8 +313,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
           backgroundColor: 'var(--bg-sidebar)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <div style={{ fontWeight: 600, fontSize: 'var(--font-size-header)' }}>{peer.displayName}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--font-size-header)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{peer.displayName}</div>
           <span
             style={{
               fontSize: 'var(--font-size-meta)',
@@ -323,7 +323,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
               backgroundColor: 'var(--bg-card)',
               padding: '2px 6px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-color)'
+              border: '1px solid var(--border-color)',
+              flexShrink: 0
             }}
           >
             Fingerprint: {peer.publicKeyFingerprint}
@@ -446,6 +447,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
           flexDirection: 'column'
         }}
       >
+        <div style={{ minHeight: '16px', flexShrink: 0 }} />
+
         {timelineItems.length === 0 ? (
           <div
             style={{
