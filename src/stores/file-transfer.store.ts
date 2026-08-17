@@ -27,7 +27,10 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
   addTransfer: (transfer) => {
     const transferWithTimestamp: LinkFileTransfer = {
       ...transfer,
-      startedAt: transfer.startedAt || Date.now()
+      startedAt: transfer.startedAt || Date.now(),
+      // Always stamp with local clock at insertion time for timeline sorting.
+      // This avoids remote clock skew pushing transfers to wrong positions.
+      localArrivalTimestamp: transfer.localArrivalTimestamp || Date.now()
     };
     set((state) => {
       const nextMap = new Map(state.transfers);

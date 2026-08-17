@@ -279,13 +279,15 @@ export function ConversationView({ peer }: ConversationViewProps) {
     ...unbatchedTransfers.map((transfer) => ({
       kind: 'transfer' as const,
       id: transfer.id,
-      timestamp: transfer.startedAt || Date.now(),
+      // Use localArrivalTimestamp to sort relative to the local clock sequence,
+      // preventing remote clock skew from displacing transfers up or down the timeline.
+      timestamp: transfer.localArrivalTimestamp || transfer.startedAt || Date.now(),
       data: transfer
     })),
     ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
       kind: 'transfer_batch' as const,
       id: batchId,
-      timestamp: batchTransfers[0].startedAt || Date.now(),
+      timestamp: batchTransfers[0].localArrivalTimestamp || batchTransfers[0].startedAt || Date.now(),
       data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);

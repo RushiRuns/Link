@@ -96,6 +96,9 @@ export interface LinkFileTransfer {
   startedAt?: number;
   completedAt?: number;
   message?: string;
+  /** Local monotonic clock at the moment this transfer was registered in the store.
+   *  Used for timeline sorting to avoid distributed clock skew from remote machines. */
+  localArrivalTimestamp?: number;
 }
 
 export type CallMediaType = 'voice' | 'video';

@@ -79,13 +79,13 @@ export function GroupView({ group }: GroupViewProps) {
     ...unbatchedTransfers.map(t => ({
       kind: 'transfer' as const,
       id: t.id,
-      timestamp: t.startedAt || Date.now(),
+      timestamp: t.localArrivalTimestamp || t.startedAt || Date.now(),
       data: t
     })),
     ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
       kind: 'transfer_batch' as const,
       id: batchId,
-      timestamp: batchTransfers[0].startedAt || Date.now(),
+      timestamp: batchTransfers[0].localArrivalTimestamp || batchTransfers[0].startedAt || Date.now(),
       data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);
