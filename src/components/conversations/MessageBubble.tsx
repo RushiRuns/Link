@@ -37,13 +37,13 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
     switch (message.deliveryStatus) {
       case 'sending':
-        return <span style={{ color: 'var(--text-secondary)', fontSize: '11px', opacity: 0.7 }}>🕒</span>;
+        return <span role="img" aria-label="Sending" style={{ color: 'var(--text-secondary)', fontSize: '11px', opacity: 0.7 }} title="Sending">🕒</span>;
       case 'sent':
-        return <span style={{ color: 'var(--text-secondary)', fontSize: '11px' }} title="Sent">✓</span>;
+        return <span role="img" aria-label="Sent" style={{ color: 'var(--text-secondary)', fontSize: '11px' }} title="Sent">✓</span>;
       case 'delivered':
-        return <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 600 }} title="Delivered">✓✓</span>;
+        return <span role="img" aria-label="Delivered" style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 600 }} title="Delivered">✓✓</span>;
       case 'failed':
-        return <span onClick={onRetry} style={{ color: 'var(--status-error)', fontSize: '11px', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry.">⚠️</span>;
+        return <span role="img" aria-label="Failed to deliver" onClick={onRetry} style={{ color: 'var(--status-error)', fontSize: '11px', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry.">⚠️</span>;
       default:
         return null;
     }
@@ -118,6 +118,13 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onFocus={() => setIsHovered(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsHovered(false);
+          }
+        }}
+        tabIndex={0}
         style={{
           position: 'relative',
           maxWidth: '70%',

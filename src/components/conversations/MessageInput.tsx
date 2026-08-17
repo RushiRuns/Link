@@ -37,6 +37,7 @@ export function MessageInput({
 }: MessageInputProps) {
   const [content, setContent] = useState('');
   const lastTypingTime = useRef(0);
+  const lastSendTime = useRef(0);
 
   useEffect(() => {
     if (initialValue !== undefined) {
@@ -63,8 +64,12 @@ export function MessageInput({
   };
 
   const handleSend = () => {
+    const now = Date.now();
+    if (now - lastSendTime.current < 500) return; // Prevent rapid double-sends
     const trimmed = content.trim();
     if (!trimmed || disabled) return;
+    
+    lastSendTime.current = now;
     onSend(trimmed);
     if (!isEditing) {
       setContent('');
