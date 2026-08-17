@@ -89,13 +89,18 @@ export function ConversationView({ peer }: ConversationViewProps) {
     sendMessage(peer.id, msg.content, msg.replyToMessageId);
   };
 
-  const handleDelete = (messageId: string) => {
+  const handleDelete = async (messageId: string) => {
     if (!conversationId) return;
     if (window.link?.messaging) {
-      window.link.messaging.sendDeleteMessage(peer.id, messageId);
-      deleteMessageLocally(conversationId, messageId);
-      if (editingMessageId === messageId) {
-        setEditingMessageId(null);
+      try {
+        await window.link.messaging.sendDeleteMessage(peer.id, messageId);
+        deleteMessageLocally(conversationId, messageId);
+        if (editingMessageId === messageId) {
+          setEditingMessageId(null);
+        }
+      } catch (err) {
+        console.error('Failed to delete message:', err);
+        window.alert('Failed to delete message. The teammate may be offline or unreachable.');
       }
     }
   };

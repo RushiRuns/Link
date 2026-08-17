@@ -114,12 +114,13 @@ class MessageService {
   }
 
   public deleteMessage(peerId: string, messageId: string) {
-    connectionManager.send(peerId, {
+    const sent = connectionManager.send(peerId, {
       type: 'message.delete',
       id: uuidv4(),
       ts: Date.now(),
       payload: { messageId }
     });
+    if (!sent) throw new Error('Failed to send delete message');
   }
 
   public sendDeliveryAck(peerId: string, messageId: string) {
