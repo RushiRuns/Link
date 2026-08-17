@@ -79,13 +79,13 @@ export function GroupView({ group }: GroupViewProps) {
     ...unbatchedTransfers.map(t => ({
       kind: 'transfer' as const,
       id: t.id,
-      timestamp: t.startedAt || 0,
+      timestamp: t.startedAt || Date.now(),
       data: t
     })),
     ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
       kind: 'transfer_batch' as const,
       id: batchId,
-      timestamp: batchTransfers[0].startedAt || 0,
+      timestamp: batchTransfers[0].startedAt || Date.now(),
       data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);
@@ -145,10 +145,12 @@ export function GroupView({ group }: GroupViewProps) {
     if (window.link?.dialog) {
       const paths = await window.link.dialog.selectFiles();
       if (paths && paths.length > 0) {
-        const items = paths.map(p => {
-          const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
-          return { path: p, name, size: 0, isFolder: false };
-        });
+        const items = paths.map(p => ({
+          path: p.path,
+          name: p.name,
+          size: p.size,
+          isFolder: false
+        }));
         setSelectiveShareType('all');
         setPreviewItems(items);
       }
@@ -159,22 +161,20 @@ export function GroupView({ group }: GroupViewProps) {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
     if (window.link?.dialog) {
-      const path = await window.link.dialog.selectFolder();
-      if (path) {
-        const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
+      const folder = await window.link.dialog.selectFolder();
+      if (folder) {
         setSelectiveShareType('all');
-        setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+        setPreviewItems([{ path: folder.path, name: folder.name, size: 0, isFolder: true }]);
       }
     }
   };
 
-  const handlePasteFile = (path: string) => {
+  const handlePasteFile = (files: Array<{ path: string; name: string; size: number }>) => {
     const peerIds = getOnlinePeerIds();
     if (peerIds.length === 0) return;
-    if (path) {
-      const name = path.split('\\').pop()?.split('/').pop() || 'Pasted File';
+    if (files.length > 0) {
       setSelectiveShareType('all');
-      setPreviewItems([{ path, name, size: 0, isFolder: false }]);
+      setPreviewItems(files.map(f => ({ path: f.path, name: f.name, size: f.size, isFolder: false })));
     }
   };
 
@@ -214,9 +214,10 @@ export function GroupView({ group }: GroupViewProps) {
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const items: PreviewItem[] = [];
       for (const file of Array.from(e.dataTransfer.files)) {
-        const path = (file as any).path;
+        const f = file as any;
+        const path = f.path;
         if (path) {
-          items.push({ path, name: file.name, size: file.size, isFolder: false });
+          items.push({ path, name: f.name, size: f.size, isFolder: false });
         }
       }
       if (items.length > 0) {
@@ -233,21 +234,22 @@ export function GroupView({ group }: GroupViewProps) {
       if (window.link?.dialog) {
         const paths = await window.link.dialog.selectFiles();
         if (paths && paths.length > 0) {
-          const items = paths.map(p => {
-            const name = p.split('\\').pop()?.split('/').pop() || 'Unknown';
-            return { path: p, name, size: 0, isFolder: false };
-          });
+          const items = paths.map(p => ({
+            path: p.path,
+            name: p.name,
+            size: p.size,
+            isFolder: false
+          }));
           setSelectiveShareType('selective');
           setPreviewItems(items);
         }
       }
     } else {
       if (window.link?.dialog) {
-        const path = await window.link.dialog.selectFolder();
-        if (path) {
-          const name = path.split('\\').pop()?.split('/').pop() || 'Unknown Folder';
+        const folder = await window.link.dialog.selectFolder();
+        if (folder) {
           setSelectiveShareType('selective');
-          setPreviewItems([{ path, name, size: 0, isFolder: true }]);
+          setPreviewItems([{ path: folder.path, name: folder.name, size: 0, isFolder: true }]);
         }
       }
     }

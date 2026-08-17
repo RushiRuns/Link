@@ -279,13 +279,13 @@ export function ConversationView({ peer }: ConversationViewProps) {
     ...unbatchedTransfers.map((transfer) => ({
       kind: 'transfer' as const,
       id: transfer.id,
-      timestamp: transfer.startedAt || 0,
+      timestamp: transfer.startedAt || Date.now(),
       data: transfer
     })),
     ...Object.entries(batchedTransfers).map(([batchId, batchTransfers]) => ({
       kind: 'transfer_batch' as const,
       id: batchId,
-      timestamp: batchTransfers[0].startedAt || 0,
+      timestamp: batchTransfers[0].startedAt || Date.now(),
       data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);

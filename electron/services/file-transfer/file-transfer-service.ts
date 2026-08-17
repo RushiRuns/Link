@@ -405,6 +405,7 @@ class FileTransferService {
       mimeType: state.mimeType,
       status: 'pending_accept',
       bytesTransferred: 0,
+      startedAt: now,
       isFolder: state.isFolder,
       message: state.message
     });

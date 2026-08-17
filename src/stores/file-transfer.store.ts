@@ -25,9 +25,13 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
   incomingOffersQueue: [],
 
   addTransfer: (transfer) => {
+    const transferWithTimestamp: LinkFileTransfer = {
+      ...transfer,
+      startedAt: transfer.startedAt || Date.now()
+    };
     set((state) => {
       const nextMap = new Map(state.transfers);
-      nextMap.set(transfer.id, transfer);
+      nextMap.set(transferWithTimestamp.id, transferWithTimestamp);
       return { transfers: nextMap };
     });
   },

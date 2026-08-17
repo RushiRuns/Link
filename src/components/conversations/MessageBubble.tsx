@@ -38,13 +38,34 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
     switch (message.deliveryStatus) {
       case 'sending':
-        return <Clock size={12} strokeWidth={2} style={{ color: 'var(--text-secondary)', opacity: 0.7 }} title="Sending" />;
+        return (
+          <span title="Sending" aria-label="Sending" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Clock size={12} strokeWidth={2} style={{ color: 'var(--text-secondary)', opacity: 0.7 }} />
+          </span>
+        );
       case 'sent':
-        return <Check size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} title="Sent" />;
+        return (
+          <span title="Sent" aria-label="Sent" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <Check size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} />
+          </span>
+        );
       case 'delivered':
-        return <CheckCheck size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} title="Delivered" />;
+        return (
+          <span title="Delivered" aria-label="Delivered" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            <CheckCheck size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} />
+          </span>
+        );
       case 'failed':
-        return <AlertTriangle size={12} strokeWidth={2} onClick={onRetry} style={{ color: 'var(--status-error)', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry." />;
+        return (
+          <span 
+            title="Failed to deliver. Click to retry." 
+            aria-label="Failed to deliver. Click to retry."
+            onClick={onRetry} 
+            style={{ display: 'inline-flex', alignItems: 'center', cursor: onRetry ? 'pointer' : 'default' }}
+          >
+            <AlertTriangle size={12} strokeWidth={2} style={{ color: 'var(--status-error)' }} />
+          </span>
+        );
       default:
         return null;
     }
