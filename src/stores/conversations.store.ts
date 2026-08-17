@@ -184,6 +184,10 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
       get().addMessage(message);
       
+      if (window.link.messaging.ackMessageReceipt) {
+        window.link.messaging.ackMessageReceipt(message.senderId, message.id);
+      }
+
       const { selectedPeerId } = useAppStore.getState();
       // Flash and play sound if we are not actively viewing this peer's chat, OR if the app is in the background
       if (selectedPeerId !== message.senderId || !document.hasFocus()) {

@@ -85,6 +85,10 @@ export function registerIpcHandlers() {
   });
 
   // Messaging Handlers
+  ipcMain.handle('messaging:ack-receipt', async (_, peerId: string, messageId: string) => {
+    return messageService.sendDeliveryAck(peerId, messageId);
+  });
+
   ipcMain.handle('messaging:send', async (_, peerId: string, content: string, replyToMessageId?: string) => {
     return messageService.sendMessage(peerId, content, replyToMessageId);
   });

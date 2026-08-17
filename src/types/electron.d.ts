@@ -46,6 +46,7 @@ export interface LinkAPI {
     loadMessages: () => Promise<Record<string, LinkMessage[]>>;
     saveMessages: (messages: Record<string, LinkMessage[]>) => Promise<void>;
     sendMessage: (peerId: string, content: string, replyToMessageId?: string) => Promise<LinkMessage>;
+    ackMessageReceipt: (peerId: string, messageId: string) => Promise<void>;
     onMessageReceived: (callback: (message: LinkMessage) => void) => () => void;
     onMessageDelivered: (callback: (messageId: string) => void) => () => void;
     sendTypingSignal: (peerId: string, groupId?: string) => Promise<void>;

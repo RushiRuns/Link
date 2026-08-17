@@ -2,6 +2,7 @@ import { connectionManager } from '../network/connection-manager.js';
 import { getOrGenerateIdentity } from '../identity/identity.js';
 import { v4 as uuidv4 } from 'uuid';
 import { showAndFocusWindow } from '../../main.js';
+import { messageStore } from '../storage/message-store.js';
 
 export interface SendMessageOptions {
   peerId: string;
@@ -10,9 +11,20 @@ export interface SendMessageOptions {
 
 class MessageService {
   private windowRef: any = null;
+  private messageSenderCache: Map<string, string> = new Map();
 
   public init(mainWindow: any) {
     this.windowRef = mainWindow;
+
+    messageStore.loadMessages()
+      .then(messages => {
+        for (const list of Object.values(messages)) {
+          for (const msg of list) {
+            this.messageSenderCache.set(msg.id, msg.senderId);
+          }
+        }
+      })
+      .catch(err => console.error('[MessageService] Failed to init cache:', err));
 
     connectionManager.on('message', (senderDeviceId: string, envelope: any) => {
       if (envelope.type === 'message.text' && !envelope.payload?.groupId) {
@@ -69,6 +81,8 @@ class MessageService {
       deliveryStatus: sent ? ('sent' as const) : ('failed' as const)
     };
 
+    this.messageSenderCache.set(messageId, identity.deviceId);
+
     return linkMsg;
   }
 
@@ -108,6 +122,15 @@ class MessageService {
     });
   }
 
+  public sendDeliveryAck(peerId: string, messageId: string) {
+    connectionManager.send(peerId, {
+      type: 'message.ack',
+      id: 'ack_' + uuidv4(),
+      ts: Date.now(),
+      payload: { messageId, status: 'delivered' }
+    });
+  }
+
   private handleTextMessage(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (!payload || !payload.content) return;
@@ -126,22 +149,13 @@ class MessageService {
       deliveryStatus: 'delivered' as const
     };
 
+    this.messageSenderCache.set(incomingMsg.id, senderDeviceId);
+
     // Forward received message to renderer
     this.windowRef?.webContents?.send('message:received', incomingMsg);
     
     // Auto-unhide and focus window
     showAndFocusWindow();
-
-    // Send MessageAck immediately on receipt
-    connectionManager.send(senderDeviceId, {
-      type: 'message.ack',
-      id: 'ack_' + uuidv4(),
-      ts: Date.now(),
-      payload: {
-        messageId: payload.messageId || envelope.id,
-        status: 'delivered'
-      }
-    });
   }
 
   private handleMessageAck(_senderDeviceId: string, envelope: any) {
@@ -166,6 +180,11 @@ class MessageService {
   private handleMessageEdit(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (payload && payload.messageId && payload.newContent) {
+      const originalSender = this.messageSenderCache.get(payload.messageId);
+      if (originalSender && originalSender !== senderDeviceId) {
+        console.warn(`[MessageService] Unauthorized edit by ${senderDeviceId} for message ${payload.messageId}`);
+        return;
+      }
       this.windowRef?.webContents?.send('message:edited', {
         senderDeviceId,
         messageId: payload.messageId,
@@ -177,6 +196,11 @@ class MessageService {
   private handleMessageDelete(senderDeviceId: string, envelope: any) {
     const payload = envelope.payload;
     if (payload && payload.messageId) {
+      const originalSender = this.messageSenderCache.get(payload.messageId);
+      if (originalSender && originalSender !== senderDeviceId) {
+        console.warn(`[MessageService] Unauthorized delete by ${senderDeviceId} for message ${payload.messageId}`);
+        return;
+      }
       this.windowRef?.webContents?.send('message:deleted', {
         senderDeviceId,
         messageId: payload.messageId
