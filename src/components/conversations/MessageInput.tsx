@@ -140,6 +140,7 @@ export function MessageInput({
       >
         {onAttachFile && (
           <button
+            className="icon-button"
             onClick={onAttachFile}
             disabled={disabled}
             title="Attach File"
@@ -164,6 +165,7 @@ export function MessageInput({
         
         {onAttachFolder && (
           <button
+            className="icon-button"
             onClick={onAttachFolder}
             disabled={disabled}
             title="Attach Folder"
@@ -188,6 +190,7 @@ export function MessageInput({
 
         {onAttachSelective && (
           <button
+            className="icon-button"
             onClick={onAttachSelective}
             disabled={disabled}
             title="Selective Share"
@@ -234,6 +237,7 @@ export function MessageInput({
         />
 
         <button
+          className="icon-button"
           onClick={handleSend}
           disabled={disabled || isContentEmpty}
           title={isEditing ? 'Update message' : 'Send message'}

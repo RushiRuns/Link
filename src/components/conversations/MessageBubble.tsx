@@ -1,5 +1,5 @@
 import { LinkMessage } from '../../types/ipc';
-import { Copy, Edit2, Trash2, CornerUpLeft } from 'lucide-react';
+import { Copy, Edit2, Trash2, CornerUpLeft, Check, CheckCheck, Clock, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { usePeersStore } from '../../stores/peers.store';
 
@@ -38,13 +38,13 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
     switch (message.deliveryStatus) {
       case 'sending':
-        return <span role="img" aria-label="Sending" style={{ color: 'var(--text-secondary)', fontSize: '11px', opacity: 0.7 }} title="Sending">🕒</span>;
+        return <Clock size={12} strokeWidth={2} style={{ color: 'var(--text-secondary)', opacity: 0.7 }} title="Sending" />;
       case 'sent':
-        return <span role="img" aria-label="Sent" style={{ color: 'var(--text-secondary)', fontSize: '11px' }} title="Sent">✓</span>;
+        return <Check size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} title="Sent" />;
       case 'delivered':
-        return <span role="img" aria-label="Delivered" style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 600 }} title="Delivered">✓✓</span>;
+        return <CheckCheck size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} title="Delivered" />;
       case 'failed':
-        return <span role="img" aria-label="Failed to deliver" onClick={onRetry} style={{ color: 'var(--status-error)', fontSize: '11px', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry.">⚠️</span>;
+        return <AlertTriangle size={12} strokeWidth={2} onClick={onRetry} style={{ color: 'var(--status-error)', cursor: onRetry ? 'pointer' : 'default' }} title="Failed to deliver. Click to retry." />;
       default:
         return null;
     }

@@ -81,3 +81,14 @@
   --status-warning: #FF9500;
   --status-error: #FF3B30;
 }
+
+@keyframes typingPulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+button.icon-button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
