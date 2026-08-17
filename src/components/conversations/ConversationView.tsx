@@ -43,13 +43,15 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const conversationId = localIdentity
     ? [localIdentity.deviceId, peer.id].sort().join('_')
-    : 'default';
+    : null;
 
   useEffect(() => {
-    markConversationRead(conversationId);
+    if (conversationId) {
+      markConversationRead(conversationId);
+    }
   }, [conversationId, markConversationRead]);
 
-  const conversationMessages = messages.get(conversationId) || [];
+  const conversationMessages = conversationId ? (messages.get(conversationId) || []) : [];
   const peerTransfers = Array.from(transfers.values()).filter((t) => t.peerId === peer.id && !t.groupId);
 
   // Auto scroll to bottom when new messages arrive
@@ -214,6 +216,14 @@ export function ConversationView({ peer }: ConversationViewProps) {
       data: batchTransfers
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);
+
+  if (!conversationId) {
+    return (
+      <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+        Loading conversation...
+      </div>
+    );
+  }
 
   return (
     <div 

@@ -23,6 +23,10 @@ export function registerIpcHandlers() {
     return true;
   });
 
+  ipcMain.on('open-external', (_, url: string) => {
+    shell.openExternal(url).catch(console.error);
+  });
+
   // Identity Handlers
   ipcMain.handle('identity:get', async () => {
     const identity = getOrGenerateIdentity();

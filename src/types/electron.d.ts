@@ -118,6 +118,7 @@ declare global {
       ping: () => Promise<{ message: string; timestamp: number }>;
       windowControl: (action: 'minimize' | 'maximize' | 'close') => void;
       flashFrame: (flag: boolean) => void;
+      openExternal: (url: string) => void;
     };
     link: LinkAPI;
   }

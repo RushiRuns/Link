@@ -55,24 +55,37 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
 
     return parts.map((part, i) => {
       if (part.match(urlRegex)) {
-        return (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: 'var(--accent-primary)',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              wordBreak: 'break-all'
-            }}
-            onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'none')}
-            onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-          >
-            {part}
-          </a>
-        );
+        let isValidUrl = false;
+        try {
+          const urlObj = new URL(part);
+          if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+            isValidUrl = true;
+          }
+        } catch (e) {
+          // Invalid URL
+        }
+
+        if (isValidUrl) {
+          return (
+            <span
+              key={i}
+              role="link"
+              tabIndex={0}
+              onClick={() => window.electron?.openExternal(part)}
+              onKeyDown={(e) => { if (e.key === 'Enter') window.electron?.openExternal(part); }}
+              style={{
+                color: 'var(--accent-primary)',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                wordBreak: 'break-all'
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              onMouseOut={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+            >
+              {part}
+            </span>
+          );
+        }
       }
       return part;
     });

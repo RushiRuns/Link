@@ -6,7 +6,8 @@ contextBridge.exposeInMainWorld("electron", {
   getSystemInfo: () => ipcRenderer.invoke("get-system-info"),
   ping: () => ipcRenderer.invoke("ping"),
   windowControl: (action) => ipcRenderer.send("window-control", action),
-  flashFrame: (flag) => ipcRenderer.send("window:flash", flag)
+  flashFrame: (flag) => ipcRenderer.send("window:flash", flag),
+  openExternal: (url) => ipcRenderer.send("open-external", url)
 });
 
 contextBridge.exposeInMainWorld("link", {
