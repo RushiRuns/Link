@@ -37,6 +37,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const [previewItems, setPreviewItems] = useState<PreviewItem[] | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [renderLimit, setRenderLimit] = useState(150);
 
   useEffect(() => {
     if (window.link?.identity) {
@@ -164,11 +165,13 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
   const handleStartCall = (mediaType: 'voice' | 'video') => {
     if (peer.status === 'offline') {
-      window.alert('Cannot call an offline teammate.');
+      setToastMessage('Cannot call an offline teammate.');
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
     if (activeCall || incomingCall) {
-      window.alert('You are already in a call.');
+      setToastMessage('You are already in a call.');
+      setTimeout(() => setToastMessage(null), 3000);
       return;
     }
     setActiveCall({
@@ -284,6 +287,14 @@ export function ConversationView({ peer }: ConversationViewProps) {
     }))
   ].sort((a, b) => a.timestamp - b.timestamp);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (e.currentTarget.scrollTop < 100 && renderLimit < timelineItems.length) {
+      setRenderLimit(prev => Math.min(timelineItems.length, prev + 100));
+    }
+  };
+
+  const displayedTimelineItems = timelineItems.slice(Math.max(0, timelineItems.length - renderLimit));
+
   if (!conversationId) {
     return (
       <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
@@ -338,18 +349,23 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 'var(--font-size-header)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{peer.displayName}</div>
           <span
+            title={`Fingerprint: ${peer.publicKeyFingerprint}\nClick to copy`}
+            onClick={() => navigator.clipboard.writeText(peer.publicKeyFingerprint)}
             style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-1)',
               fontSize: 'var(--font-size-meta)',
               color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-mono)',
-              backgroundColor: 'var(--bg-card)',
-              padding: '2px 6px',
+              padding: '4px',
               borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-color)',
-              flexShrink: 0
+              transition: 'background-color 0.2s',
             }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            Fingerprint: {peer.publicKeyFingerprint}
+            <Shield size={14} />
           </span>
         </div>
 
@@ -461,6 +477,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
       {/* Message & File Transfer List */}
       <div
         ref={scrollRef}
+        onScroll={handleScroll}
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -494,7 +511,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
             </div>
           </div>
         ) : (
-          timelineItems.map((item) => {
+          displayedTimelineItems.map((item) => {
             if (item.kind === 'message') {
               return (
                 <MessageBubble
