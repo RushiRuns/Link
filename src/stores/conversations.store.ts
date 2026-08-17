@@ -167,10 +167,9 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
               id: 'failed_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
               conversationId,
               senderId: id.deviceId,
-              recipientDeviceId: peerId,
+              senderName: id.displayName,
               content,
               timestamp: Date.now(),
-              type: 'text',
               deliveryStatus: 'failed',
               replyToMessageId
             };
