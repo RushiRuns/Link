@@ -21,9 +21,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
     typingPeers, 
     sendMessage, 
     markConversationRead,
-    editingMessageId,
+    editingMessageIds,
     setEditingMessageId,
-    replyingToMessageId,
+    replyingToMessageIds,
     setReplyingToMessageId,
     editMessageLocally,
     deleteMessageLocally
@@ -91,10 +91,10 @@ export function ConversationView({ peer }: ConversationViewProps) {
         window.link.messaging.sendEditMessage(peer.id, editingMessageId, text);
         editMessageLocally(conversationId, editingMessageId, text);
       }
-      setEditingMessageId(null);
+      setEditingMessageId(conversationId, null);
     } else {
       sendMessage(peer.id, text, replyingToMessageId || undefined);
-      setReplyingToMessageId(null);
+      setReplyingToMessageId(conversationId, null);
     }
   };
 
@@ -115,7 +115,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         await window.link.messaging.sendDeleteMessage(peer.id, messageId);
         deleteMessageLocally(conversationId, messageId);
         if (editingMessageId === messageId) {
-          setEditingMessageId(null);
+          setEditingMessageId(conversationId, null);
         }
       } catch (err) {
         console.error('Failed to delete message:', err);
@@ -461,13 +461,17 @@ export function ConversationView({ peer }: ConversationViewProps) {
                   isLatestMessage={item.data.id === latestSentMessageId}
                   repliedMessage={item.data.replyToMessageId ? conversationMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
                   onReply={() => {
-                    setReplyingToMessageId(item.data.id);
-                    setEditingMessageId(null); // Mutually exclusive
+                    if (conversationId) {
+                      setReplyingToMessageId(conversationId, item.data.id);
+                      setEditingMessageId(conversationId, null); // Mutually exclusive
+                    }
                   }}
                   onCopy={() => handleCopy(item.data.content)}
                   onEdit={() => {
-                    setEditingMessageId(item.data.id);
-                    setReplyingToMessageId(null); // Mutually exclusive
+                    if (conversationId) {
+                      setEditingMessageId(conversationId, item.data.id);
+                      setReplyingToMessageId(conversationId, null); // Mutually exclusive
+                    }
                   }}
                   onDelete={() => handleDelete(item.data.id)}
                   onRetry={item.data.deliveryStatus === 'failed' ? () => handleRetry(item.data) : undefined}
@@ -549,7 +553,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
             </div>
           </div>
           <button
-            onClick={() => setReplyingToMessageId(null)}
+            onClick={() => { if (conversationId) setReplyingToMessageId(conversationId, null); }}
             title="Cancel reply"
             style={{
               background: 'transparent',
@@ -570,7 +574,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         <MessageInput
           initialValue={editingMessageContent}
           isEditing={!!editingMessageId}
-          onCancelEdit={() => setEditingMessageId(null)}
+          onCancelEdit={() => { if (conversationId) setEditingMessageId(conversationId, null); }}
           onSend={handleSend}
           onTyping={() => {
             if (window.link?.messaging) {
