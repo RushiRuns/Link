@@ -39,7 +39,16 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
       
       // Avoid duplicate messages
       if (!existing.some((m) => m.id === message.id)) {
-        nextMessages.set(convId, [...existing, message]);
+        let maxLogical = 0;
+        if (existing.length > 0) {
+          maxLogical = Math.max(...existing.map(m => m.logicalTimestamp || m.timestamp));
+        }
+        
+        // Ensure strictly increasing monotonic timestamps for local timeline
+        const messageLogical = Math.max(message.timestamp, maxLogical + 1);
+        const msgWithLogical = { ...message, logicalTimestamp: messageLogical };
+        
+        nextMessages.set(convId, [...existing, msgWithLogical]);
       }
 
       const nextUnreads = new Map(state.unreadCounts);

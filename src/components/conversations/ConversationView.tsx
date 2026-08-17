@@ -273,7 +273,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
     ...conversationMessages.map((msg) => ({
       kind: 'message' as const,
       id: msg.id,
-      timestamp: msg.timestamp,
+      timestamp: msg.logicalTimestamp || msg.timestamp,
       data: msg
     })),
     ...unbatchedTransfers.map((transfer) => ({

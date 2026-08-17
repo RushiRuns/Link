@@ -52,6 +52,7 @@ export interface LinkMessage {
   deliveryStatus: DeliveryStatus;
   isEdited?: boolean;
   lastEditTimestamp?: number;
+  logicalTimestamp?: number;
 }
 
 export interface GroupMember {
