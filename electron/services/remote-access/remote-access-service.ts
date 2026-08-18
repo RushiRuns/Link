@@ -177,6 +177,7 @@ class RemoteAccessService {
 
     this.windowRef?.webContents?.send('remote-access:session-accepted', {
       sessionId: p.sessionId,
+      peerId: state.peerId,
       sessionToken: p.sessionToken,
       permissionMode: p.permissionMode,
       sdp: p.sdp

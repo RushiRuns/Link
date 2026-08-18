@@ -20,7 +20,8 @@ export function RemoteViewerModal() {
   } = useRemoteAccessWebRTC({
     sessionId: activeSession?.sessionId || '',
     role: activeSession?.role || 'controller',
-    permissionMode: activeSession?.permissionMode
+    permissionMode: activeSession?.permissionMode,
+    initialSdp: activeSession?.initialSdp
   });
 
   // Attach video stream

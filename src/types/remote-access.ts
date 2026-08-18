@@ -7,6 +7,7 @@ export interface RemoteAccessSession {
   sessionToken: string;
   permissionMode: PermissionMode;
   role: 'host' | 'controller';
+  initialSdp?: string;
 }
 
 export interface IncomingRemoteRequest {

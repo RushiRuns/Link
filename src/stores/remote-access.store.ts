@@ -128,14 +128,19 @@ export const useRemoteAccessStore = create<RemoteAccessState>((set, get) => ({
       }),
 
       window.link.remoteAccess.onSessionAccepted((data: any) => {
-        const session = get().activeSession;
-        // Controller side receives accept
-        if (session && session.sessionId === data.sessionId) {
-          get().updateSession({
+        // We are the controller and the host has accepted our request
+        set({
+          activeSession: {
+            sessionId: data.sessionId,
+            peerId: data.peerId,
+            peerName: 'Peer', // Fallback, could look up from peers store if needed
             sessionToken: data.sessionToken,
-            permissionMode: data.permissionMode
-          });
-        }
+            permissionMode: data.permissionMode,
+            role: 'controller',
+            initialSdp: data.sdp
+          },
+          isSessionActive: true
+        });
       }),
 
       window.link.remoteAccess.onSessionEnded((data: any) => {
