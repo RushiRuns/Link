@@ -27,14 +27,13 @@ export function ScreenPickerModal({ onSelect, onCancel, mode = 'calls' }: Screen
           fetchedSources = await window.link.remoteAccess.getSources();
         } else if (window.link?.desktopCapturer) {
           fetchedSources = await window.link.desktopCapturer.getSources();
-        }
-          if (isMounted) {
-            setSources(fetchedSources);
-            setLoading(false);
-          }
         } else {
-          console.error('[ScreenPicker] desktopCapturer API not found');
-          if (isMounted) setLoading(false);
+          console.error('[ScreenPicker] Capture API not found');
+        }
+        
+        if (isMounted) {
+          setSources(fetchedSources);
+          setLoading(false);
         }
       } catch (err) {
         console.error('[ScreenPicker] Error fetching sources:', err);

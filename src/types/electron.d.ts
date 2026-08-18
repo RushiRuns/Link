@@ -109,6 +109,20 @@ export interface LinkAPI {
   desktopCapturer: {
     getSources: () => Promise<{ id: string; name: string; thumbnail: string }[]>;
   };
+  remoteAccess: {
+    requestAccess: (peerId: string) => Promise<string>;
+    sendAccept: (sessionId: string, permissionMode: string, sdp: string) => Promise<void>;
+    sendAnswer: (sessionId: string, sdp: string) => Promise<void>;
+    sendIce: (sessionId: string, candidate: any) => Promise<void>;
+    endSession: (sessionId: string) => Promise<void>;
+    injectInput: (sessionId: string, token: string, event: any) => Promise<void>;
+    getSources: () => Promise<{ id: string; name: string; thumbnail: string }[]>;
+    onRequestReceived: (callback: (data: any) => void) => () => void;
+    onSessionAccepted: (callback: (data: any) => void) => () => void;
+    onSessionEnded: (callback: (data: any) => void) => () => void;
+    onAnswerReceived: (callback: (data: any) => void) => () => void;
+    onIceReceived: (callback: (data: any) => void) => () => void;
+  };
 }
 
 declare global {

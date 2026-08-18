@@ -14,7 +14,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
       // Re-using the same dialog IPC used elsewhere, but wait, do we have an IPC for this?
       const result = await window.link.dialog.selectFolder();
       if (result) {
-        setSelectedPath(result);
+        setSelectedPath(result.path);
       }
     } catch (err) {
       console.error('[Onboarding] Error selecting folder:', err);

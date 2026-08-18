@@ -9,11 +9,11 @@ interface RemoteAccessButtonProps {
 
 export function RemoteAccessButton({ peerId, disabled }: RemoteAccessButtonProps) {
   const [isPending, setIsPending] = useState(false);
-  const activeTransfers = useFileTransferStore(s => s.activeTransfers);
+  const transfers = useFileTransferStore(s => s.transfers);
 
   const handleClick = async () => {
     // File transfer warning check
-    const hasActiveTransfer = Array.from(activeTransfers.values()).some(
+    const hasActiveTransfer = Array.from(transfers.values()).some(
       t => t.status === 'transferring'
     );
     

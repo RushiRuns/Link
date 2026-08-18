@@ -46,8 +46,8 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
     try {
       const result = await window.link.dialog.selectFolder();
       if (result) {
-        await window.link.config.setDownloadPath(result);
-        setDownloadPath(result);
+        await window.link.config.setDownloadPath(result.path);
+        setDownloadPath(result.path);
       }
     } catch (err) {
       console.error('[Settings] Error selecting folder:', err);
