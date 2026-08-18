@@ -197,5 +197,38 @@ contextBridge.exposeInMainWorld('link', {
   },
   desktopCapturer: {
     getSources: () => ipcRenderer.invoke('desktop-capturer:get-sources')
+  },
+  remoteAccess: {
+    requestAccess: (peerId: string) => ipcRenderer.invoke('remote-access:request', peerId),
+    sendAnswer: (sessionId: string, sdp: string) => ipcRenderer.invoke('remote-access:answer', sessionId, sdp),
+    sendIce: (sessionId: string, candidate: any) => ipcRenderer.invoke('remote-access:ice', sessionId, candidate),
+    endSession: (sessionId: string) => ipcRenderer.invoke('remote-access:end', sessionId),
+    injectInput: (sessionId: string, token: string, event: any) => ipcRenderer.invoke('remote-access:inject-input', sessionId, token, event),
+    getSources: () => ipcRenderer.invoke('remote-access:get-sources'),
+    onRequestReceived: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('remote-access:request-received', listener);
+      return () => ipcRenderer.removeListener('remote-access:request-received', listener);
+    },
+    onSessionAccepted: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('remote-access:session-accepted', listener);
+      return () => ipcRenderer.removeListener('remote-access:session-accepted', listener);
+    },
+    onSessionEnded: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('remote-access:session-ended', listener);
+      return () => ipcRenderer.removeListener('remote-access:session-ended', listener);
+    },
+    onAnswerReceived: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('remote-access:answer-received', listener);
+      return () => ipcRenderer.removeListener('remote-access:answer-received', listener);
+    },
+    onIceReceived: (callback: EventCallback) => {
+      const listener = (_: any, data: any) => callback(data);
+      ipcRenderer.on('remote-access:ice-received', listener);
+      return () => ipcRenderer.removeListener('remote-access:ice-received', listener);
+    }
   }
 });

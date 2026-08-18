@@ -11,6 +11,7 @@ import { messageStore } from '../storage/message-store.js';
 import { configStore } from '../storage/config.js';
 import { discoveryManager } from '../discovery/discovery-manager.js';
 import { broadcastProfileUpdate } from '../network/handshake.js';
+import { remoteAccessService } from '../remote-access/remote-access-service.js';
 
 export function registerIpcHandlers() {
   // Config Handlers
@@ -228,6 +229,48 @@ export function registerIpcHandlers() {
   ipcMain.handle('desktop-capturer:get-sources', async () => {
     const sources = await desktopCapturer.getSources({ 
       types: ['screen'], 
+      thumbnailSize: { width: 320, height: 180 } 
+    });
+    return sources.map(source => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL()
+    }));
+  });
+
+  registerRemoteAccessIpcHandlers();
+}
+
+function registerRemoteAccessIpcHandlers() {
+  ipcMain.removeHandler('remote-access:request');
+  ipcMain.handle('remote-access:request', async (_, peerId: string) => {
+    return remoteAccessService.sendRequest(peerId);
+  });
+
+  ipcMain.removeHandler('remote-access:answer');
+  ipcMain.handle('remote-access:answer', async (_, sessionId: string, sdp: string) => {
+    return remoteAccessService.sendAnswer(sessionId, sdp);
+  });
+
+  ipcMain.removeHandler('remote-access:ice');
+  ipcMain.handle('remote-access:ice', async (_, sessionId: string, candidate: any) => {
+    return remoteAccessService.sendIceCandidate(sessionId, candidate);
+  });
+
+  ipcMain.removeHandler('remote-access:end');
+  ipcMain.handle('remote-access:end', async (_, sessionId: string) => {
+    return remoteAccessService.endSession(sessionId);
+  });
+
+  ipcMain.removeHandler('remote-access:inject-input');
+  ipcMain.handle('remote-access:inject-input', async (_, sessionId: string, token: string, event: any) => {
+    return remoteAccessService.handleInputInject(sessionId, token, event);
+  });
+
+  ipcMain.removeHandler('remote-access:get-sources');
+  ipcMain.handle('remote-access:get-sources', async () => {
+    const sources = await desktopCapturer.getSources({ 
+      types: ['screen', 'window'], 
       thumbnailSize: { width: 320, height: 180 } 
     });
     return sources.map(source => ({
