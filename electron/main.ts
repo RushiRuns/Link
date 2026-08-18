@@ -126,6 +126,9 @@ function createWindow() {
 
   // Hide to tray on close unless quitting
   mainWindow.on('close', (event) => {
+    // FIX: Allow standard close in development to prevent orphaned background processes
+    if (process.env['VITE_DEV_SERVER_URL']) return;
+    
     if (!isQuitting) {
       event.preventDefault();
       mainWindow?.hide();
