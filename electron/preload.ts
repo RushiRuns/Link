@@ -200,6 +200,7 @@ contextBridge.exposeInMainWorld('link', {
   },
   remoteAccess: {
     requestAccess: (peerId: string) => ipcRenderer.invoke('remote-access:request', peerId),
+    sendAccept: (sessionId: string, permissionMode: string, sdp: string) => ipcRenderer.invoke('remote-access:accept', sessionId, permissionMode, sdp),
     sendAnswer: (sessionId: string, sdp: string) => ipcRenderer.invoke('remote-access:answer', sessionId, sdp),
     sendIce: (sessionId: string, candidate: any) => ipcRenderer.invoke('remote-access:ice', sessionId, candidate),
     endSession: (sessionId: string) => ipcRenderer.invoke('remote-access:end', sessionId),

@@ -247,6 +247,11 @@ function registerRemoteAccessIpcHandlers() {
     return remoteAccessService.sendRequest(peerId);
   });
 
+  ipcMain.removeHandler('remote-access:accept');
+  ipcMain.handle('remote-access:accept', async (_, sessionId: string, permissionMode: any, sdp: string) => {
+    return remoteAccessService.sendAccept(sessionId, permissionMode, sdp);
+  });
+
   ipcMain.removeHandler('remote-access:answer');
   ipcMain.handle('remote-access:answer', async (_, sessionId: string, sdp: string) => {
     return remoteAccessService.sendAnswer(sessionId, sdp);
