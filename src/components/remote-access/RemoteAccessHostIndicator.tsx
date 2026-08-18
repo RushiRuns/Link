@@ -1,9 +1,19 @@
 import { useRemoteAccessStore } from '../../stores/remote-access.store';
+import { useRemoteAccessWebRTC } from '../../hooks/useRemoteAccessWebRTC';
 import { ScreenShareOff, ShieldAlert } from 'lucide-react';
 
 export function RemoteAccessHostIndicator() {
   const activeSession = useRemoteAccessStore((s) => s.activeSession);
   const endSession = useRemoteAccessStore((s) => s.endSession);
+  const hostScreenSourceId = useRemoteAccessStore((s) => s.hostScreenSourceId);
+
+  // The hook is initialized immediately when the host indicator mounts (which is right after confirmScreenSelection).
+  useRemoteAccessWebRTC({
+    sessionId: activeSession?.sessionId || '',
+    role: activeSession?.role || 'host',
+    permissionMode: activeSession?.permissionMode,
+    screenSourceId: hostScreenSourceId || undefined
+  });
 
   if (!activeSession || activeSession.role !== 'host') return null;
 

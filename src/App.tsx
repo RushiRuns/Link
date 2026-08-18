@@ -16,8 +16,13 @@ import { useGroupsStore } from './stores/groups.store';
 import { useFileTransferStore } from './stores/file-transfer.store';
 import { useCallsStore } from './stores/calls.store';
 import { useConversationsStore } from './stores/conversations.store';
+import { useRemoteAccessStore } from './stores/remote-access.store';
 import { LinkPeer } from './types/ipc';
 import { Shield, Activity, Radio } from 'lucide-react';
+import { RemoteAccessPromptModal } from './components/remote-access/RemoteAccessPromptModal';
+import { RemoteViewerModal } from './components/remote-access/RemoteViewerModal';
+import { RemoteAccessHostIndicator } from './components/remote-access/RemoteAccessHostIndicator';
+import { ScreenPickerModal } from './components/calls/ScreenPickerModal';
 
 export default function App() {
   const { selectedPeerId, selectedGroupId } = useAppStore();
@@ -28,6 +33,12 @@ export default function App() {
   const { initListeners: initConversationsListeners, loadFromDisk } = useConversationsStore();
   const { initListeners: initGroupsListeners, loadGroupsFromDisk } = useGroupsStore();
   const { initListeners: initFtListeners } = useFileTransferStore();
+  const { 
+    initListeners: initRemoteAccessListeners, 
+    showScreenPicker, 
+    cancelScreenSelection, 
+    confirmScreenSelection 
+  } = useRemoteAccessStore();
 
   const [showSettings, setShowSettings] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -47,16 +58,17 @@ export default function App() {
     const cleanGroups = initGroupsListeners();
     const cleanFt = initFtListeners();
     const cleanPeers = initPeersListeners();
+    const cleanRemoteAccess = initRemoteAccessListeners();
     
     return () => {
       cleanCalls();
       cleanConversations();
       cleanGroups();
       cleanFt();
-      cleanFt();
       cleanPeers();
+      cleanRemoteAccess();
     };
-  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, loadFromDisk]);
+  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, initRemoteAccessListeners, loadFromDisk]);
 
   useEffect(() => {
     if (mediaError) {
@@ -188,6 +200,18 @@ export default function App() {
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
       {profilePeer && <PeerProfile peer={profilePeer} onClose={() => setProfilePeer(null)} />}
+      
+      {/* Remote Access Overlays */}
+      <RemoteAccessPromptModal />
+      <RemoteViewerModal />
+      <RemoteAccessHostIndicator />
+      {showScreenPicker && (
+        <ScreenPickerModal 
+          onSelect={(sourceId) => confirmScreenSelection(sourceId)}
+          onCancel={cancelScreenSelection}
+          mode="remote-access"
+        />
+      )}
     </>
   );
 }

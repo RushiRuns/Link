@@ -10,9 +10,10 @@ interface ScreenSource {
 interface ScreenPickerModalProps {
   onSelect: (sourceId: string) => void;
   onCancel: () => void;
+  mode?: 'calls' | 'remote-access';
 }
 
-export function ScreenPickerModal({ onSelect, onCancel }: ScreenPickerModalProps) {
+export function ScreenPickerModal({ onSelect, onCancel, mode = 'calls' }: ScreenPickerModalProps) {
   const [sources, setSources] = useState<ScreenSource[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,8 +22,12 @@ export function ScreenPickerModal({ onSelect, onCancel }: ScreenPickerModalProps
     
     const fetchSources = async () => {
       try {
-        if (window.link?.desktopCapturer) {
-          const fetchedSources = await window.link.desktopCapturer.getSources();
+        let fetchedSources: ScreenSource[] = [];
+        if (mode === 'remote-access' && window.link?.remoteAccess?.getSources) {
+          fetchedSources = await window.link.remoteAccess.getSources();
+        } else if (window.link?.desktopCapturer) {
+          fetchedSources = await window.link.desktopCapturer.getSources();
+        }
           if (isMounted) {
             setSources(fetchedSources);
             setLoading(false);

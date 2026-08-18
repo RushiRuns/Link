@@ -8,6 +8,7 @@ interface RemoteAccessState {
   // Host consent flow state
   pendingPermissionMode: PermissionMode | null;
   showScreenPicker: boolean;
+  hostScreenSourceId: string | null;
 
   // Computed state
   isSessionActive: boolean;
@@ -17,6 +18,7 @@ interface RemoteAccessState {
   
   // Host flow
   startScreenSelection: (mode: PermissionMode) => void;
+  confirmScreenSelection: (sourceId: string) => void;
   cancelScreenSelection: () => void;
   denyRequest: () => Promise<void>;
   
@@ -34,6 +36,7 @@ export const useRemoteAccessStore = create<RemoteAccessState>((set, get) => ({
   activeSession: null,
   pendingPermissionMode: null,
   showScreenPicker: false,
+  hostScreenSourceId: null,
   isSessionActive: false,
 
   setIncomingRequest: (req) => set({ incomingRequest: req }),
@@ -43,9 +46,28 @@ export const useRemoteAccessStore = create<RemoteAccessState>((set, get) => ({
     showScreenPicker: true 
   }),
 
+  confirmScreenSelection: (sourceId) => set((state) => {
+    if (!state.incomingRequest || !state.pendingPermissionMode) return state;
+    return {
+      hostScreenSourceId: sourceId,
+      showScreenPicker: false,
+      activeSession: {
+        sessionId: state.incomingRequest.sessionId,
+        peerId: state.incomingRequest.peerId,
+        peerName: state.incomingRequest.peerName,
+        sessionToken: '', // assigned by backend
+        permissionMode: state.pendingPermissionMode,
+        role: 'host'
+      },
+      isSessionActive: true,
+      incomingRequest: null
+    };
+  }),
+
   cancelScreenSelection: () => set({ 
     pendingPermissionMode: null, 
-    showScreenPicker: false 
+    showScreenPicker: false,
+    hostScreenSourceId: null
   }),
 
   denyRequest: async () => {
@@ -73,7 +95,8 @@ export const useRemoteAccessStore = create<RemoteAccessState>((set, get) => ({
     activeSession: null,
     isSessionActive: false,
     pendingPermissionMode: null, 
-    showScreenPicker: false 
+    showScreenPicker: false,
+    hostScreenSourceId: null
   }),
 
   endSession: async () => {

@@ -4,6 +4,8 @@ import { useConversationsStore } from '../../stores/conversations.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { useCallsStore } from '../../stores/calls.store';
 import { usePeersStore } from '../../stores/peers.store';
+import { useRemoteAccessStore } from '../../stores/remote-access.store';
+import { RemoteAccessButton } from '../remote-access/RemoteAccessButton';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
@@ -190,7 +192,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
   const isOffline = livePeer.status === 'offline';
   const isVersionMismatch = livePeer.status === 'version_mismatch';
   const isTyping = conversationId ? typingPeers.has(conversationId) : false;
-  const isCallActive = activeCall !== null || incomingCall !== null;
+  const isRemoteSessionActive = useRemoteAccessStore(s => s.isSessionActive);
+  const isCallActive = activeCall !== null;
+  const isCurrentlyInCall = isCallActive || isRemoteSessionActive || incomingCall !== null;
   const isSelf = peer.id === localIdentity?.deviceId;
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -381,8 +385,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
               <>
                 <button
                   onClick={() => handleStartCall('voice')}
-                  disabled={isCallActive}
-                  title={isCallActive ? "You are already in a call" : "Start Voice Call"}
+                  disabled={isCurrentlyInCall}
+                  title={isCurrentlyInCall ? "You are already in a session" : "Start Voice Call"}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -392,9 +396,9 @@ export function ConversationView({ peer }: ConversationViewProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-card)',
-                    color: isCallActive ? 'var(--text-muted)' : 'var(--text-primary)',
-                    cursor: isCallActive ? 'not-allowed' : 'pointer',
-                    opacity: isCallActive ? 0.5 : 1,
+                    color: isCurrentlyInCall ? 'var(--text-muted)' : 'var(--text-primary)',
+                    cursor: isCurrentlyInCall ? 'not-allowed' : 'pointer',
+                    opacity: isCurrentlyInCall ? 0.5 : 1,
                     transition: 'background-color var(--transition-fast)'
                   }}
                 >
@@ -403,8 +407,8 @@ export function ConversationView({ peer }: ConversationViewProps) {
 
                 <button
                   onClick={() => handleStartCall('video')}
-                  disabled={isCallActive}
-                  title={isCallActive ? "You are already in a call" : "Start Video Call"}
+                  disabled={isCurrentlyInCall}
+                  title={isCurrentlyInCall ? "You are already in a session" : "Start Video Call"}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -414,14 +418,16 @@ export function ConversationView({ peer }: ConversationViewProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-color)',
                     backgroundColor: 'var(--bg-card)',
-                    color: isCallActive ? 'var(--text-muted)' : 'var(--accent-primary)',
-                    cursor: isCallActive ? 'not-allowed' : 'pointer',
-                    opacity: isCallActive ? 0.5 : 1,
+                    color: isCurrentlyInCall ? 'var(--text-muted)' : 'var(--accent-primary)',
+                    cursor: isCurrentlyInCall ? 'not-allowed' : 'pointer',
+                    opacity: isCurrentlyInCall ? 0.5 : 1,
                     transition: 'background-color var(--transition-fast)'
                   }}
                 >
                   <Video size={15} strokeWidth={1.5} />
                 </button>
+
+                <RemoteAccessButton peerId={peer.id} disabled={isCurrentlyInCall} />
               </>
             )}
 
