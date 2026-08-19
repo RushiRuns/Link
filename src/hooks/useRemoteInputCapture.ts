@@ -59,10 +59,10 @@ export function useRemoteInputCapture({ videoRef, inputChannel, isActive }: UseR
         startY = rect.top + (rect.height - actualHeight) / 2;
       }
 
-      const x = ((e.clientX - startX) / actualWidth) * video.videoWidth;
-      const y = ((e.clientY - startY) / actualHeight) * video.videoHeight;
+      const x = ((e.clientX - startX) / actualWidth);
+      const y = ((e.clientY - startY) / actualHeight);
 
-      if (x < 0 || x > video.videoWidth || y < 0 || y > video.videoHeight) {
+      if (x < 0 || x > 1.0 || y < 0 || y > 1.0) {
         return null; // Out of bounds (clicked on black bars)
       }
 

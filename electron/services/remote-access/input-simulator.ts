@@ -32,11 +32,29 @@ using System;
 using System.Runtime.InteropServices;
 public class InputSim {
     [DllImport("user32.dll")] public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
-    [DllImport("user32.dll")] public static extern bool SetCursorPos(int X, int Y);
     [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+    
+    public static void Run() {
+        string line;
+        while ((line = Console.ReadLine()) != null) {
+            if (line == "EXIT") break;
+            if (line.Length < 2) continue;
+            try {
+                string[] p = line.Split(',');
+                if (p[0] == "M") {
+                    mouse_event(0x8001, int.Parse(p[1]), int.Parse(p[2]), 0, 0);
+                } else if (p[0] == "C") {
+                    mouse_event(int.Parse(p[1]), 0, 0, int.Parse(p[2]), 0);
+                } else if (p[0] == "K") {
+                    keybd_event(byte.Parse(p[1]), 0, int.Parse(p[2]), 0);
+                }
+            } catch {}
+        }
+    }
 }
 "@
 Add-Type -TypeDefinition $code
+[InputSim]::Run()
 `;
     this.executeCommand(initScript);
   }
@@ -57,7 +75,7 @@ Add-Type -TypeDefinition $code
       // Without this, here-string (@"..."@) blocks fail to parse, preventing
       // the C# InputSim class from compiling and breaking all input injection.
       const normalized = cmd.replace(/\r?\n/g, '\r\n');
-      if (!normalized.includes('SetCursorPos')) {
+      if (!normalized.startsWith('M,')) {
         console.log(`[InputSimulator] Executing native command:`, normalized.trim());
       }
       this.psProcess.stdin.write(normalized + '\r\n');
@@ -75,7 +93,10 @@ Add-Type -TypeDefinition $code
     switch (event.type) {
       case 'mousemove':
         if (event.x !== undefined && event.y !== undefined) {
-          this.executeCommand(`[InputSim]::SetCursorPos(${Math.round(event.x)}, ${Math.round(event.y)})`);
+          // Map normalized coords (0.0 - 1.0) to absolute coords (0 - 65535)
+          const dx = Math.round(event.x * 65535);
+          const dy = Math.round(event.y * 65535);
+          this.executeCommand(`M,${dx},${dy}`);
         }
         break;
 
@@ -89,28 +110,24 @@ Add-Type -TypeDefinition $code
           else if (event.button === 'middle') flag = isDown ? 0x0020 : 0x0040;
           
           if (flag !== 0) {
-            this.executeCommand(`[InputSim]::mouse_event(${flag}, 0, 0, 0, 0)`);
+            this.executeCommand(`C,${flag},0`);
           }
         }
         break;
 
       case 'wheel':
         if (event.deltaY !== undefined) {
-          // MOUSEEVENTF_WHEEL = 0x0800
-          // Browser wheel event: positive deltaY is scrolling down.
-          // Windows mouse_event wheel: < 0 is backwards/down. So we negate the browser delta.
-          // Typical browser delta is ~100 per tick, Windows wheel delta is 120 per tick.
           const wheelAmount = -Math.round(event.deltaY);
-          this.executeCommand(`[InputSim]::mouse_event(0x0800, 0, 0, ${wheelAmount}, 0)`);
+          // MOUSEEVENTF_WHEEL = 0x0800
+          this.executeCommand(`C,2048,${wheelAmount}`);
         }
         break;
 
       case 'keydown':
       case 'keyup':
         if (event.vkCode !== undefined) {
-          // KEYEVENTF_KEYUP = 0x0002
           const flag = event.type === 'keyup' ? 0x0002 : 0x0000;
-          this.executeCommand(`[InputSim]::keybd_event(${event.vkCode}, 0, ${flag}, 0)`);
+          this.executeCommand(`K,${event.vkCode},${flag}`);
         }
         break;
     }
