@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MonitorUp } from 'lucide-react';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 
@@ -10,6 +10,16 @@ interface RemoteAccessButtonProps {
 export function RemoteAccessButton({ peerId, disabled }: RemoteAccessButtonProps) {
   const [isPending, setIsPending] = useState(false);
   const transfers = useFileTransferStore(s => s.transfers);
+
+  useEffect(() => {
+    if (window.link?.remoteAccess) {
+      const cleanups = [
+        window.link.remoteAccess.onSessionEnded(() => setIsPending(false)),
+        window.link.remoteAccess.onSessionAccepted(() => setIsPending(false))
+      ];
+      return () => cleanups.forEach(c => c());
+    }
+  }, []);
 
   const handleClick = async () => {
     // File transfer warning check
