@@ -78,6 +78,7 @@ export function RemoteViewerModal() {
         ref={videoRef}
         autoPlay
         playsInline
+        muted
         style={{
           width: '100%',
           height: '100%',

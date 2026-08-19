@@ -204,7 +204,10 @@ contextBridge.exposeInMainWorld("link", {
     sendAnswer: (sessionId, sdp) => ipcRenderer.invoke('remote-access:answer', sessionId, sdp),
     sendIce: (sessionId, candidate) => ipcRenderer.invoke('remote-access:ice', sessionId, candidate),
     endSession: (sessionId) => ipcRenderer.invoke('remote-access:end', sessionId),
-    injectInput: (sessionId, token, event) => ipcRenderer.invoke('remote-access:input', sessionId, token, event),
+    injectInput: (sessionId, token, event) => {
+      if (event.type !== 'mousemove') console.log(`[Preload] IPC invoking 'remote-access:inject-input' for ${event.type}`);
+      return ipcRenderer.invoke('remote-access:inject-input', sessionId, token, event);
+    },
     getSources: () => ipcRenderer.invoke('remote-access:get-sources'),
     onRequestReceived: (callback) => {
       const listener = (_, data) => callback(data);

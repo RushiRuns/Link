@@ -111,6 +111,9 @@ export function useRemoteAccessWebRTC({ sessionId, role, permissionMode, initial
     // DataChannel logic for low-latency input transport and RTT measurement
     const setupDataChannel = (channel: RTCDataChannel) => {
       inputChannelRef.current = channel;
+      if (channel.readyState === 'open') {
+        setIsInputReady(true);
+      }
       channel.onopen = () => setIsInputReady(true);
       channel.onclose = () => setIsInputReady(false);
       
@@ -128,9 +131,18 @@ export function useRemoteAccessWebRTC({ sessionId, role, permissionMode, initial
            }
            // Host specific: Forward input events to native OS via IPC
            if (role === 'host' && window.link?.remoteAccess && data.token) {
+             if (data.type !== 'mousemove') {
+               console.log(`[RemoteAccessWebRTC] Host received ${data.type} event. Forwarding to IPC...`);
+             }
              window.link.remoteAccess.injectInput(sessionId, data.token, data);
+           } else if (role === 'host') {
+             if (data.type !== 'mousemove') {
+               console.warn(`[RemoteAccessWebRTC] Host dropped ${data.type}: missing IPC bridge or token`, { hasBridge: !!window.link?.remoteAccess, hasToken: !!data.token });
+             }
            }
-         } catch(e) {}
+         } catch(e) {
+           console.error('[RemoteAccessWebRTC] Error parsing data channel message:', e);
+         }
       };
 
       // Periodic ping for RTT

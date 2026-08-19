@@ -17,12 +17,15 @@ class InputSimulator {
     // Spawn a persistent PowerShell process that reads from stdin.
     // This eliminates the 50-150ms startup latency of spawning a new process per input event.
     this.psProcess = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-NoExit', '-Command', '-']);
+    console.log('[InputSimulator] Spawned persistent PowerShell process (PID:', this.psProcess.pid, ')');
 
     this.psProcess.stderr.on('data', (data) => {
       console.error('[InputSimulator] PowerShell Error:', data.toString());
     });
-
-    // Initialize C# wrapper for user32.dll
+    
+    this.psProcess.stdout.on('data', (data) => {
+      console.log('[InputSimulator] PowerShell Output:', data.toString());
+    });
     const initScript = `
 $code = @"
 using System;
@@ -50,7 +53,16 @@ Add-Type -TypeDefinition $code
 
   private executeCommand(cmd: string) {
     if (this.psProcess && this.isActive) {
-      this.psProcess.stdin.write(cmd + '\n');
+      // PowerShell requires CRLF line endings when reading from stdin.
+      // Without this, here-string (@"..."@) blocks fail to parse, preventing
+      // the C# InputSim class from compiling and breaking all input injection.
+      const normalized = cmd.replace(/\r?\n/g, '\r\n');
+      if (!normalized.includes('SetCursorPos')) {
+        console.log(`[InputSimulator] Executing native command:`, normalized.trim());
+      }
+      this.psProcess.stdin.write(normalized + '\r\n');
+    } else {
+      console.warn('[InputSimulator] Cannot execute command: psProcess missing or inactive', { hasProcess: !!this.psProcess, isActive: this.isActive });
     }
   }
 

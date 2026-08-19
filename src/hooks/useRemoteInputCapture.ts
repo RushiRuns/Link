@@ -17,15 +17,23 @@ export function useRemoteInputCapture({ videoRef, inputChannel, isActive }: UseR
 
   useEffect(() => {
     if (!isActive || !inputChannel || inputChannel.readyState !== 'open' || !videoRef.current || !activeSession) {
+      console.log('[RemoteInputCapture] Not ready:', { isActive, channelState: inputChannel?.readyState, hasVideo: !!videoRef.current, hasSession: !!activeSession });
       return;
     }
+
+    console.log('[RemoteInputCapture] Ready and capturing input for session:', activeSession.sessionId);
 
     const video = videoRef.current;
     const sessionToken = activeSession.sessionToken;
 
     const sendEvent = (event: Omit<RaInputEvent, 'token'>) => {
       if (inputChannel.readyState === 'open') {
+        if (event.type !== 'mousemove') {
+           console.log(`[RemoteInputCapture] Sending ${event.type}:`, event);
+        }
         inputChannel.send(JSON.stringify({ ...event, token: sessionToken }));
+      } else {
+        console.warn(`[RemoteInputCapture] Channel not open, dropped ${event.type}`);
       }
     };
 

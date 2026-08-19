@@ -269,6 +269,7 @@ function registerRemoteAccessIpcHandlers() {
 
   ipcMain.removeHandler('remote-access:inject-input');
   ipcMain.handle('remote-access:inject-input', async (_, sessionId: string, token: string, event: any) => {
+    if (event.type !== 'mousemove') console.log(`[Handlers] IPC received 'remote-access:inject-input' for ${event.type}`);
     return remoteAccessService.handleInputInject(sessionId, token, event);
   });
 

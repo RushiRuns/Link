@@ -235,11 +235,18 @@ class RemoteAccessService {
   // Called directly from DataChannel IPC to validate and inject input
   public handleInputInject(sessionId: string, token: string, event: any) {
     const state = this.activeSessions.get(sessionId);
-    if (!state || state.role !== 'host' || state.permissionMode !== 'full-control') return;
+    if (!state || state.role !== 'host' || state.permissionMode !== 'full-control') {
+      if (event.type !== 'mousemove') console.warn(`[RemoteAccessService] Dropped ${event.type}: invalid state.`, { hasState: !!state, role: state?.role, perm: state?.permissionMode });
+      return;
+    }
     
     // validate token securely
-    if (state.sessionToken !== token) return;
+    if (state.sessionToken !== token) {
+      if (event.type !== 'mousemove') console.warn(`[RemoteAccessService] Dropped ${event.type}: invalid token.`);
+      return;
+    }
     
+    if (event.type !== 'mousemove') console.log(`[RemoteAccessService] Passing ${event.type} to input simulator.`);
     inputSimulator.handleInputEvent({ ...event, token });
   }
 }
