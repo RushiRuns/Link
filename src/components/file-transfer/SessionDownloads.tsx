@@ -44,10 +44,10 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
         left: '8px',
         right: '8px',
         maxHeight: '360px',
-        backgroundColor: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
+        backgroundColor: '#1E1E22',
+        border: '1px solid #3A3A3E',
         borderRadius: 'var(--radius-md)',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
+        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.55)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 1000,
@@ -57,11 +57,11 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
       <div
         style={{
           padding: 'var(--space-2) var(--space-3)',
-          borderBottom: '1px solid var(--border-color)',
+          borderBottom: '1px solid #3A3A3E',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: 'var(--bg-card-hover)'
+          backgroundColor: '#28282D'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', minWidth: 0 }}>
@@ -99,14 +99,14 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
             borderRadius: '50%',
             flexShrink: 0
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-hover)')}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#3A3A3E')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
           <X size={14} />
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-2)' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-2)', backgroundColor: '#1E1E22' }}>
         {sessionTransfers.length === 0 ? (
           <div
             style={{
@@ -140,17 +140,17 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                     gap: 'var(--space-2)',
                     padding: '6px 8px',
                     borderRadius: 'var(--radius-sm)',
-                    backgroundColor: isSaved ? 'var(--bg-sidebar)' : 'var(--bg-body)',
+                    backgroundColor: '#2C2C30',
                     border: '1px solid',
-                    borderColor: isSaved ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 71, 87, 0.15)',
+                    borderColor: isSaved ? 'rgba(46, 213, 115, 0.25)' : 'rgba(255, 71, 87, 0.2)',
                     cursor: isSaved ? 'pointer' : 'default',
                     transition: 'background-color var(--transition-fast)'
                   }}
                   onMouseEnter={(e) => {
-                    if (isSaved) e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    if (isSaved) e.currentTarget.style.backgroundColor = '#36363C';
                   }}
                   onMouseLeave={(e) => {
-                    if (isSaved) e.currentTarget.style.backgroundColor = 'var(--bg-sidebar)';
+                    if (isSaved) e.currentTarget.style.backgroundColor = '#2C2C30';
                   }}
                 >
                   <div
@@ -158,7 +158,8 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                       width: '30px',
                       height: '30px',
                       borderRadius: 'var(--radius-sm)',
-                      backgroundColor: 'var(--bg-card)',
+                      backgroundColor: '#202024',
+                      border: '1px solid #333338',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
