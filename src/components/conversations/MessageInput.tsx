@@ -93,11 +93,9 @@ export function MessageInput({
     
     lastSendTime.current = now;
     onSend(trimmed);
-    if (!isEditing) {
-      setContent('');
-      if (onTyping) onTyping(false);
-      lastTypingTime.current = 0;
-    }
+    setContent('');
+    if (onTyping) onTyping(false);
+    lastTypingTime.current = 0;
   };
 
   const handleCancelEdit = () => {
