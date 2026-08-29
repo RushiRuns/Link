@@ -42,6 +42,17 @@ export function MessageInput({
   const lastSendTime = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const resizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [content]);
+
   useEffect(() => {
     if (!disabled) {
       textareaRef.current?.focus();
