@@ -70,7 +70,7 @@ export function getOrGenerateIdentity(): LocalIdentityFull {
     secretKey: secKey,
     publicKeyBase64: pubKeyBase64,
     publicKeyFingerprint: fingerprint,
-    appVersion: '3.0.0'
+    appVersion: '4.0.0'
   };
 
   return cachedIdentity;
