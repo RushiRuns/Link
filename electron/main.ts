@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, Menu, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeTheme, Menu, Tray, powerMonitor } from 'electron';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -219,6 +219,20 @@ if (!gotTheLock) {
     if (tcpPort) {
       discoveryManager.start(tcpPort);
     }
+
+    // Handle system sleep/wake cycles to reset discovery network layer
+    powerMonitor.on('resume', () => {
+      console.log('[Main] System resumed from sleep. Restarting discovery services...');
+      discoveryManager.stop();
+      
+      // Wait briefly for network interfaces to re-acquire IPs before binding sockets
+      setTimeout(() => {
+        if (tcpPort) {
+          discoveryManager.start(tcpPort);
+          discoveryManager.announce();
+        }
+      }, 3000);
+    });
 
     // Listen for OS theme changes
     nativeTheme.on('updated', () => {

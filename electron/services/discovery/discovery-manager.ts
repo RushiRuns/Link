@@ -11,13 +11,22 @@ class DiscoveryManager extends EventEmitter {
   private noPeersTimer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
 
-  public start(tcpPort: number) {
-    if (this.isRunning) return;
-    this.isRunning = true;
-
+  constructor() {
+    super();
     // Listen to mDNS and UDP broadcast announcements
     mdnsDiscovery.on('peer-found', (peer) => this.handleDiscoveredPeer(peer));
     udpBroadcastDiscovery.on('peer-found', (peer) => this.handleDiscoveredPeer(peer));
+
+    // If a connection drops (e.g. ECONNRESET after sleep), remove it from the deduplication 
+    // cache so the next incoming broadcast will trigger a fresh reconnection.
+    connectionManager.on('peer:disconnected', (deviceId) => {
+      this.discoveredPeers.delete(deviceId);
+    });
+  }
+
+  public start(tcpPort: number) {
+    if (this.isRunning) return;
+    this.isRunning = true;
 
     // Start mDNS immediately
     mdnsDiscovery.start(tcpPort);
@@ -43,6 +52,7 @@ class DiscoveryManager extends EventEmitter {
       clearTimeout(this.noPeersTimer);
       this.noPeersTimer = null;
     }
+    this.discoveredPeers.clear();
     mdnsDiscovery.stop();
     udpBroadcastDiscovery.stop();
   }
