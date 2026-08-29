@@ -31,8 +31,11 @@ export function FilePreviewModal({ items, recipientName, onSend, onCancel }: Fil
       const focusableElements = modalRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
       if (focusableElements.length > 0) {
         const textarea = modalRef.current.querySelector('textarea');
+        const textInput = modalRef.current.querySelector('input[type="text"]');
         if (textarea) {
           textarea.focus();
+        } else if (textInput) {
+          (textInput as HTMLElement).focus();
         } else {
           (focusableElements[0] as HTMLElement).focus();
         }
