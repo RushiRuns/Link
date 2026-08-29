@@ -165,6 +165,14 @@ export function registerIpcHandlers() {
   });
 
   // File Transfer Handlers
+  ipcMain.handle('file-transfers:load', async () => {
+    return messageStore.loadTransfers();
+  });
+
+  ipcMain.handle('file-transfers:save', async (_, data: Record<string, any>) => {
+    return messageStore.saveTransfers(data);
+  });
+
   ipcMain.handle('file-transfer:offer-files', async (_, peerIds: string[], filePaths: string[], groupId?: string, message?: string) => {
     return fileTransferService.offerFiles(peerIds, filePaths, groupId, message);
   });

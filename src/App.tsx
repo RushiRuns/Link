@@ -32,7 +32,7 @@ export default function App() {
   const { activeCall, incomingCall, mediaError, setMediaError, initListeners: initCallListeners } = useCallsStore();
   const { initListeners: initConversationsListeners, loadFromDisk } = useConversationsStore();
   const { initListeners: initGroupsListeners, loadGroupsFromDisk } = useGroupsStore();
-  const { initListeners: initFtListeners } = useFileTransferStore();
+  const { initListeners: initFtListeners, loadFromDisk: loadTransfersFromDisk } = useFileTransferStore();
   const { 
     initListeners: initRemoteAccessListeners, 
     showScreenPicker, 
@@ -52,6 +52,7 @@ export default function App() {
     });
 
     loadFromDisk();
+    loadTransfersFromDisk();
     loadGroupsFromDisk();
     const cleanCalls = initCallListeners();
     const cleanConversations = initConversationsListeners();
@@ -68,7 +69,7 @@ export default function App() {
       cleanPeers();
       cleanRemoteAccess();
     };
-  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, initRemoteAccessListeners, loadFromDisk]);
+  }, [initCallListeners, initConversationsListeners, initGroupsListeners, initFtListeners, initPeersListeners, initRemoteAccessListeners, loadFromDisk, loadTransfersFromDisk, loadGroupsFromDisk]);
 
   useEffect(() => {
     if (mediaError) {

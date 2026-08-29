@@ -13,6 +13,10 @@ class MessageStore {
     return path.join(app.getPath('userData'), 'group_messages.enc');
   }
 
+  private getTransfersDbPath(): string {
+    return path.join(app.getPath('userData'), 'file_transfers.enc');
+  }
+
   private getFallbackKey(): Buffer {
     const identity = getOrGenerateIdentity();
     // Derive a 32-byte AES-256 key from the identity secret key
@@ -97,6 +101,36 @@ class MessageStore {
     } catch (err: any) {
       if (err.code !== 'ENOENT') {
         console.error('[MessageStore] Failed to load group messages:', err);
+      }
+      return {}; 
+    }
+  }
+
+  public async saveTransfers(data: Record<string, any>): Promise<void> {
+    try {
+      const jsonStr = JSON.stringify(data);
+      const encryptedBuffer = this.encryptData(jsonStr);
+      await fs.writeFile(this.getTransfersDbPath(), encryptedBuffer);
+      console.log(`[TransferStore] Saving ${Object.keys(data).length} transfers to disk`);
+    } catch (err) {
+      console.error('[TransferStore] Failed to save transfers:', err);
+    }
+  }
+
+  public async loadTransfers(): Promise<Record<string, any>> {
+    try {
+      const dbPath = this.getTransfersDbPath();
+      await fs.access(dbPath);
+      const encryptedBuffer = await fs.readFile(dbPath);
+      const jsonStr = this.decryptData(encryptedBuffer);
+      const data = JSON.parse(jsonStr);
+      console.log(`[TransferStore] Loaded ${Object.keys(data).length} transfers from disk`);
+      return data;
+    } catch (err: any) {
+      if (err.code !== 'ENOENT') {
+        console.error('[TransferStore] Failed to load transfers:', err);
+      } else {
+        console.log('[TransferStore] No transfer file found, starting fresh');
       }
       return {}; 
     }

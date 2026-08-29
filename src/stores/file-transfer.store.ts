@@ -16,6 +16,7 @@ interface FileTransferState {
   offerPastedBuffer: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => Promise<LinkFileTransfer[] | undefined>;
   respondToOffer: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
   openTransferFolder: (transferId: string) => Promise<boolean>;
+  loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
 }
 
@@ -158,6 +159,33 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     return false;
   },
 
+  loadFromDisk: async () => {
+    if (window.link?.fileTransfer?.loadTransfers) {
+      console.log('[FileTransferStore] loadFromDisk: loading transfers from disk...');
+      try {
+        const data = await window.link.fileTransfer.loadTransfers();
+        const map = new Map<string, LinkFileTransfer>();
+        let downgradedCount = 0;
+        
+        for (const [id, transfer] of Object.entries(data)) {
+          let loadedTransfer = { ...transfer };
+          if (loadedTransfer.status === 'pending_accept' || loadedTransfer.status === 'transferring') {
+            loadedTransfer.status = 'failed';
+            downgradedCount++;
+          }
+          map.set(id, loadedTransfer);
+        }
+        
+        set({ transfers: map });
+        console.log(`[FileTransferStore] loadFromDisk: restored ${map.size} transfers (${downgradedCount} downgraded to failed)`);
+      } catch (err) {
+        console.error('[FileTransferStore] loadFromDisk: ERROR —', err);
+      }
+    } else {
+      console.log('[FileTransferStore] loadFromDisk: no IPC bridge available, skipping');
+    }
+  },
+
   initListeners: () => {
     if (!window.link?.fileTransfer) return () => {};
 
@@ -200,3 +228,46 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     };
   }
 }));
+
+let saveTimeout: any;
+let lastFingerprint = '';
+
+useFileTransferStore.subscribe((state) => {
+  // Create a fingerprint of IDs + statuses
+  const entries = Array.from(state.transfers.values());
+  const currentFingerprint = entries.map(t => `${t.id}:${t.status}`).sort().join('|');
+
+  if (currentFingerprint !== lastFingerprint) {
+    lastFingerprint = currentFingerprint;
+    
+    if (saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async () => {
+      if (window.link?.fileTransfer?.saveTransfers) {
+        const record: Record<string, LinkFileTransfer> = {};
+        for (const [id, transfer] of state.transfers.entries()) {
+          record[id] = transfer;
+        }
+        try {
+          console.log(`[FileTransferStore] Persisting ${state.transfers.size} transfers to disk`);
+          await window.link.fileTransfer.saveTransfers(record);
+        } catch (err) {
+          console.error('[FileTransferStore] Save error —', err);
+        }
+      }
+    }, 500); // 500ms debounce
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (saveTimeout && window.link?.fileTransfer?.saveTransfers) {
+    clearTimeout(saveTimeout);
+    const record: Record<string, LinkFileTransfer> = {};
+    const transfers = useFileTransferStore.getState().transfers;
+    for (const [id, transfer] of transfers.entries()) {
+      record[id] = transfer;
+    }
+    console.log('[FileTransferStore] beforeunload: flushing transfers to disk');
+    // Fire and forget, OS usually allows small async IPC messages in beforeunload
+    window.link.fileTransfer.saveTransfers(record);
+  }
+});

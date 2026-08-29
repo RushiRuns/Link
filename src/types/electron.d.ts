@@ -85,6 +85,8 @@ export interface LinkAPI {
     respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
     openFolder: (transferId: string) => Promise<boolean>;
     getThumbnail: (filePath: string) => Promise<string | null>;
+    loadTransfers: () => Promise<Record<string, LinkFileTransfer>>;
+    saveTransfers: (data: Record<string, LinkFileTransfer>) => Promise<void>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;
     onProgress: (callback: (transferId: string, bytesTransferred: number) => void) => () => void;
     onCompleted: (callback: (transferId: string) => void) => () => void;

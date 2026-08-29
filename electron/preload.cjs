@@ -130,6 +130,8 @@ contextBridge.exposeInMainWorld("link", {
       ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
     openFolder: (transferId) => ipcRenderer.invoke("file-transfer:open-folder", transferId),
     getThumbnail: (filePath) => ipcRenderer.invoke("file-transfer:get-thumbnail", filePath),
+    loadTransfers: () => ipcRenderer.invoke('file-transfers:load'),
+    saveTransfers: (data) => ipcRenderer.invoke('file-transfers:save', data),
     onOfferReceived: (callback) => {
       const listener = (_, transfer) => callback(transfer);
       ipcRenderer.on("file-transfer:offer-received", listener);
