@@ -85,9 +85,9 @@ export default function App() {
       <GlobalStyles />
       <AppShell sidebar={<PeerList onOpenSettings={() => setShowSettings(true)} />}>
         {selectedPeer ? (
-          <ConversationView peer={selectedPeer} />
+          <ConversationView key={selectedPeer.id} peer={selectedPeer} />
         ) : selectedGroup ? (
-          <GroupView group={selectedGroup} />
+          <GroupView key={selectedGroup.id} group={selectedGroup} />
         ) : (
           <div
             style={{

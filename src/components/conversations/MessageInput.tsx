@@ -40,6 +40,13 @@ export function MessageInput({
   const [content, setContent] = useState('');
   const lastTypingTime = useRef(0);
   const lastSendTime = useRef(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!disabled) {
+      textareaRef.current?.focus();
+    }
+  }, [disabled]);
 
   useEffect(() => {
     if (initialValue !== undefined) {
@@ -214,6 +221,7 @@ export function MessageInput({
         )}
 
         <textarea
+          ref={textareaRef}
           rows={1}
           value={content}
           maxLength={MAX_CHAR_LIMIT}
