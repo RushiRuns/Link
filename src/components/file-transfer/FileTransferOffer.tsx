@@ -1,5 +1,6 @@
 import { LinkFileTransfer } from '../../types/ipc';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
+import { usePeersStore } from '../../stores/peers.store';
 import { FileText, Download, X } from 'lucide-react';
 
 interface FileTransferOfferProps {
@@ -16,6 +17,10 @@ function formatBytes(bytes: number): string {
 
 export function FileTransferOffer({ offer }: FileTransferOfferProps) {
   const { respondToOffer } = useFileTransferStore();
+  const { peers, knownPeers } = usePeersStore();
+
+  const peer = peers.get(offer.peerId) || knownPeers.find(p => p.id === offer.peerId);
+  const senderName = peer?.displayName || 'A teammate';
 
   const handleAccept = () => {
     respondToOffer(offer.id, true);
@@ -74,7 +79,7 @@ export function FileTransferOffer({ offer }: FileTransferOfferProps) {
           Incoming File Transfer
         </h3>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-4)' }}>
-          A teammate wants to send you a file over LAN
+          <strong style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>{senderName}</strong> wants to send you a {offer.isFolder ? 'folder' : 'file'} over LAN
         </p>
 
         <div
