@@ -4,12 +4,23 @@ import { udpBroadcastDiscovery } from './udp-broadcast.js';
 import { connectionManager } from '../network/connection-manager.js';
 import { sendHandshakeHello } from '../network/handshake.js';
 import { getFingerprint } from '../identity/fingerprint.js';
+import { getOrGenerateIdentity } from '../identity/identity.js';
 import { db } from '../storage/db.js';
 
 class DiscoveryManager extends EventEmitter {
   private discoveredPeers: Map<string, DiscoveredPeerAnnouncement> = new Map();
   private noPeersTimer: NodeJS.Timeout | null = null;
   private isRunning: boolean = false;
+
+  private parseMajorMinor(versionStr: string): string {
+    const parts = (versionStr || '0.0.0').split('.');
+    return parts.length >= 2 ? `${parts[0]}.${parts[1]}` : versionStr;
+  }
+
+  private isVersionCompatible(remoteVersion: string): boolean {
+    const { appVersion } = getOrGenerateIdentity();
+    return this.parseMajorMinor(appVersion) === this.parseMajorMinor(remoteVersion);
+  }
 
   constructor() {
     super();
@@ -20,7 +31,18 @@ class DiscoveryManager extends EventEmitter {
     // If a connection drops (e.g. ECONNRESET after sleep), remove it from the deduplication 
     // cache so the next incoming broadcast will trigger a fresh reconnection.
     connectionManager.on('peer:disconnected', (deviceId) => {
-      this.discoveredPeers.delete(deviceId);
+      const cached = this.discoveredPeers.get(deviceId);
+      if (cached && this.isVersionCompatible(cached.appVersion)) {
+        // Compatible peer disconnected (e.g. after sleep/wake) — clear cache to allow reconnection.
+        console.log(`[DiscoveryManager] Compatible peer ${cached.deviceId} disconnected — clearing cache for reconnection.`);
+        this.discoveredPeers.delete(deviceId);
+      } else if (cached) {
+        // Incompatible peer was rejected — keep in cache to suppress infinite reconnect loop.
+        console.log(`[DiscoveryManager] Incompatible peer ${deviceId} (v${cached.appVersion}) disconnected — keeping in cache to suppress flicker.`);
+      } else {
+        // Peer disconnected before discovery cache was populated (e.g. inbound connection).
+        console.log(`[DiscoveryManager] Peer ${deviceId} disconnected but was not in discovery cache.`);
+      }
     });
   }
 
@@ -65,12 +87,33 @@ class DiscoveryManager extends EventEmitter {
   }
 
   private async handleDiscoveredPeer(peer: DiscoveredPeerAnnouncement) {
-    if (!peer.deviceId || !peer.tcpPort) return;
-    if (!peer.ipAddress) return;
+    if (!peer.deviceId || !peer.tcpPort) {
+      console.warn(`[DiscoveryManager] Ignored malformed broadcast (missing deviceId or tcpPort).`);
+      return;
+    }
+    if (!peer.ipAddress) {
+      console.warn(`[DiscoveryManager] Ignored broadcast from ${peer.deviceId} (missing ipAddress).`);
+      return;
+    }
 
     // Deduplicate
     const existing = this.discoveredPeers.get(peer.deviceId);
     if (existing && existing.ipAddress === peer.ipAddress && existing.tcpPort === peer.tcpPort) {
+      // [DEBUG] Uncomment the line below to trace suppressed duplicate broadcasts:
+      // console.log(`[DiscoveryManager] Suppressed duplicate broadcast from ${peer.displayName} (${peer.deviceId}) — already cached.`);
+      return;
+    }
+
+    // Version compatibility check — log clearly if peer is incompatible
+    if (!this.isVersionCompatible(peer.appVersion)) {
+      const { appVersion: localVersion } = getOrGenerateIdentity();
+      console.warn(
+        `[DiscoveryManager] Skipping connection to ${peer.displayName} — version mismatch: ` +
+        `local=${localVersion}, remote=${peer.appVersion || 'unknown'}. ` +
+        `Peer will be cached to suppress future reconnect attempts.`
+      );
+      // Cache the peer as-is so deduplication silences future broadcasts
+      this.discoveredPeers.set(peer.deviceId, peer);
       return;
     }
 
