@@ -159,7 +159,10 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
           border: '1px solid var(--border-color)',
           wordBreak: 'break-word',
           fontSize: 'var(--font-size-body)',
-          lineHeight: 1.45
+          lineHeight: 1.45,
+          outline: 'none',
+          userSelect: 'text',
+          WebkitUserSelect: 'text'
         }}
       >
         {isHovered && (
@@ -176,7 +179,9 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
               boxShadow: 'var(--shadow-sm)',
-              zIndex: 10
+              zIndex: 10,
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
             }}
           >
             <button
@@ -236,7 +241,9 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
               display: 'flex',
               flexDirection: 'column',
               gap: '2px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              userSelect: 'none',
+              WebkitUserSelect: 'none'
             }}
           >
             <div style={{ color: 'var(--accent-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -254,7 +261,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
           </div>
         )}
 
-        <div style={{ whiteSpace: 'pre-wrap' }}>{renderContentWithLinks(message.content)}</div>
+        <div style={{ whiteSpace: 'pre-wrap', userSelect: 'text', WebkitUserSelect: 'text', cursor: 'text' }}>{renderContentWithLinks(message.content)}</div>
 
         <div
           style={{
@@ -264,7 +271,9 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
             gap: '4px',
             marginTop: 'var(--space-1)',
             fontSize: 'var(--font-size-meta)',
-            color: 'var(--text-secondary)'
+            color: 'var(--text-secondary)',
+            userSelect: 'none',
+            WebkitUserSelect: 'none'
           }}
         >
           {message.isEdited && <span style={{ fontStyle: 'italic', marginRight: '2px' }} title="Edited">(edited)</span>}
