@@ -23,6 +23,7 @@ import { RemoteAccessPromptModal } from './components/remote-access/RemoteAccess
 import { RemoteViewerModal } from './components/remote-access/RemoteViewerModal';
 import { RemoteAccessHostIndicator } from './components/remote-access/RemoteAccessHostIndicator';
 import { ScreenPickerModal } from './components/calls/ScreenPickerModal';
+import { ToastContainer } from './components/design-system/ToastContainer';
 
 export default function App() {
   const { selectedPeerId, selectedGroupId } = useAppStore();
@@ -213,6 +214,7 @@ export default function App() {
           mode="remote-access"
         />
       )}
+      <ToastContainer />
     </>
   );
 }

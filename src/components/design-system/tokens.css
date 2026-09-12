@@ -106,6 +106,19 @@
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
 button.icon-button:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;

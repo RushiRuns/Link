@@ -8,7 +8,7 @@ import { MessageBubble } from '../conversations/MessageBubble';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { MessageInput } from '../conversations/MessageInput';
-import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock } from 'lucide-react';
+import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock, Edit2 } from 'lucide-react';
 
 interface GroupViewProps {
   group: LinkGroup;
@@ -497,6 +497,51 @@ export function GroupView({ group }: GroupViewProps) {
               <button
                 onClick={() => setReplyingToMessageId(null)}
                 title="Cancel reply"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Edit Preview Banner */}
+          {editingMessage && (
+            <div
+              style={{
+                padding: 'var(--space-2) var(--space-4)',
+                backgroundColor: 'var(--bg-card)',
+                borderTop: '1px solid var(--border-color)',
+                borderLeft: '4px solid var(--accent-primary)',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 'var(--space-3)'
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '2px' }}>
+                  <Edit2 size={14} strokeWidth={2} />
+                  <span>Editing message</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                    (Esc to cancel)
+                  </span>
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {editingMessage.content}
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingMessageId(null)}
+                title="Cancel edit"
                 style={{
                   background: 'transparent',
                   border: 'none',

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { LinkIdentity } from '../../types/ipc';
 import { useAppStore } from '../../stores/app.store';
-import { X, User, Key, Shield, Sun, Moon, Info, FolderHeart } from 'lucide-react';
+import { toast } from '../../stores/toast.store';
+import { X, User, Key, Shield, Sun, Moon, Info, FolderHeart, Check } from 'lucide-react';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [identity, setIdentity] = useState<LinkIdentity | null>(null);
   const [displayName, setDisplayNameInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [downloadPath, setDownloadPath] = useState('');
   const { isDarkMode, setDarkMode } = useAppStore();
 
@@ -34,9 +36,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       if (window.link?.identity) {
         const updated = await window.link.identity.setDisplayName(displayName.trim());
         setIdentity(updated);
+        setIsSaved(true);
+        toast.success('Display name updated');
+        setTimeout(() => setIsSaved(false), 1500);
       }
     } catch (err) {
       console.error('[Settings] Error setting display name:', err);
+      toast.error('Failed to update display name');
     } finally {
       setIsSaving(false);
     }
@@ -147,28 +153,41 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               />
               <button
                 onClick={handleSaveDisplayName}
-                disabled={isSaving || !displayName.trim() || displayName.trim() === identity?.displayName}
+                disabled={isSaving || isSaved || !displayName.trim() || displayName.trim() === identity?.displayName}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
                   padding: 'var(--space-2) var(--space-4)',
                   borderRadius: 'var(--radius-sm)',
                   border: 'none',
-                  backgroundColor:
-                    !displayName.trim() || displayName.trim() === identity?.displayName
+                  backgroundColor: isSaved
+                    ? 'var(--status-online)'
+                    : (!displayName.trim() || displayName.trim() === identity?.displayName)
                       ? 'var(--bg-card-hover)'
                       : 'var(--accent-primary)',
-                  color:
-                    !displayName.trim() || displayName.trim() === identity?.displayName
+                  color: isSaved
+                    ? '#ffffff'
+                    : (!displayName.trim() || displayName.trim() === identity?.displayName)
                       ? 'var(--text-muted)'
                       : '#ffffff',
                   cursor:
-                    !displayName.trim() || displayName.trim() === identity?.displayName
+                    isSaved || !displayName.trim() || displayName.trim() === identity?.displayName
                       ? 'default'
                       : 'pointer',
                   fontWeight: 500,
-                  fontSize: 'var(--font-size-body)'
+                  fontSize: 'var(--font-size-body)',
+                  transition: 'background-color var(--transition-fast)'
                 }}
               >
-                Save
+                {isSaved ? (
+                  <>
+                    <Check size={14} strokeWidth={2.5} />
+                    <span>Saved!</span>
+                  </>
+                ) : (
+                  'Save'
+                )}
               </button>
             </div>
           </div>

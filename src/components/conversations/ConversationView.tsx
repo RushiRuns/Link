@@ -10,7 +10,7 @@ import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
-import { Shield, UploadCloud, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X } from 'lucide-react';
+import { Shield, UploadCloud, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X, Edit2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { getConversationId } from '../../utils/conversation';
 
@@ -637,6 +637,51 @@ export function ConversationView({ peer }: ConversationViewProps) {
               color: 'var(--text-secondary)',
               padding: '4px',
               display: 'flex'
+            }}
+          >
+            <X size={16} strokeWidth={2} />
+          </button>
+        </div>
+      )}
+
+      {/* Editing Message Banner */}
+      {editingMessageId && (
+        <div
+          style={{
+            padding: 'var(--space-2) var(--space-4)',
+            backgroundColor: 'var(--bg-card)',
+            borderTop: '1px solid var(--border-color)',
+            borderLeft: '4px solid var(--accent-primary)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 'var(--space-3)'
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-primary)', fontWeight: 600, fontSize: '0.85rem', marginBottom: '2px' }}>
+              <Edit2 size={14} strokeWidth={2} />
+              <span>Editing message</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '4px' }}>
+                (Esc to cancel)
+              </span>
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {editingMessageContent || 'Empty message'}
+            </div>
+          </div>
+          <button
+            onClick={() => { if (conversationId) setEditingMessageId(conversationId, null); }}
+            title="Cancel edit"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             <X size={16} strokeWidth={2} />

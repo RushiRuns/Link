@@ -1,6 +1,6 @@
 import { LinkMessage } from '../../types/ipc';
-import { Copy, Edit2, Trash2, CornerUpLeft, Check, CheckCheck, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Copy, Edit2, Trash2, CornerUpLeft, Check, CheckCheck, Clock, AlertTriangle, AlertCircle, RotateCw } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { usePeersStore } from '../../stores/peers.store';
 
 interface MessageBubbleProps {
@@ -19,7 +19,45 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessage, repliedMessage, onReply, onCopy, onEdit, onDelete, onRetry }: MessageBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isReplyExpanded, setIsReplyExpanded] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { peers } = usePeersStore();
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCopyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCopy) {
+      onCopy();
+    } else {
+      navigator.clipboard.writeText(message.content);
+    }
+    setIsCopied(true);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => {
+      setIsCopied(false);
+      copyTimeoutRef.current = null;
+    }, 1500);
+  };
+
+  const handleRetryClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onRetry || isRetrying) return;
+    setIsRetrying(true);
+    onRetry();
+    if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
+    retryTimeoutRef.current = setTimeout(() => {
+      setIsRetrying(false);
+      retryTimeoutRef.current = null;
+    }, 1500);
+  };
 
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
     hour: '2-digit',
@@ -58,12 +96,25 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
       case 'failed':
         return (
           <span 
-            title="Failed to deliver. Click to retry." 
-            aria-label="Failed to deliver. Click to retry."
-            onClick={onRetry} 
-            style={{ display: 'inline-flex', alignItems: 'center', cursor: onRetry ? 'pointer' : 'default' }}
+            title={isRetrying ? "Retrying delivery..." : "Failed to deliver. Click to retry."} 
+            aria-label={isRetrying ? "Retrying delivery..." : "Failed to deliver. Click to retry."}
+            onClick={handleRetryClick} 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              cursor: isRetrying ? 'default' : (onRetry ? 'pointer' : 'default') 
+            }}
           >
-            <AlertTriangle size={12} strokeWidth={2} style={{ color: 'var(--status-error)' }} />
+            {isRetrying ? (
+              <RotateCw 
+                size={12} 
+                strokeWidth={2} 
+                className="spin-animation" 
+                style={{ color: 'var(--accent-primary)' }} 
+              />
+            ) : (
+              <AlertTriangle size={12} strokeWidth={2} style={{ color: 'var(--status-error)' }} />
+            )}
           </span>
         );
       default:
@@ -192,11 +243,20 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
               <CornerUpLeft size={12} strokeWidth={1.5} />
             </button>
             <button
-              onClick={onCopy}
-              title="Copy"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center' }}
+              onClick={handleCopyClick}
+              title={isCopied ? "Copied!" : "Copy"}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: isCopied ? 'var(--status-online)' : 'var(--text-secondary)',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'color var(--transition-fast)'
+              }}
             >
-              <Copy size={12} strokeWidth={1.5} />
+              {isCopied ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} strokeWidth={1.5} />}
             </button>
             {isSelf && isLatestMessage && (
               <button
