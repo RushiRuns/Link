@@ -1,6 +1,7 @@
 import { LinkFileTransfer } from '../../types/ipc';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { usePeersStore } from '../../stores/peers.store';
+import { toast } from '../../stores/toast.store';
 import { FileText, Download, X } from 'lucide-react';
 
 interface FileTransferOfferProps {
@@ -24,10 +25,12 @@ export function FileTransferOffer({ offer }: FileTransferOfferProps) {
 
   const handleAccept = () => {
     respondToOffer(offer.id, true);
+    toast.success(`Transfer accepted — downloading "${offer.fileName}" to Link folder`);
   };
 
   const handleDecline = () => {
     respondToOffer(offer.id, false);
+    toast.info(`File transfer declined for "${offer.fileName}"`);
   };
 
   return (

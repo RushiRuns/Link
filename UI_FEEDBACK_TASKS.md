@@ -215,8 +215,8 @@ Before implementing the individual UI feedback items, the following shared infra
   2. In message action toolbar, check if current message ID is copied.
   3. Render `<Check />` icon and `"Copied!"` tooltip during active state.
 - **Acceptance Criteria**:
-  - [ ] Clicking copy on group message transforms icon into checkmark for 1.5s.
-  - [ ] Multiple rapid clicks do not break timer or layout.
+  - [x] Clicking copy on group message transforms icon into checkmark for 1.5s.
+  - [x] Multiple rapid clicks do not break timer or layout.
 
 ---
 
@@ -232,8 +232,8 @@ Before implementing the individual UI feedback items, the following shared infra
   1. In `handleAccept` (L127–L146), call `toast.success(\`Transfer accepted — downloading "${offer.fileName}"\`)`.
   2. In `handleDecline` (L105–L124), call `toast.info(\`File transfer declined for "${offer.fileName}"\`)`.
 - **Acceptance Criteria**:
-  - [ ] Accepting file offer shows clear toast indicating download has started.
-  - [ ] Declining offer shows dismissal toast.
+  - [x] Accepting file offer shows clear toast indicating download has started.
+  - [x] Declining offer shows dismissal toast.
 
 ---
 
@@ -250,8 +250,8 @@ Before implementing the individual UI feedback items, the following shared infra
   2. Wrap IPC call in try/catch or inspect returned status.
   3. On failure, trigger `toast.error("File could not be opened or has been moved")`.
 - **Acceptance Criteria**:
-  - [ ] Clicking row provides immediate tactile press feedback.
-  - [ ] Missing file triggers descriptive error toast.
+  - [x] Clicking row provides immediate tactile press feedback.
+  - [x] Missing file triggers descriptive error toast.
 
 ---
 
@@ -265,7 +265,7 @@ Before implementing the individual UI feedback items, the following shared infra
 - **Implementation Steps**:
   1. Replace `window.alert` call in `handleDeleteMessage` catch block (L141) with `toast.error(...)`.
 - **Acceptance Criteria**:
-  - [ ] Deletion error displays an in-app error toast without freezing the renderer or popping a native dialog.
+  - [x] Deletion error displays an in-app error toast without freezing the renderer or popping a native dialog.
 
 ---
 
@@ -283,9 +283,9 @@ Before implementing the individual UI feedback items, the following shared infra
   3. Render modal overlay with warning details, "Cancel", and "Continue" buttons.
   4. Proceed with `requestAccess` only when user confirms.
 - **Acceptance Criteria**:
-  - [ ] Initiating remote access during file transfer opens modern in-app warning modal.
-  - [ ] Native OS dialog is completely eliminated.
-  - [ ] User can cancel or proceed smoothly without thread freezing.
+  - [x] Initiating remote access during file transfer opens modern in-app warning modal.
+  - [x] Native OS dialog is completely eliminated.
+  - [x] User can cancel or proceed smoothly without thread freezing.
 
 ---
 

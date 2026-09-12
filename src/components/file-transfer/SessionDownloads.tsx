@@ -1,6 +1,7 @@
 import { Download, Check, X, FileIcon, XCircle, FileArchive, FileText, Image as ImageIcon, FileVideo } from 'lucide-react';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { usePeersStore } from '../../stores/peers.store';
+import { toast } from '../../stores/toast.store';
 
 interface SessionDownloadsProps {
   onClose: () => void;
@@ -131,8 +132,13 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
               return (
                 <div
                   key={transfer.id}
-                  onClick={() => {
-                    if (isSaved) openTransferFolder(transfer.id, transfer.savePath);
+                  onClick={async () => {
+                    if (isSaved) {
+                      const success = await openTransferFolder(transfer.id, transfer.savePath);
+                      if (!success) {
+                        toast.error('File could not be opened or has been moved.');
+                      }
+                    }
                   }}
                   title={isSaved ? `Click to open ${transfer.fileName}` : undefined}
                   style={{
@@ -145,13 +151,28 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                     border: '1px solid',
                     borderColor: isSaved ? 'rgba(46, 213, 115, 0.25)' : 'rgba(255, 71, 87, 0.2)',
                     cursor: isSaved ? 'pointer' : 'default',
-                    transition: 'background-color var(--transition-fast)'
+                    transition: 'background-color var(--transition-fast), transform var(--transition-fast)'
                   }}
                   onMouseEnter={(e) => {
                     if (isSaved) e.currentTarget.style.backgroundColor = '#36363C';
                   }}
                   onMouseLeave={(e) => {
-                    if (isSaved) e.currentTarget.style.backgroundColor = '#2C2C30';
+                    if (isSaved) {
+                      e.currentTarget.style.backgroundColor = '#2C2C30';
+                      e.currentTarget.style.transform = 'none';
+                    }
+                  }}
+                  onMouseDown={(e) => {
+                    if (isSaved) {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                      e.currentTarget.style.backgroundColor = '#242428';
+                    }
+                  }}
+                  onMouseUp={(e) => {
+                    if (isSaved) {
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.backgroundColor = '#36363C';
+                    }
                   }}
                 >
                   <div

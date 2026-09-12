@@ -11,6 +11,7 @@ import { MessageInput } from './MessageInput';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { Shield, UploadCloud, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X, Edit2 } from 'lucide-react';
+import { toast } from '../../stores/toast.store';
 import { v4 as uuidv4 } from 'uuid';
 import { getConversationId } from '../../utils/conversation';
 
@@ -138,7 +139,7 @@ export function ConversationView({ peer }: ConversationViewProps) {
         }
       } catch (err) {
         console.error('Failed to delete message:', err);
-        window.alert('Failed to delete message. The teammate may be offline or unreachable.');
+        toast.error('Failed to delete message. The teammate may be offline or unreachable.');
       }
     }
   };
