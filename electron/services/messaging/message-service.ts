@@ -13,6 +13,7 @@ export interface SendMessageOptions {
 class MessageService {
   private windowRef: any = null;
   private messageSenderCache: Map<string, string> = new Map();
+  private lastWakeTime: number = 0;
 
   public init(mainWindow: any) {
     this.windowRef = mainWindow;
@@ -140,6 +141,14 @@ class MessageService {
     const identity = getOrGenerateIdentity();
     const conversationId = getConversationId(identity.deviceId, senderDeviceId);
 
+    const wasHidden = this.windowRef ? (!this.windowRef.isVisible() || this.windowRef.isMinimized()) : false;
+    const now = Date.now();
+    const shouldWake = wasHidden && (now - this.lastWakeTime > 1000);
+
+    if (shouldWake) {
+      this.lastWakeTime = now;
+    }
+
     const incomingMsg = {
       id: payload.messageId || envelope.id,
       conversationId,
@@ -148,7 +157,8 @@ class MessageService {
       content: payload.content,
       replyToMessageId: payload.replyToMessageId,
       timestamp: envelope.ts || Date.now(),
-      deliveryStatus: 'delivered' as const
+      deliveryStatus: 'delivered' as const,
+      wokeApp: shouldWake
     };
 
     this.messageSenderCache.set(incomingMsg.id, senderDeviceId);
@@ -156,8 +166,16 @@ class MessageService {
     // Forward received message to renderer
     this.windowRef?.webContents?.send('message:received', incomingMsg);
     
-    if (this.windowRef && !this.windowRef.isFocused()) {
-      this.windowRef.flashFrame(true);
+    if (shouldWake && this.windowRef) {
+      if (!this.windowRef.isVisible()) this.windowRef.show();
+      if (this.windowRef.isMinimized()) this.windowRef.restore();
+      this.windowRef.focus();
+    }
+
+    if (this.windowRef && (!this.windowRef.isFocused() || shouldWake)) {
+      if (!shouldWake) {
+        this.windowRef.flashFrame(true);
+      }
       if (Notification.isSupported()) {
         new Notification({
           title: `New message from ${incomingMsg.senderName}`,

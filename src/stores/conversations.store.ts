@@ -216,6 +216,11 @@ export const useConversationsStore = create<ConversationsState>((set, get) => ({
     let lastNotificationTime = 0;
 
     const cleanReceived = window.link.messaging.onMessageReceived((message) => {
+      if (message.wokeApp) {
+        useAppStore.getState().selectPeer(message.senderId);
+        useAppStore.getState().setActiveView('chat');
+      }
+
       get().addMessage(message);
       
       if (window.link.messaging.ackMessageReceipt) {

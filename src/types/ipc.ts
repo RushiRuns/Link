@@ -53,6 +53,7 @@ export interface LinkMessage {
   isEdited?: boolean;
   lastEditTimestamp?: number;
   logicalTimestamp?: number;
+  wokeApp?: boolean;
 }
 
 export interface GroupMember {
