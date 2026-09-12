@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { usePeersStore } from '../../stores/peers.store';
 import { useGroupsStore } from '../../stores/groups.store';
 import { useAppStore } from '../../stores/app.store';
-import { X, Users, Check } from 'lucide-react';
+import { toast } from '../../stores/toast.store';
+import { X, Users, Check, RotateCw } from 'lucide-react';
 
 interface GroupCreateProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface GroupCreateProps {
 export function GroupCreate({ onClose }: GroupCreateProps) {
   const [groupName, setGroupName] = useState('');
   const [selectedPeerIds, setSelectedPeerIds] = useState<Set<string>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { peers } = usePeersStore();
   const { createGroup } = useGroupsStore();
   const { selectGroup } = useAppStore();
@@ -18,6 +20,7 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
   const peerList = Array.from(peers.values()).filter((p) => p.status === 'online');
 
   const togglePeer = (peerId: string) => {
+    if (isSubmitting) return;
     const next = new Set(selectedPeerIds);
     if (next.has(peerId)) {
       next.delete(peerId);
@@ -29,12 +32,23 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
 
   const handleCreate = async () => {
     const trimmed = groupName.trim();
-    if (!trimmed || selectedPeerIds.size === 0) return;
+    if (!trimmed || selectedPeerIds.size === 0 || isSubmitting) return;
 
-    const group = await createGroup(trimmed, Array.from(selectedPeerIds));
-    if (group) {
-      selectGroup(group.id);
-      onClose();
+    setIsSubmitting(true);
+    try {
+      const group = await createGroup(trimmed, Array.from(selectedPeerIds));
+      if (group) {
+        toast.success(`Group "${trimmed}" created`);
+        selectGroup(group.id);
+        onClose();
+      } else {
+        toast.error('Failed to create group');
+      }
+    } catch (err) {
+      console.error('Failed to create group:', err);
+      toast.error('Failed to create group');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -212,13 +226,14 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
         >
           <button
             onClick={onClose}
+            disabled={isSubmitting}
             style={{
               padding: 'var(--space-2) var(--space-4)',
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border-color)',
               background: 'transparent',
-              color: 'var(--text-primary)',
-              cursor: 'pointer',
+              color: isSubmitting ? 'var(--text-muted)' : 'var(--text-primary)',
+              cursor: isSubmitting ? 'default' : 'pointer',
               fontSize: 'var(--font-size-body)'
             }}
           >
@@ -227,19 +242,29 @@ export function GroupCreate({ onClose }: GroupCreateProps) {
 
           <button
             onClick={handleCreate}
-            disabled={!groupName.trim() || selectedPeerIds.size === 0}
+            disabled={isSubmitting || !groupName.trim() || selectedPeerIds.size === 0}
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
               padding: 'var(--space-2) var(--space-4)',
               borderRadius: 'var(--radius-sm)',
               border: 'none',
-              backgroundColor: !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--bg-card-hover)' : 'var(--accent-primary)',
-              color: !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--text-secondary)' : '#ffffff',
-              cursor: !groupName.trim() || selectedPeerIds.size === 0 ? 'default' : 'pointer',
+              backgroundColor: isSubmitting || !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--bg-card-hover)' : 'var(--accent-primary)',
+              color: isSubmitting || !groupName.trim() || selectedPeerIds.size === 0 ? 'var(--text-secondary)' : '#ffffff',
+              cursor: isSubmitting || !groupName.trim() || selectedPeerIds.size === 0 ? 'default' : 'pointer',
               fontSize: 'var(--font-size-body)',
               fontWeight: 500
             }}
           >
-            Create Group
+            {isSubmitting ? (
+              <>
+                <RotateCw size={14} strokeWidth={2} className="spin-animation" />
+                <span>Creating group...</span>
+              </>
+            ) : (
+              'Create Group'
+            )}
           </button>
         </div>
       </div>

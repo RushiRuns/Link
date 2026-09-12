@@ -13,6 +13,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [displayName, setDisplayNameInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isFolderUpdated, setIsFolderUpdated] = useState(false);
   const [downloadPath, setDownloadPath] = useState('');
   const { isDarkMode, setDarkMode } = useAppStore();
 
@@ -51,12 +52,18 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const handleChangeFolder = async () => {
     try {
       const result = await window.link.dialog.selectFolder();
-      if (result) {
-        await window.link.config.setDownloadPath(result.path);
-        setDownloadPath(result.path);
+      if (result && result.path) {
+        if (result.path !== downloadPath) {
+          await window.link.config.setDownloadPath(result.path);
+          setDownloadPath(result.path);
+          setIsFolderUpdated(true);
+          toast.success('Download folder updated');
+          setTimeout(() => setIsFolderUpdated(false), 1500);
+        }
       }
     } catch (err) {
       console.error('[Settings] Error selecting folder:', err);
+      toast.error('Failed to update download folder');
     }
   };
 
@@ -297,8 +304,10 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 padding: 'var(--space-3)',
                 backgroundColor: 'var(--bg-app)',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-color)',
-                gap: 'var(--space-3)'
+                border: isFolderUpdated ? '1px solid var(--status-online)' : '1px solid var(--border-color)',
+                boxShadow: isFolderUpdated ? '0 0 0 1px var(--status-online)' : 'none',
+                gap: 'var(--space-3)',
+                transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)'
               }}
             >
               <span style={{ 
@@ -314,18 +323,28 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               <button
                 onClick={handleChangeFolder}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
                   padding: 'var(--space-1) var(--space-3)',
                   borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  backgroundColor: 'var(--bg-card)',
-                  color: 'var(--text-primary)',
+                  border: isFolderUpdated ? '1px solid var(--status-online)' : '1px solid var(--border-color)',
+                  backgroundColor: isFolderUpdated ? 'var(--status-online)' : 'var(--bg-card)',
+                  color: isFolderUpdated ? '#ffffff' : 'var(--text-primary)',
                   cursor: 'pointer',
                   fontSize: 'var(--font-size-meta)',
                   fontWeight: 500,
-                  transition: 'background-color var(--transition-fast)'
+                  transition: 'all var(--transition-fast)'
                 }}
               >
-                Change
+                {isFolderUpdated ? (
+                  <>
+                    <Check size={12} strokeWidth={2.5} />
+                    <span>Updated</span>
+                  </>
+                ) : (
+                  'Change'
+                )}
               </button>
             </div>
           </div>

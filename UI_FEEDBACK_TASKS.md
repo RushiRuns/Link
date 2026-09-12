@@ -117,8 +117,8 @@ Before implementing the individual UI feedback items, the following shared infra
   2. Trigger `toast.success("Download folder updated")`.
   3. Add a temporary highlight state on the path container.
 - **Acceptance Criteria**:
-  - [ ] Changing download folder shows confirmation toast.
-  - [ ] Path updates visibly in settings with smooth transition.
+  - [x] Changing download folder shows confirmation toast.
+  - [x] Path updates visibly in settings with smooth transition.
 
 ---
 
@@ -137,8 +137,8 @@ Before implementing the individual UI feedback items, the following shared infra
   3. Render spinner inside button and disable inputs while `isSubmitting`.
   4. Call `toast.success(\`Group "${trimmed}" created\`)` before closing.
 - **Acceptance Criteria**:
-  - [ ] "Create Group" button displays spinner and disables on click.
-  - [ ] Success toast displays new group name upon completion.
+  - [x] "Create Group" button displays spinner and disables on click.
+  - [x] Success toast displays new group name upon completion.
 
 ---
 
@@ -153,8 +153,8 @@ Before implementing the individual UI feedback items, the following shared infra
   1. In `GroupView.tsx` save handler (L620–L622 and L633–L636), capture new name.
   2. Trigger `toast.success(\`Group renamed to "${newName}"\`)`.
 - **Acceptance Criteria**:
-  - [ ] Renaming group triggers toast displaying the updated group name.
-  - [ ] View updates instantly without visual glitching.
+  - [x] Renaming group triggers toast displaying the updated group name.
+  - [x] View updates instantly without visual glitching.
 
 ---
 
@@ -169,7 +169,7 @@ Before implementing the individual UI feedback items, the following shared infra
   1. In `GroupView.tsx` add members handler (L683–L687), record count of selected peers.
   2. Trigger `toast.success(\`Added ${count} member(s) to ${group.name}\`)`.
 - **Acceptance Criteria**:
-  - [ ] Adding members generates a toast with accurate member count and group name.
+  - [x] Adding members generates a toast with accurate member count and group name.
 
 ---
 
@@ -184,7 +184,7 @@ Before implementing the individual UI feedback items, the following shared infra
   1. In `GroupView.tsx` remove member handler (L785–L788), capture member display name.
   2. Trigger `toast.info(\`Removed ${m.displayName} from ${group.name}\`)`.
 - **Acceptance Criteria**:
-  - [ ] Member removal triggers confirmation toast specifying the removed member's name.
+  - [x] Member removal triggers confirmation toast specifying the removed member's name.
 
 ---
 
@@ -199,7 +199,7 @@ Before implementing the individual UI feedback items, the following shared infra
   1. In `GroupView.tsx` delete confirmation button handler (L716–L719), store group name.
   2. Call `toast.info(\`Group "${group.name}" deleted\`)`.
 - **Acceptance Criteria**:
-  - [ ] Deleting a group triggers informational toast confirming deletion.
+  - [x] Deleting a group triggers informational toast confirming deletion.
 
 ---
 

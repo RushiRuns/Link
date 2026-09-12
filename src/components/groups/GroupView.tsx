@@ -8,6 +8,7 @@ import { MessageBubble } from '../conversations/MessageBubble';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { MessageInput } from '../conversations/MessageInput';
+import { toast } from '../../stores/toast.store';
 import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock, Edit2 } from 'lucide-react';
 
 interface GroupViewProps {
@@ -662,8 +663,10 @@ export function GroupView({ group }: GroupViewProps) {
                     onChange={(e) => setRenameInput(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (renameInput.trim() !== '' && renameInput !== group.name) {
-                          renameGroup(group.id, renameInput.trim());
+                        const trimmed = renameInput.trim();
+                        if (trimmed !== '' && trimmed !== group.name) {
+                          renameGroup(group.id, trimmed);
+                          toast.success(`Group renamed to "${trimmed}"`);
                         }
                         setIsRenaming(false);
                       } else if (e.key === 'Escape') {
@@ -675,8 +678,10 @@ export function GroupView({ group }: GroupViewProps) {
                     <button 
                       style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px' }}
                       onClick={() => {
-                        if (renameInput.trim() !== '' && renameInput !== group.name) {
-                          renameGroup(group.id, renameInput.trim());
+                        const trimmed = renameInput.trim();
+                        if (trimmed !== '' && trimmed !== group.name) {
+                          renameGroup(group.id, trimmed);
+                          toast.success(`Group renamed to "${trimmed}"`);
                         }
                         setIsRenaming(false);
                       }}
@@ -726,9 +731,11 @@ export function GroupView({ group }: GroupViewProps) {
                       style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '4px' }}
                       disabled={selectedPeersToAdd.length === 0}
                       onClick={() => {
+                        const count = selectedPeersToAdd.length;
                         addMembersToGroup(group.id, selectedPeersToAdd);
                         setIsAddingMember(false);
                         setSelectedPeersToAdd([]);
+                        toast.success(`Added ${count} member${count === 1 ? '' : 's'} to ${group.name}`);
                       }}
                     >Add</button>
                     <button 
@@ -759,8 +766,10 @@ export function GroupView({ group }: GroupViewProps) {
                     <button 
                       style={{ flex: 1, padding: '4px 8px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--status-error)', color: 'white', border: 'none', borderRadius: '4px' }}
                       onClick={() => {
+                        const deletedName = group.name;
                         deleteGroup(group.id);
                         selectGroup(null);
+                        toast.info(`Group "${deletedName}" deleted`);
                       }}
                     >Yes, Delete</button>
                     <button 
@@ -828,8 +837,10 @@ export function GroupView({ group }: GroupViewProps) {
                       <button 
                         style={{ flex: 1, padding: '2px 4px', fontSize: 'var(--font-size-meta)', cursor: 'pointer', backgroundColor: 'var(--status-error)', color: 'white', border: 'none', borderRadius: '4px' }}
                         onClick={() => {
+                          const memberName = m.displayName;
                           removeMemberFromGroup(group.id, m.peerId!);
                           setMemberToRemove(null);
+                          toast.info(`Removed ${memberName} from ${group.name}`);
                         }}
                       >Remove</button>
                       <button 
