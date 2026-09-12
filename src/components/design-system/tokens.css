@@ -27,6 +27,10 @@
   --status-warning: #FF9F0A;
   --status-error: #FF453A;
 
+  --scrollbar-thumb: rgba(255, 255, 255, 0.22);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.38);
+  --scrollbar-thumb-active: rgba(255, 255, 255, 0.55);
+
   --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI Variable", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
@@ -80,6 +84,10 @@
   --status-offline: #8E8E93;
   --status-warning: #FF9500;
   --status-error: #FF3B30;
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.22);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.38);
+  --scrollbar-thumb-active: rgba(0, 0, 0, 0.55);
 }
 
 @keyframes typingPulse {
@@ -91,4 +99,38 @@
 button.icon-button:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+/* Universal Custom Scrollbar: Thin (6px), Semi-transparent Grey, Auto-hiding */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast);
+}
+
+/* Thumb appears during active scrolling */
+.is-scrolling::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+/* Hover & Active states when interacting with the thumb directly */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

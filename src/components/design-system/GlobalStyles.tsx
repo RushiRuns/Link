@@ -29,5 +29,36 @@ export function GlobalStyles() {
     }
   }, [setDarkMode]);
 
+  // Auto-hide scrollbar when not actively scrolling
+  useEffect(() => {
+    const scrollTimeouts = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      const element = target instanceof HTMLElement ? target : (target === document ? document.documentElement : null);
+      if (!element) return;
+
+      element.classList.add('is-scrolling');
+
+      const existing = scrollTimeouts.get(element);
+      if (existing) {
+        clearTimeout(existing);
+      }
+
+      const timeout = setTimeout(() => {
+        element.classList.remove('is-scrolling');
+        scrollTimeouts.delete(element);
+      }, 1000);
+
+      scrollTimeouts.set(element, timeout);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, []);
+
   return null;
 }
+
