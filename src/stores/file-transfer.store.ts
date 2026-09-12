@@ -8,14 +8,14 @@ interface FileTransferState {
   incomingOffersQueue: LinkFileTransfer[];
   addTransfer: (transfer: LinkFileTransfer) => void;
   updateProgress: (transferId: string, bytesTransferred: number) => void;
-  setTransferStatus: (transferId: string, status: LinkFileTransfer['status']) => void;
+  setTransferStatus: (transferId: string, status: LinkFileTransfer['status'], savePath?: string) => void;
   clearIncomingOffer: () => void;
   clearPeerTransfers: (peerId: string) => void;
   offerFiles: (peerIds: string[], filePaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[] | undefined>;
   offerFolders: (peerIds: string[], folderPaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[] | undefined>;
   offerPastedBuffer: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => Promise<LinkFileTransfer[] | undefined>;
   respondToOffer: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
-  openTransferFolder: (transferId: string) => Promise<boolean>;
+  openTransferFolder: (transferId: string, explicitPath?: string) => Promise<boolean>;
   loadFromDisk: () => Promise<void>;
   initListeners: () => () => void;
 }
@@ -56,12 +56,16 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     });
   },
 
-  setTransferStatus: (transferId, status) => {
+  setTransferStatus: (transferId, status, savePath) => {
     set((state) => {
       const existing = state.transfers.get(transferId);
       if (existing) {
         const nextMap = new Map(state.transfers);
-        nextMap.set(transferId, { ...existing, status });
+        nextMap.set(transferId, {
+          ...existing,
+          status,
+          savePath: savePath || existing.savePath
+        });
         return { transfers: nextMap };
       }
       return state;
@@ -139,8 +143,9 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
   respondToOffer: async (transferId, accepted, savePath) => {
     if (window.link?.fileTransfer) {
       try {
-        await window.link.fileTransfer.respond(transferId, accepted, savePath);
-        get().setTransferStatus(transferId, accepted ? 'transferring' : 'declined');
+        const result = await window.link.fileTransfer.respond(transferId, accepted, savePath);
+        const resolvedPath = (result && typeof result === 'object' && result.savePath) ? result.savePath : savePath;
+        get().setTransferStatus(transferId, accepted ? 'transferring' : 'declined', resolvedPath);
         get().clearIncomingOffer();
       } catch (err) {
         console.error('[FileTransferStore] Error responding to offer:', err);
@@ -148,10 +153,12 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
     }
   },
 
-  openTransferFolder: async (transferId) => {
+  openTransferFolder: async (transferId, explicitPath) => {
     if (window.link?.fileTransfer) {
       try {
-        return await window.link.fileTransfer.openFolder(transferId);
+        const transfer = get().transfers.get(transferId);
+        const targetPath = explicitPath || transfer?.savePath;
+        return await window.link.fileTransfer.openFolder(transferId, targetPath);
       } catch (err) {
         console.error('[FileTransferStore] Error opening transfer folder:', err);
       }
@@ -207,8 +214,12 @@ export const useFileTransferStore = create<FileTransferState>((set, get) => ({
       get().updateProgress(transferId, bytesTransferred);
     });
 
-    const cleanCompleted = window.link.fileTransfer.onCompleted((transferId) => {
-      get().setTransferStatus(transferId, 'completed');
+    const cleanCompleted = window.link.fileTransfer.onCompleted((data) => {
+      const transferId = typeof data === 'string' ? data : data?.transferId;
+      const savePath = typeof data === 'object' ? data?.savePath : undefined;
+      if (transferId) {
+        get().setTransferStatus(transferId, 'completed', savePath);
+      }
     });
 
     const cleanDeclined = window.link.fileTransfer.onDeclined((transferId) => {
@@ -233,9 +244,9 @@ let saveTimeout: any;
 let lastFingerprint = '';
 
 useFileTransferStore.subscribe((state) => {
-  // Create a fingerprint of IDs + statuses
+  // Create a fingerprint of IDs + statuses + savePath
   const entries = Array.from(state.transfers.values());
-  const currentFingerprint = entries.map(t => `${t.id}:${t.status}`).sort().join('|');
+  const currentFingerprint = entries.map(t => `${t.id}:${t.status}:${t.savePath || ''}`).sort().join('|');
 
   if (currentFingerprint !== lastFingerprint) {
     lastFingerprint = currentFingerprint;

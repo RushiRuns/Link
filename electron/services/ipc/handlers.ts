@@ -1,5 +1,6 @@
-import { ipcMain, shell, desktopCapturer } from 'electron';
+import { ipcMain, shell, desktopCapturer, app } from 'electron';
 import fs from 'fs';
+import path from 'path';
 import { getOrGenerateIdentity, setDisplayName } from '../identity/identity.js';
 import { peersStore } from '../storage/peers-store.js';
 import { messageService } from '../messaging/message-service.js';
@@ -193,16 +194,46 @@ export function registerIpcHandlers() {
     return fileTransferService.respondToOffer(transferId, accepted, savePath);
   });
 
-  ipcMain.handle('file-transfer:open-folder', async (_, transferId: string) => {
-    const state = fileTransferService.getTransferState(transferId);
-    if (!state) return false;
-    
-    const targetPath = state.savePath || state.filePath;
+  ipcMain.handle('file-transfer:open-folder', async (_, transferId: string, explicitPath?: string) => {
+    let targetPath: string | undefined = explicitPath;
+
+    if (targetPath && !fs.existsSync(targetPath)) {
+      targetPath = undefined;
+    }
+
+    if (!targetPath) {
+      const state = fileTransferService.getTransferState(transferId);
+      const candidate = state?.savePath || state?.filePath;
+      if (candidate && fs.existsSync(candidate)) {
+        targetPath = candidate;
+      }
+    }
+
+    if (!targetPath) {
+      try {
+        const savedTransfers = await messageStore.loadTransfers();
+        const saved = savedTransfers?.[transferId];
+        if (saved?.savePath && fs.existsSync(saved.savePath)) {
+          targetPath = saved.savePath;
+        } else if (saved?.fileName) {
+          const customConfigPath = configStore.get('downloadPath');
+          const downloadsDir = customConfigPath || app.getPath('downloads');
+          const candidate = path.join(downloadsDir, saved.fileName);
+          if (fs.existsSync(candidate)) {
+            targetPath = candidate;
+          }
+        }
+      } catch (err) {
+        console.error('[FileTransfer] Error resolving targetPath from saved transfers:', err);
+      }
+    }
+
     if (targetPath && fs.existsSync(targetPath)) {
       const errorMsg = await shell.openPath(targetPath);
       if (errorMsg) {
         console.error(`[FileTransfer] Error opening path ${targetPath}:`, errorMsg);
-        return false;
+        shell.showItemInFolder(targetPath);
+        return true;
       }
       return true;
     }

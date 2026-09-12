@@ -82,14 +82,14 @@ export interface LinkAPI {
     offerFolders: (peerIds: string[], folderPaths: string[], groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;
     saveBuffer: (buffer: ArrayBuffer, mimeType: string) => Promise<string>;
     offerPastedBuffer: (peerIds: string[], buffer: ArrayBuffer, mimeType: string, groupId?: string, message?: string) => Promise<LinkFileTransfer[]>;
-    respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<void>;
-    openFolder: (transferId: string) => Promise<boolean>;
+    respond: (transferId: string, accepted: boolean, savePath?: string) => Promise<{ accepted: boolean; savePath?: string } | void>;
+    openFolder: (transferId: string, filePath?: string) => Promise<boolean>;
     getThumbnail: (filePath: string) => Promise<string | null>;
     loadTransfers: () => Promise<Record<string, LinkFileTransfer>>;
     saveTransfers: (data: Record<string, LinkFileTransfer>) => Promise<void>;
     onOfferReceived: (callback: (transfer: LinkFileTransfer) => void) => () => void;
     onProgress: (callback: (transferId: string, bytesTransferred: number) => void) => () => void;
-    onCompleted: (callback: (transferId: string) => void) => () => void;
+    onCompleted: (callback: (data: string | { transferId: string; savePath?: string }) => void) => () => void;
     onDeclined: (callback: (transferId: string) => void) => () => void;
     onFailed: (callback: (transferId: string) => void) => () => void;
   };

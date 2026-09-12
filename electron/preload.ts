@@ -128,7 +128,7 @@ contextBridge.exposeInMainWorld('link', {
       ipcRenderer.invoke('file-transfer:offer-pasted-buffer', peerIds, buffer, mimeType, groupId, message),
     respond: (transferId: string, accepted: boolean, savePath?: string) => 
       ipcRenderer.invoke('file-transfer:respond', transferId, accepted, savePath),
-    openFolder: (transferId: string) => ipcRenderer.invoke('file-transfer:open-folder', transferId),
+    openFolder: (transferId: string, filePath?: string) => ipcRenderer.invoke('file-transfer:open-folder', transferId, filePath),
     getThumbnail: (filePath: string) => ipcRenderer.invoke('file-transfer:get-thumbnail', filePath),
     loadTransfers: () => ipcRenderer.invoke('file-transfers:load'),
     saveTransfers: (data: any) => ipcRenderer.invoke('file-transfers:save', data),
@@ -142,8 +142,8 @@ contextBridge.exposeInMainWorld('link', {
       ipcRenderer.on('file-transfer:progress', listener);
       return () => ipcRenderer.removeListener('file-transfer:progress', listener);
     },
-    onCompleted: (callback: EventCallback<string>) => {
-      const listener = (_: any, transferId: string) => callback(transferId);
+    onCompleted: (callback: EventCallback<string | { transferId: string; savePath?: string }>) => {
+      const listener = (_: any, data: any) => callback(data);
       ipcRenderer.on('file-transfer:completed', listener);
       return () => ipcRenderer.removeListener('file-transfer:completed', listener);
     },

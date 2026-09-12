@@ -132,8 +132,9 @@ export function SessionDownloads({ onClose }: SessionDownloadsProps) {
                 <div
                   key={transfer.id}
                   onClick={() => {
-                    if (isSaved) openTransferFolder(transfer.id);
+                    if (isSaved) openTransferFolder(transfer.id, transfer.savePath);
                   }}
+                  title={isSaved ? `Click to open ${transfer.fileName}` : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

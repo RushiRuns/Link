@@ -128,7 +128,7 @@ contextBridge.exposeInMainWorld("link", {
       ipcRenderer.invoke("file-transfer:offer-pasted-buffer", peerIds, buffer, mimeType, groupId, message),
     respond: (transferId, accepted, savePath) => 
       ipcRenderer.invoke("file-transfer:respond", transferId, accepted, savePath),
-    openFolder: (transferId) => ipcRenderer.invoke("file-transfer:open-folder", transferId),
+    openFolder: (transferId, filePath) => ipcRenderer.invoke("file-transfer:open-folder", transferId, filePath),
     getThumbnail: (filePath) => ipcRenderer.invoke("file-transfer:get-thumbnail", filePath),
     loadTransfers: () => ipcRenderer.invoke('file-transfers:load'),
     saveTransfers: (data) => ipcRenderer.invoke('file-transfers:save', data),
@@ -143,7 +143,7 @@ contextBridge.exposeInMainWorld("link", {
       return () => ipcRenderer.removeListener("file-transfer:progress", listener);
     },
     onCompleted: (callback) => {
-      const listener = (_, transferId) => callback(transferId);
+      const listener = (_, data) => callback(data);
       ipcRenderer.on("file-transfer:completed", listener);
       return () => ipcRenderer.removeListener("file-transfer:completed", listener);
     },

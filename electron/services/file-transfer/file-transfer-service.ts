@@ -326,9 +326,9 @@ class FileTransferService {
     };
   }
 
-  public async respondToOffer(transferId: string, accepted: boolean, customSavePath?: string) {
+  public async respondToOffer(transferId: string, accepted: boolean, customSavePath?: string): Promise<{ accepted: boolean; savePath?: string }> {
     const state = this.transfers.get(transferId);
-    if (!state) return;
+    if (!state) return { accepted: false };
 
     if (!accepted) {
       state.status = 'declined';
@@ -338,7 +338,7 @@ class FileTransferService {
         ts: Date.now(),
         payload: { transferId, accepted: false }
       });
-      return;
+      return { accepted: false };
     }
 
     // Determine save path if not specified
@@ -368,6 +368,8 @@ class FileTransferService {
       ts: Date.now(),
       payload: { transferId, accepted: true }
     });
+
+    return { accepted: true, savePath };
   }
 
   private handleFileOffer(senderDeviceId: string, envelope: any) {
@@ -482,7 +484,10 @@ class FileTransferService {
         payload: { transferId: state.id, success: true }
       });
 
-      this.windowRef?.webContents?.send('file-transfer:completed', state.id);
+      this.windowRef?.webContents?.send('file-transfer:completed', {
+        transferId: state.id,
+        savePath: state.savePath || state.filePath
+      });
     });
 
     readStream.on('error', (err: any) => {
@@ -532,7 +537,10 @@ class FileTransferService {
           }
         }
         state.status = 'completed';
-        this.windowRef?.webContents?.send('file-transfer:completed', state.id);
+        this.windowRef?.webContents?.send('file-transfer:completed', {
+          transferId: state.id,
+          savePath: state.savePath || state.filePath
+        });
       });
     }
   }
