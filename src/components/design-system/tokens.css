@@ -1,11 +1,13 @@
 /* Link Design System Tokens - macOS Sequoia-Inspired (Dark-Matte-First) */
 
-:root, [data-theme="dark"] {
+:root,
+[data-theme="dark"] {
   /* Dark Mode (Primary Mode — Matte Grey, NOT pure black) */
   --bg-app: #1E1E20;
   --bg-sidebar: #252528;
   --bg-card: #2C2C30;
-  --bg-card-hover: #333338;
+  --bg-card-hover: #303031;
+  --bg-hover: #303031;
   --bg-input: #252528;
   --bg-active: #333338;
   --bubble-own: #2C2C30;
@@ -91,9 +93,17 @@
 }
 
 @keyframes typingPulse {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
+  0% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.4;
+  }
 }
 
 button.icon-button:focus-visible {

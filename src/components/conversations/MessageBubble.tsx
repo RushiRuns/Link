@@ -52,7 +52,7 @@ export function MessageBubble({ message, isSelf, showSenderLabel, isLatestMessag
       case 'delivered':
         return (
           <span title="Delivered" aria-label="Delivered" style={{ display: 'inline-flex', alignItems: 'center' }}>
-            <CheckCheck size={14} strokeWidth={2.5} style={{ color: 'var(--text-secondary)' }} />
+            <CheckCheck size={14} strokeWidth={2.5} style={{ color: '#0A84FF' }} />
           </span>
         );
       case 'failed':
