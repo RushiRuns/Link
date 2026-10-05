@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LinkPeer, LinkIdentity } from '../../types/ipc';
 import { useConversationsStore } from '../../stores/conversations.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
@@ -8,12 +8,14 @@ import { useRemoteAccessStore } from '../../stores/remote-access.store';
 import { RemoteAccessButton } from '../remote-access/RemoteAccessButton';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
+import { DateDivider } from './DateDivider';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { Shield, UploadCloud, AlertCircle, Phone, Video, Trash2, CornerUpLeft, X, Edit2 } from 'lucide-react';
 import { toast } from '../../stores/toast.store';
 import { v4 as uuidv4 } from 'uuid';
 import { getConversationId } from '../../utils/conversation';
+import { isSameDay, formatTimelineDate } from '../../utils/date';
 
 interface ConversationViewProps {
   peer: LinkPeer;
@@ -527,54 +529,60 @@ export function ConversationView({ peer }: ConversationViewProps) {
             </div>
           </div>
         ) : (
-          displayedTimelineItems.map((item) => {
-            if (item.kind === 'message') {
-              return (
-                <MessageBubble
-                  key={item.id}
-                  message={item.data}
-                  isSelf={item.data.senderId === localIdentity?.deviceId}
-                  isLatestMessage={item.data.id === latestSentMessageId}
-                  repliedMessage={item.data.replyToMessageId ? conversationMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
-                  onReply={() => {
-                    if (conversationId) {
-                      setReplyingToMessageId(conversationId, item.data.id);
-                      setEditingMessageId(conversationId, null); // Mutually exclusive
-                    }
-                  }}
-                  onCopy={() => handleCopy(item.data.content)}
-                  onEdit={() => {
-                    if (conversationId) {
-                      setEditingMessageId(conversationId, item.data.id);
-                      setReplyingToMessageId(conversationId, null); // Mutually exclusive
-                    }
-                  }}
-                  onDelete={() => handleDelete(item.data.id)}
-                  onRetry={item.data.deliveryStatus === 'failed' ? () => handleRetry(item.data) : undefined}
-                />
-              );
-            }
-            if (item.kind === 'transfer') {
-              return (
-                <TransferProgress
-                  key={item.id}
-                  transfer={item.data}
-                  isSelf={item.data.direction === 'outgoing'}
-                  showCaption={true}
-                />
-              );
-            }
+          displayedTimelineItems.map((item, index) => {
+            const prevItem = index > 0 ? displayedTimelineItems[index - 1] : null;
+            const isFirstItemOfDay = !prevItem || !isSameDay(item.timestamp, prevItem.timestamp);
+
             return (
-              <div key={item.id} style={{ display: 'flex', flexDirection: 'column', margin: 'var(--space-1) 0' }}>
-                {item.data.map((t, index) => (
-                  <TransferProgress 
-                    key={t.id} 
-                    transfer={t} 
-                    isSelf={t.direction === 'outgoing'}
-                    showCaption={index === item.data.length - 1} 
+              <React.Fragment key={item.id}>
+                {isFirstItemOfDay && (
+                  <DateDivider label={formatTimelineDate(item.timestamp)} />
+                )}
+                {item.kind === 'message' && (
+                  <MessageBubble
+                    key={item.id}
+                    message={item.data}
+                    isSelf={item.data.senderId === localIdentity?.deviceId}
+                    isLatestMessage={item.data.id === latestSentMessageId}
+                    repliedMessage={item.data.replyToMessageId ? conversationMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
+                    onReply={() => {
+                      if (conversationId) {
+                        setReplyingToMessageId(conversationId, item.data.id);
+                        setEditingMessageId(conversationId, null); // Mutually exclusive
+                      }
+                    }}
+                    onCopy={() => handleCopy(item.data.content)}
+                    onEdit={() => {
+                      if (conversationId) {
+                        setEditingMessageId(conversationId, item.data.id);
+                        setReplyingToMessageId(conversationId, null); // Mutually exclusive
+                      }
+                    }}
+                    onDelete={() => handleDelete(item.data.id)}
+                    onRetry={item.data.deliveryStatus === 'failed' ? () => handleRetry(item.data) : undefined}
                   />
-                ))}
-              </div>
+                )}
+                {item.kind === 'transfer' && (
+                  <TransferProgress
+                    key={item.id}
+                    transfer={item.data}
+                    isSelf={item.data.direction === 'outgoing'}
+                    showCaption={true}
+                  />
+                )}
+                {item.kind === 'transfer_batch' && (
+                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', margin: 'var(--space-1) 0' }}>
+                    {item.data.map((t, index) => (
+                      <TransferProgress 
+                        key={t.id} 
+                        transfer={t} 
+                        isSelf={t.direction === 'outgoing'}
+                        showCaption={index === item.data.length - 1} 
+                      />
+                    ))}
+                  </div>
+                )}
+              </React.Fragment>
             );
           })
         )}

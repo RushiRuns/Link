@@ -5,11 +5,13 @@ import { usePeersStore } from '../../stores/peers.store';
 import { useAppStore } from '../../stores/app.store';
 import { useFileTransferStore } from '../../stores/file-transfer.store';
 import { MessageBubble } from '../conversations/MessageBubble';
+import { DateDivider } from '../conversations/DateDivider';
 import { TransferProgress } from '../file-transfer/TransferProgress';
 import { FilePreviewModal, PreviewItem } from '../file-transfer/FilePreviewModal';
 import { MessageInput } from '../conversations/MessageInput';
 import { toast } from '../../stores/toast.store';
 import { Users, Shield, X, Pencil, Trash2, UserPlus, Lock, Edit2 } from 'lucide-react';
+import { isSameDay, formatTimelineDate } from '../../utils/date';
 
 interface GroupViewProps {
   group: LinkGroup;
@@ -351,63 +353,74 @@ export function GroupView({ group }: GroupViewProps) {
             </div>
           ) : (
             timelineItems.map((item, i) => {
-              if (item.kind === 'message') {
-                return (
-                  <MessageBubble
-                    key={item.id || `msg-${i}`}
-                    message={item.data}
-                    isSelf={item.data.senderId === localIdentity?.deviceId}
-                    isLatestMessage={item.data.id === latestSentMessageId}
-                    repliedMessage={item.data.replyToMessageId ? groupMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
-                    showSenderLabel={true}
-                    onReply={() => {
-                      setReplyingToMessageId(item.data.id);
-                      setEditingMessageId(null); // Mutually exclusive
-                    }}
-                    onCopy={() => handleCopy(item.data.content)}
-                    onEdit={() => {
-                      setEditingMessageId(item.data.id);
-                      setReplyingToMessageId(null); // Mutually exclusive
-                    }}
-                    onDelete={() => handleDelete(item.data.id)}
-                  />
-                );
-              } else if (item.kind === 'transfer') {
-                return <TransferProgress key={item.id} transfer={item.data} isSelf={item.data.direction === 'outgoing'} showCaption={true} />;
-              } else if (item.kind === 'transfer_batch') {
-                const isSelf = item.data[0].direction === 'outgoing';
-                const recipientNames = isSelf 
-                  ? item.data.map(t => {
-                      const p = peers.get(t.peerId);
-                      return p ? p.displayName : 'Unknown';
-                    }).join(', ')
-                  : undefined;
-                const senderName = !isSelf && peers.get(item.data[0].peerId)?.displayName;
+              const prevItem = i > 0 ? timelineItems[i - 1] : null;
+              const isFirstItemOfDay = !prevItem || !isSameDay(item.timestamp, prevItem.timestamp);
 
-                return (
-                  <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start', margin: 'var(--space-1) 0' }}>
-                    {isSelf ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingRight: '4px' }}>
-                        <Lock size={12} opacity={0.7} />
-                        <span>Sent to {recipientNames}</span>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingLeft: '4px' }}>
-                        <span>From {senderName || 'Unknown'}</span>
-                      </div>
-                    )}
-                    {item.data.map((t, index) => (
-                      <TransferProgress 
-                        key={t.id} 
-                        transfer={t} 
-                        isSelf={isSelf} 
-                        showCaption={index === item.data.length - 1} 
-                      />
-                    ))}
-                  </div>
-                );
-              }
-              return null;
+              return (
+                <React.Fragment key={item.id || `item-${i}`}>
+                  {isFirstItemOfDay && (
+                    <DateDivider label={formatTimelineDate(item.timestamp)} />
+                  )}
+                  {item.kind === 'message' && (
+                    <MessageBubble
+                      key={item.id || `msg-${i}`}
+                      message={item.data}
+                      isSelf={item.data.senderId === localIdentity?.deviceId}
+                      isLatestMessage={item.data.id === latestSentMessageId}
+                      repliedMessage={item.data.replyToMessageId ? groupMessages.find(m => m.id === item.data.replyToMessageId) : undefined}
+                      showSenderLabel={true}
+                      onReply={() => {
+                        setReplyingToMessageId(item.data.id);
+                        setEditingMessageId(null); // Mutually exclusive
+                      }}
+                      onCopy={() => handleCopy(item.data.content)}
+                      onEdit={() => {
+                        setEditingMessageId(item.data.id);
+                        setReplyingToMessageId(null); // Mutually exclusive
+                      }}
+                      onDelete={() => handleDelete(item.data.id)}
+                    />
+                  )}
+                  {item.kind === 'transfer' && (
+                    <TransferProgress key={item.id} transfer={item.data} isSelf={item.data.direction === 'outgoing'} showCaption={true} />
+                  )}
+                  {item.kind === 'transfer_batch' && (
+                    (() => {
+                      const isSelf = item.data[0].direction === 'outgoing';
+                      const recipientNames = isSelf 
+                        ? item.data.map(t => {
+                            const p = peers.get(t.peerId);
+                            return p ? p.displayName : 'Unknown';
+                          }).join(', ')
+                        : undefined;
+                      const senderName = !isSelf && peers.get(item.data[0].peerId)?.displayName;
+
+                      return (
+                        <div key={item.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isSelf ? 'flex-end' : 'flex-start', margin: 'var(--space-1) 0' }}>
+                          {isSelf ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingRight: '4px' }}>
+                              <Lock size={12} opacity={0.7} />
+                              <span>Sent to {recipientNames}</span>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-size-meta)', color: 'var(--text-secondary)', marginBottom: '2px', paddingLeft: '4px' }}>
+                              <span>From {senderName || 'Unknown'}</span>
+                            </div>
+                          )}
+                          {item.data.map((t, index) => (
+                            <TransferProgress 
+                              key={t.id} 
+                              transfer={t} 
+                              isSelf={isSelf} 
+                              showCaption={index === item.data.length - 1} 
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()
+                  )}
+                </React.Fragment>
+              );
             })
           )}
         </div>
